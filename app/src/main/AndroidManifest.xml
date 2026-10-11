@@ -46,6 +46,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="aileilenamaz" android:host="login" />
                 <data android:scheme="namazarkadasim" android:host="login" />
                 <data android:scheme="aileilesecdeye" android:host="login" />
             </intent-filter>

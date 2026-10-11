@@ -26,7 +26,7 @@ Uygulamayı Android cihazınıza doğrudan yüklemek için resmi indirme bağlan
 👉 **[📥 Aile ile Namaz APK İndir](https://github.com/bilkil53/aile-ile-namaz/releases/latest/download/Aile_Ile_Namaz.apk)**
 
 * **Resmi GitHub Deposu:** [https://github.com/bilkil53/aile-ile-namaz](https://github.com/bilkil53/aile-ile-namaz)
-* **Paket Kimliği (ApplicationId):** `com.app.namazarkadasim`
+* **Paket Kimliği (ApplicationId):** `com.app.aileilenamaz`
 * **Geliştirici:** `bilkil53`
 * **Hedef Kitle:** Eşler, anne, baba, çocuklar ve aile fertleri (2 kişiden sınırsız kişiye kadar genişleyebilir).
 
