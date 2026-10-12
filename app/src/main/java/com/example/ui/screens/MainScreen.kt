@@ -109,7 +109,7 @@ fun MainScreen(
                                     color = Color.White
                                 )
                                 Text(
-                                    text = "Uygulama Bilgi & Bildirim Tercihleri",
+                                    text = "Uygulama Bilgileri",
                                     fontSize = 11.sp,
                                     color = Color.White.copy(alpha = 0.85f)
                                 )

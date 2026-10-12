@@ -80,7 +80,7 @@ fun SettingsScreen(
                     text = "Uygulama Bilgileri",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = EmeraldPrimary
                 )
             }
         }
@@ -171,7 +171,7 @@ fun SettingsScreen(
                         Surface(
                             shape = CircleShape,
                             color = EmeraldContainer,
-                            modifier = Modifier.size(36.dp)
+                            modifier = Modifier.size(38.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(Icons.Filled.Info, contentDescription = null, tint = EmeraldPrimary, modifier = Modifier.size(20.dp))
@@ -183,13 +183,21 @@ fun SettingsScreen(
                                 text = "Uygulama Bilgileri",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = TextPrimary
+                                color = EmeraldPrimary
                             )
-                            Text(
-                                text = "Aile ile Namaz Rehberi",
-                                fontSize = 12.sp,
-                                color = TextSecondary
-                            )
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = EmeraldContainer,
+                                modifier = Modifier.padding(top = 2.dp)
+                            ) {
+                                Text(
+                                    text = "Aile ile Namaz",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = EmeraldPrimary,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
                         }
                     }
                     Spacer(modifier = Modifier.height(14.dp))
@@ -229,8 +237,15 @@ fun SettingsScreen(
                     ) {
                         Icon(Icons.Filled.SystemUpdateAlt, contentDescription = null, tint = EmeraldPrimary, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Güncellemeleri Otomatik Denetle 🔄", fontSize = 12.sp, color = EmeraldPrimary, fontWeight = FontWeight.Bold)
+                        Text("Güncellemeleri Şimdi Denetle 🔄", fontSize = 12.sp, color = EmeraldPrimary, fontWeight = FontWeight.Bold)
                     }
+
+                    Text(
+                        text = "Sistem her gün saat 12:00'de otomatik denetler ve yeni sürüm varsa ekrana bildirir.",
+                        fontSize = 11.sp,
+                        color = TextSecondary,
+                        modifier = Modifier.padding(top = 4.dp, start = 4.dp)
+                    )
 
                     HorizontalDivider(color = DividerColor, modifier = Modifier.padding(vertical = 8.dp))
 
@@ -256,22 +271,75 @@ fun SettingsScreen(
 
                     HorizontalDivider(color = DividerColor, modifier = Modifier.padding(vertical = 8.dp))
 
-                    // Öneri ve Destek Bölümü
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Filled.Email, contentDescription = null, tint = EmeraldPrimary, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(text = "Öneri & Destek", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = TextPrimary)
-                            }
-                            Text(text = "e.bilkil5391@gmail.com", fontSize = 12.sp, color = TextSecondary)
+                    // Açık Kaynak Proje & GitHub Butonu
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Filled.Code,
+                                contentDescription = null,
+                                tint = EmeraldPrimary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = "Proje & Kaynak Kod", fontSize = 13.sp, color = TextSecondary)
                         }
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Surface(
+                            onClick = {
+                                try {
+                                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/bilkil53/aile-ile-namaz"))
+                                    context.startActivity(browserIntent)
+                                } catch (_: Exception) {
+                                    Toast.makeText(context, "Bağlantı açılamadı.", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            color = EmeraldContainer,
+                            border = BorderStroke(1.dp, SoftInfoCardBorder)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Detaylar buradadır",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = EmeraldPrimary
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(
+                                    Icons.Filled.OpenInNew,
+                                    contentDescription = "GitHub",
+                                    tint = EmeraldPrimary,
+                                    modifier = Modifier.size(13.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    HorizontalDivider(color = DividerColor, modifier = Modifier.padding(vertical = 8.dp))
+
+                    // Öneri ve Destek Bölümü
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                Icons.Filled.Email,
+                                contentDescription = null,
+                                tint = EmeraldPrimary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = "Öneri & Destek", fontSize = 13.sp, color = TextSecondary)
+                        }
 
                         Button(
                             onClick = {
@@ -286,16 +354,16 @@ fun SettingsScreen(
                                 try {
                                     context.startActivity(Intent.createChooser(emailIntent, "Öneri Gönder"))
                                 } catch (e: Exception) {
-                                    Toast.makeText(context, "E-posta uygulaması bulunamadı. Adres: e.bilkil5391@gmail.com", Toast.LENGTH_LONG).show()
+                                    Toast.makeText(context, "E-posta uygulaması bulunamadı.", Toast.LENGTH_LONG).show()
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
-                            shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier.fillMaxWidth()
+                            shape = RoundedCornerShape(8.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                         ) {
-                            Icon(Icons.Filled.Email, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Öneri & Geri Bildirim Gönder ✉️", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Icon(Icons.Filled.Email, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Öneri Yaz ✉️", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
                     }
                 }

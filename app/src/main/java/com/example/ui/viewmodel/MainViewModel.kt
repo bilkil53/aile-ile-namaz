@@ -174,13 +174,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
 
-        // Automatic GitHub Release Update Check (at startup and every 30 minutes)
+        // Automatic GitHub Release Update Check:
+        // Checks at startup, and automatically checks every day at 12:00 noon with popup
         viewModelScope.launch(Dispatchers.IO) {
-            delay(3500)
+            delay(4000)
             checkForAppUpdate(silent = true)
             while (true) {
-                delay(30 * 60 * 1000L)
-                checkForAppUpdate(silent = true)
+                val now = java.util.Calendar.getInstance()
+                val target = java.util.Calendar.getInstance().apply {
+                    set(java.util.Calendar.HOUR_OF_DAY, 12)
+                    set(java.util.Calendar.MINUTE, 0)
+                    set(java.util.Calendar.SECOND, 0)
+                    set(java.util.Calendar.MILLISECOND, 0)
+                    if (timeInMillis <= now.timeInMillis) {
+                        add(java.util.Calendar.DAY_OF_YEAR, 1)
+                    }
+                }
+                val delayMillis = (target.timeInMillis - now.timeInMillis).coerceAtLeast(60_000L)
+                delay(delayMillis)
+                // At 12:00 noon, check and display popup if update is found
+                checkForAppUpdate(silent = false)
             }
         }
     }
