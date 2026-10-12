@@ -299,7 +299,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     else -> prayerType
                 }
                 if (partnerInfo.value.isMatched) {
-                    _statusMessage.value = "$trName namazı kaydedildi ve arkadaşınıza bildirildi! 🤲"
+                    _statusMessage.value = "$trName namazı kaydedildi ve aile fertlerinize bildirildi! 🤲"
                 } else {
                     _statusMessage.value = "$trName namazı kılındı olarak kaydedildi! Allah kabul etsin."
                 }
@@ -408,7 +408,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _isRefreshingPartner.value = false
             if (success) {
                 val current = partnerInfo.value
-                val name = if (current.partnerDisplayName.isNotBlank()) current.partnerDisplayName else "Namaz arkadaşınız"
+                val name = if (current.partnerDisplayName.isNotBlank()) current.partnerDisplayName else "Aile ferdiniz"
                 _statusMessage.value = "$name ile başarıyla eşleştiniz!"
             } else {
                 _statusMessage.value = "Davet kodu doğrulanamadı. Lütfen kontrol edin."
@@ -451,7 +451,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun updatePartnerName(name: String) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.updatePartnerName(name)
-            _statusMessage.value = "Arkadaşınızın ismi güncellendi: $name"
+            _statusMessage.value = "Kişi ismi güncellendi: $name"
             delay(2500)
             _statusMessage.value = null
         }
@@ -652,7 +652,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // =========================================================================
-    // VERİ AKTARIMI (Namaz Arkadaşım -> Aile ile Secdeye Geçiş)
+    // VERİ AKTARIMI (Yedekleme ve Geri Yükleme)
     // =========================================================================
     fun exportDataBackup(onResult: (String) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -669,7 +669,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             withContext(Dispatchers.Main) {
                 if (success) {
                     loadPrayerForCurrentDate()
-                    _statusMessage.value = "Namaz Arkadaşım verileri başarıyla Aile ile Secdeye'ye aktarıldı! 🤲"
+                    _statusMessage.value = "Veriler başarıyla Aile ile Namaz uygulamasına aktarıldı! 🤲"
                     onSuccess()
                 } else {
                     _statusMessage.value = "Yedek verisi okunamadı. Lütfen geçerli bir yedek metni girin."

@@ -187,7 +187,7 @@ fun TrackerScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "NAMAZ ARKADAŞIM",
+                        text = "AİLE İLE NAMAZ",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = EmeraldPrimary,

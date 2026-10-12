@@ -84,7 +84,7 @@ object PartnerSyncManager {
         val a = normalizeCode(codeA)
         val b = normalizeCode(codeB)
         val sorted = if (a < b) "${a}_${b}" else "${b}_${a}"
-        return "na_pair_$sorted"
+        return "ain_pair_$sorted"
     }
 
     /**
@@ -104,7 +104,7 @@ object PartnerSyncManager {
             }
 
             val request = Request.Builder()
-                .url("$BASE_URL/na_usr_$cleaned")
+                .url("$BASE_URL/ain_usr_$cleaned")
                 .post(json.toString().toRequestBody(JSON_MEDIA_TYPE))
                 .build()
 
@@ -123,7 +123,7 @@ object PartnerSyncManager {
 
         try {
             val request = Request.Builder()
-                .url("$BASE_URL/na_usr_$cleaned/json?poll=1")
+                .url("$BASE_URL/ain_usr_$cleaned/json?poll=1")
                 .get()
                 .build()
 
@@ -180,7 +180,7 @@ object PartnerSyncManager {
             }
 
             val request = Request.Builder()
-                .url("$BASE_URL/na_inv_$cleanedTarget")
+                .url("$BASE_URL/ain_inv_$cleanedTarget")
                 .post(json.toString().toRequestBody(JSON_MEDIA_TYPE))
                 .build()
 
@@ -203,7 +203,7 @@ object PartnerSyncManager {
 
         try {
             val request = Request.Builder()
-                .url("$BASE_URL/na_inv_$cleaned/json?poll=1")
+                .url("$BASE_URL/ain_inv_$cleaned/json?poll=1")
                 .get()
                 .build()
 
@@ -494,7 +494,7 @@ object PartnerSyncManager {
         if (cleanEmail.isBlank()) return@withContext
 
         // SHA-256 hash topic for user's personal private cloud backup
-        val safeTopic = "na_cld_" + cleanEmail.replace("@", "_at_").replace(".", "_")
+        val safeTopic = "ain_cld_" + cleanEmail.replace("@", "_at_").replace(".", "_")
         try {
             val json = JSONObject().apply {
                 put("type", "AUTO_CLOUD_BACKUP")
@@ -528,7 +528,7 @@ object PartnerSyncManager {
         val cleanEmail = email.trim().lowercase()
         if (cleanEmail.isBlank()) return@withContext null
 
-        val safeTopic = "na_cld_" + cleanEmail.replace("@", "_at_").replace(".", "_")
+        val safeTopic = "ain_cld_" + cleanEmail.replace("@", "_at_").replace(".", "_")
         try {
             val request = Request.Builder()
                 .url("$BASE_URL/$safeTopic/json?poll=1")

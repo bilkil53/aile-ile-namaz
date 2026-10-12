@@ -103,7 +103,7 @@ class PrayerRepository(
         if (status == "PRAYED" || status == "MISSED") {
             pendingPrayerEventJobs[prayerKey] = repositoryScope.launch {
                 try {
-                    delay(5000L) // Namaz arkadaşına 5 saniye sonra gitsin
+                    delay(5000L) // Aile fertlerine 5 saniye sonra gitsin
 
                     // Verify latest status from database after 5 seconds to ensure user didn't change it again
                     val latest = prayerDao.getPrayerForDate(date).firstOrNull() ?: return@launch
@@ -118,7 +118,7 @@ class PrayerRepository(
 
                     val partner = prayerDao.getPartnerInfo().firstOrNull()
                     if (partner != null && partner.isMatched && partner.partnerInviteCode.isNotBlank()) {
-                        val spouseName = partner.myDisplayName.ifBlank { "Arkadaşınız" }
+                        val spouseName = partner.myDisplayName.ifBlank { "Aile Ferdi" }
                         if (currentStatus == "PRAYED") {
                             PartnerSyncManager.broadcastPartnerEvent(
                                 codeA = partner.myInviteCode,
@@ -179,7 +179,7 @@ class PrayerRepository(
                 codeA = partner.myInviteCode,
                 codeB = partner.partnerInviteCode,
                 myCode = partner.myInviteCode,
-                myName = partner.myDisplayName.ifBlank { "Arkadaşınız" },
+                myName = partner.myDisplayName.ifBlank { "Aile Ferdi" },
                 eventType = "KAZA",
                 prayerName = trName,
                 actionText = "1 vakit $trName kaza namazı kıldı. Tebrikler! 🤲"
@@ -220,7 +220,7 @@ class PrayerRepository(
             codeA = partner.myInviteCode,
             codeB = partner.partnerInviteCode,
             myCode = partner.myInviteCode,
-            myName = partner.myDisplayName.ifBlank { "Namaz Arkadaşım" },
+            myName = partner.myDisplayName.ifBlank { "Aile Ferdi" },
             myEmail = partner.myEmail,
             date = todayDate,
             fajr = prayers.fajrStatus,
@@ -269,7 +269,7 @@ class PrayerRepository(
             if (incomingMatch != null && incomingMatch.partnerCode.isNotBlank()) {
                 val matched = current.copy(
                     isMatched = true,
-                    partnerDisplayName = incomingMatch.partnerName.ifBlank { "Namaz Arkadaşım" },
+                    partnerDisplayName = incomingMatch.partnerName.ifBlank { "Aile Ferdi" },
                     partnerEmail = incomingMatch.partnerEmail,
                     partnerInviteCode = PartnerSyncManager.formatDisplayCode(incomingMatch.partnerCode),
                     lastSyncTime = System.currentTimeMillis()
@@ -343,7 +343,7 @@ class PrayerRepository(
                             .replace("Kazaya bıraktı", "kılmadı")
                         NotificationHelper.showPartnerAlertNotification(
                             context = context,
-                            partnerName = current.partnerDisplayName.ifBlank { event.senderName.ifBlank { "Arkadaşınız" } },
+                            partnerName = current.partnerDisplayName.ifBlank { event.senderName.ifBlank { "Aile Ferdi" } },
                             actionText = sanitized
                         )
                     }
@@ -359,7 +359,7 @@ class PrayerRepository(
             val activeUpdate = todayUpdate ?: yesterdayUpdate!!
             val updated = current.copy(
                 lastSyncTime = if (activeUpdate.timestamp > 0) activeUpdate.timestamp else System.currentTimeMillis(),
-                partnerDisplayName = if (current.partnerDisplayName.isNotBlank()) current.partnerDisplayName else activeUpdate.senderName.ifBlank { "Namaz Arkadaşım" },
+                partnerDisplayName = if (current.partnerDisplayName.isNotBlank()) current.partnerDisplayName else activeUpdate.senderName.ifBlank { "Aile Ferdi" },
                 partnerEmail = if (activeUpdate.senderEmail.isNotBlank()) activeUpdate.senderEmail else current.partnerEmail,
                 partnerFajr = todayUpdate?.fajr ?: current.partnerFajr,
                 partnerDhuhr = todayUpdate?.dhuhr ?: current.partnerDhuhr,
@@ -402,7 +402,7 @@ class PrayerRepository(
             partnerName.isNotBlank() -> partnerName.trim()
             !cloudProfile?.first.isNullOrBlank() -> cloudProfile!!.first.trim()
             !cloudProfile?.second.isNullOrBlank() -> cloudProfile!!.second.substringBefore("@")
-            else -> "Namaz Arkadaşım"
+            else -> "Aile Ferdi"
         }
 
         val determinedEmail = when {
@@ -415,7 +415,7 @@ class PrayerRepository(
         PartnerSyncManager.sendPairClaim(
             targetCode = displayTargetCode,
             myCode = current.myInviteCode,
-            myName = current.myDisplayName.ifBlank { "Namaz Arkadaşım" },
+            myName = current.myDisplayName.ifBlank { "Aile Ferdi" },
             myEmail = current.myEmail
         )
 
@@ -602,7 +602,7 @@ class PrayerRepository(
     }
 
     // =========================================================================
-    // VERİ DIŞA / İÇE AKTARMA (MİGRASYON SİHİRBAZI: Namaz Arkadaşım -> Aile ile Secdeye)
+    // VERİ DIŞA / İÇE AKTARMA (MİGRASYON SİHİRBAZI: Aile ile Namaz)
     // =========================================================================
     suspend fun exportDataToJson(): String {
         val settings = prayerDao.getSettings().firstOrNull() ?: AppSettingsEntity()
@@ -611,7 +611,7 @@ class PrayerRepository(
         val kazaPrayers = prayerDao.getAllKazaPrayersDirect()
 
         val root = org.json.JSONObject()
-        root.put("sourceApp", "NamazArkadasim")
+        root.put("sourceApp", "AileIleNamaz")
         root.put("version", 1)
         root.put("exportedAt", System.currentTimeMillis())
 

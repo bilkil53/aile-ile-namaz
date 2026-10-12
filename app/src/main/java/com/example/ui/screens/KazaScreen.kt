@@ -168,7 +168,7 @@ fun KazaScreen(
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 Text(
-                                    text = "Arkadaş Kaza Durumu (Detaysız)",
+                                    text = "Aile Fertleri Kaza Durumu (Detaysız)",
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = TextPrimary
@@ -284,13 +284,13 @@ fun KazaScreen(
                                     Spacer(modifier = Modifier.width(10.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = "Henüz Bir Arkadaş Eşleşmedi",
+                                            text = "Henüz Bir Aile Ferdi Eşleşmedi",
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = TextPrimary
                                         )
                                         Text(
-                                            text = "'Arkadaşlar' sekmesinden davet kodu ile eşleştiğinizde arkadaşınızın kaza durumu burada mahremiyet korumalı olarak görünecektir.",
+                                            text = "'Aile Havuzu' sekmesinden davet kodu ile eşleştiğinizde aile fertlerinizin kaza durumu burada mahremiyet korumalı olarak görünecektir.",
                                             fontSize = 11.sp,
                                             color = TextSecondary,
                                             lineHeight = 15.sp

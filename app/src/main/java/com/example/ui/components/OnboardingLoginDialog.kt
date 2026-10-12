@@ -125,15 +125,15 @@ fun OnboardingLoginDialog(
 
                     IntroFeatureItem(
                         icon = Icons.Filled.People,
-                        title = "Arkadaşlar Sekmesi (Ortak Havuz)",
-                        description = "Aileniz ve sevdiklerinizle tek davet kodu ile bağlanın; canlı namaz durumlarını ortaklaşa görüntüleyin.",
+                        title = "Aile Havuzu Sekmesi (İbadet Halkası)",
+                        description = "Aileniz, eşiniz ve çocuklarınızla tek davet kodu ile bağlanın; canlı namaz durumlarını ortaklaşa görüntüleyin.",
                         badgeColor = Color(0xFF0284C7)
                     )
 
                     IntroFeatureItem(
                         icon = Icons.Filled.CalendarMonth,
                         title = "Kaza Sekmesi (Mahremiyet Korumalı)",
-                        description = "Kaza borçlarınızı pratik şekilde tutun; arkadaşlarınızın kaza durumunu mahremiyet korumalı özet olarak görün.",
+                        description = "Kaza borçlarınızı pratik şekilde tutun; aile fertlerinizin kaza durumunu mahremiyet korumalı özet olarak görün.",
                         badgeColor = Color(0xFFD97706)
                     )
 
@@ -196,7 +196,7 @@ fun OnboardingLoginDialog(
                                 color = Color.White
                             )
                             Text(
-                                text = "Arkadaşlar sekmesinde tekrar girişe gerek kalmaz",
+                                text = "Aile Havuzu sekmesinde tekrar girişe gerek kalmaz",
                                 fontSize = 11.sp,
                                 color = Color.White.copy(alpha = 0.9f)
                             )

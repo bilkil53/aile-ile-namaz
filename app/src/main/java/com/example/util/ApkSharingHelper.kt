@@ -68,7 +68,7 @@ object ApkSharingHelper {
         try {
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "message/rfc822"
-                putExtra(Intent.EXTRA_SUBJECT, "Namaz Arkadaşım Daveti ve İndirme Bağlantısı")
+                putExtra(Intent.EXTRA_SUBJECT, "Aile ile Namaz Daveti ve İndirme Bağlantısı")
                 putExtra(Intent.EXTRA_TEXT, message)
             }
             context.startActivity(Intent.createChooser(intent, "Mail ile Paylaş"))
@@ -85,9 +85,9 @@ object ApkSharingHelper {
             val intent = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 putExtra(Intent.EXTRA_TEXT, message)
-                putExtra(Intent.EXTRA_SUBJECT, "Namaz Arkadaşım Daveti")
+                putExtra(Intent.EXTRA_SUBJECT, "Aile ile Namaz Daveti")
             }
-            context.startActivity(Intent.createChooser(intent, "Namaz Arkadaşım Daveti Paylaş"))
+            context.startActivity(Intent.createChooser(intent, "Aile ile Namaz Daveti Paylaş"))
         } catch (e: Exception) {
             Toast.makeText(context, "Paylaşım açılamadı: ${e.message}", Toast.LENGTH_SHORT).show()
         }

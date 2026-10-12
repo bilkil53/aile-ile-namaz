@@ -112,7 +112,7 @@ class MainActivity : ComponentActivity() {
 
     private fun handleAuthIntent(intent: Intent?) {
         val data = intent?.data
-        if (data != null && (data.scheme == "aileilenamaz" || data.scheme == "namazarkadasim" || data.scheme == "aileilesecdeye") && data.host == "login") {
+        if (data != null && (data.scheme == "aileilenamaz" || data.scheme == "aileilesecdeye") && data.host == "login") {
             val email = data.getQueryParameter("email") ?: "e.bilkil5391@gmail.com"
             val name = data.getQueryParameter("name") ?: "Mümin"
             viewModel.loginWithGoogleBrowser(email, name)

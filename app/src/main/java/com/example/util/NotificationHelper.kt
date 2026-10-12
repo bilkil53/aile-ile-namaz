@@ -38,10 +38,10 @@ object NotificationHelper {
 
             val partnerChannel = NotificationChannel(
                 CHANNEL_PARTNER_ID,
-                "Namaz Arkadaşı Bildirimleri",
+                "Aile Havuzu Bildirimleri",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Namaz arkadaşınız ibadetini eda ettiğinde gelen anlık bildirimler"
+                description = "Aile fertleriniz veya eşiniz ibadetini eda ettiğinde gelen anlık bildirimler"
                 enableVibration(true)
             }
 
@@ -117,7 +117,7 @@ object NotificationHelper {
     }
 
     fun showPartnerAlertNotification(context: Context, partnerName: String, actionText: String) {
-        val title = if (partnerName.isNotBlank()) "🤝 Arkadaşınız: $partnerName" else "🤝 Namaz Arkadaşınız"
+        val title = if (partnerName.isNotBlank()) "👨‍👩‍👧‍👦 Aile Ferdi: $partnerName" else "👨‍👩‍👧‍👦 Aile İbadet Bildirimi"
         val builder = NotificationCompat.Builder(context, CHANNEL_PARTNER_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
@@ -135,7 +135,7 @@ object NotificationHelper {
 
     fun showAppUpdateNotification(context: Context, versionTag: String, releaseNotes: String) {
         val title = "📲 Yeni Güncelleme Yayında: $versionTag"
-        val message = "Namaz Arkadaşım'ın yeni versiyonu hazır! Yüklemek ve yeniliklere ulaşmak için dokunun."
+        val message = "Aile ile Namaz'ın yeni versiyonu hazır! Yüklemek ve yeniliklere ulaşmak için dokunun."
 
         val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
         val pendingIntent = if (intent != null) {

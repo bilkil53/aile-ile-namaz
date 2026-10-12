@@ -46,7 +46,7 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "namaz_arkadasim_database"
+                    "aile_ile_namaz_database"
                 )
                     .addMigrations(MIGRATION_4_5)
                     .fallbackToDestructiveMigration()

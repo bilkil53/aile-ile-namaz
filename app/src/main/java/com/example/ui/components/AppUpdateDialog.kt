@@ -138,7 +138,7 @@ fun AppUpdateDialog(
                         .padding(10.dp)
                 ) {
                     Text(
-                        text = updateInfo.releaseNotes.ifBlank { "Yeni optimizasyonlar ve namaz arkadaşı senkronizasyon güncellemeleri." },
+                        text = updateInfo.releaseNotes.ifBlank { "Yeni optimizasyonlar ve Aile ile Namaz senkronizasyon güncellemeleri." },
                         fontSize = 12.sp,
                         lineHeight = 17.sp,
                         color = TextSecondary,

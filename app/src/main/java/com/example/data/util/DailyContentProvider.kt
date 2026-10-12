@@ -132,21 +132,21 @@ object DailyContentProvider {
             category = "Bugünün Motivasyon Sözü · Özgün",
             title = "Namaz Vakti Bir Fırsattır",
             text = "Her ezan, dünyanın telaşından sıyrılıp Yaratıcının huzuruna çıkmak için sana sunulan eşsiz bir randevudur. Bugün vakitlerini erteleme.",
-            source = "Namaz Arkadaşım Özgün Motivasyon",
+            source = "Aile ile Namaz Özgün Motivasyon",
             isDiyanet = false
         ),
         DailyQuote(
             category = "Bugünün Motivasyon Sözü · Özgün",
             title = "Birlikte Daha Güçlüyüz",
-            text = "Bir dostun 'Namazını kıldın mı?' sorusu, cennet yolunda birbirine uzatılan en samimi eldir. Arkadaşını tebrik etmeyi unutma!",
-            source = "Namaz Arkadaşım Özgün Motivasyon",
+            text = "Aile fertlerinin 'Namazını kıldın mı?' sorusu ve teşviki, cennet yolunda birbirine uzatılan en samimi eldir. Aileni tebrik etmeyi unutma!",
+            source = "Aile ile Namaz Özgün Motivasyon",
             isDiyanet = false
         ),
         DailyQuote(
             category = "Bugünün Motivasyon Sözü · Özgün",
             title = "Kaza Borcu Dağ Değildir",
             text = "Kılınan her bir kaza namazı, ruhun üzerindeki bir yükü hafifletir. Küçük adımların istikrarı, büyük engelleri aşmanın en kutlu yoludur.",
-            source = "Namaz Arkadaşım Özgün Motivasyon",
+            source = "Aile ile Namaz Özgün Motivasyon",
             isDiyanet = false
         )
     )

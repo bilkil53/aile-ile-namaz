@@ -562,13 +562,13 @@ fun PartnerScreen(
                             Spacer(modifier = Modifier.width(10.dp))
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Sınırsız Kişi & Çoklu Arkadaş Havuzu",
+                                    text = "Sınırsız Kişi & Çoklu Aile Havuzu",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = TextPrimary
                                 )
                                 Text(
-                                    text = "Aileniz, dostlarınız ve sevdikleriniz tek bir arkadaşlık kodu ile aynı havuza bağlanabilir.",
+                                    text = "Aileniz, eşiniz ve çocuklarınız tek bir aile kodu ile aynı havuza bağlanabilir.",
                                     fontSize = 10.sp,
                                     color = TextSecondary,
                                     lineHeight = 14.sp
@@ -641,9 +641,9 @@ fun PartnerScreen(
                                 text = if (partnerInfo.isMatched) {
                                     "$person2Name ile çift taraflı bağlantı sağlandı. Kılınan namazlar ve kazalar anlık senkronize ediliyor."
                                 } else if (isGuestMode) {
-                                    "Giriş yapmadan tüm ekranları, sekmeleri ve butonları özgürce deneyebilirsiniz. Arkadaşınızla gerçek zamanlı bağlantı ve kalıcı kayıt için yukarıdan Google ile giriş yapabilirsiniz."
+                                    "Giriş yapmadan tüm ekranları, sekmeleri ve butonları özgürce deneyebilirsiniz. Ailenizle gerçek zamanlı bağlantı ve kalıcı kayıt için yukarıdan Google ile giriş yapabilirsiniz."
                                 } else {
-                                    "2. Kişi henüz havuz kodunu onaylamadı. Bağlantının sağlanması için aşağıdaki davet kodunuzu arkadaşınızla paylaşın."
+                                    "2. Kişi henüz havuz kodunu onaylamadı. Bağlantının sağlanması için aşağıdaki davet kodunuzu aile ferdinizle paylaşın."
                                 },
                                 fontSize = 10.sp,
                                 color = if (partnerInfo.isMatched || isGuestMode) TextSecondary else Color(0xFF78350F),

@@ -91,7 +91,7 @@ fun DriveShareDialog(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = "Namaz Arkadaşını Davet Et",
+                                text = "Aile Havuzuna Davet Et",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = TextPrimary
@@ -147,7 +147,7 @@ fun DriveShareDialog(
                         OutlinedButton(
                             onClick = {
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                clipboard.setPrimaryClip(ClipData.newPlainText("Namaz Arkadaşım Daveti", fullMessage))
+                                clipboard.setPrimaryClip(ClipData.newPlainText("Aile ile Namaz Daveti", fullMessage))
                                 Toast.makeText(context, "Davet mesajı ve link kopyalandı!", Toast.LENGTH_SHORT).show()
                             },
                             shape = RoundedCornerShape(8.dp),
