@@ -105,12 +105,10 @@ fun PartnerScreen(
         mutableStateOf(if (list.isEmpty()) listOf(3, 4) else list)
     }
 
-    // Giriş yapılmamışsa doğrudan serbest deneme modudur
-    val isGuestMode = !settings.isLoggedIn
-
-    // Giriş yapmadan deneyen kullanıcılar için arayüz durumları (RAM içi geçici)
-    var simP1Prayers by remember { mutableStateOf(listOf("PRAYED", "PRAYED", "NONE", "NONE", "NONE")) }
-    var simP2Prayers by remember { mutableStateOf(listOf("NONE", "PRAYED", "PRAYED", "NONE", "NONE")) }
+    // Giriş durumu: Gerçek kullanıcı deneyimi (Deneme modu kaldırıldı)
+    val isGuestMode = false
+    var simP1Prayers by remember { mutableStateOf(listOf("NONE", "NONE", "NONE", "NONE", "NONE")) }
+    var simP2Prayers by remember { mutableStateOf(listOf("NONE", "NONE", "NONE", "NONE", "NONE")) }
 
     // Uygulama Modu: "FAMILY" veya "PARTNER"
     var appMode by remember {
@@ -418,65 +416,6 @@ fun PartnerScreen(
             }
         }
 
-        // =================================================================
-        // 2. GİRİŞ YAPILMAMIŞSA: CANLI ÖNİZLEME & İNCELEME BİLGİ KARTI
-        // =================================================================
-        if (!settings.isLoggedIn) {
-            item {
-                Card(
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = EmeraldContainer.copy(alpha = 0.85f)),
-                    border = BorderStroke(1.dp, SoftInfoCardBorder),
-                    modifier = Modifier.fillMaxWidth().testTag("guest_preview_banner")
-                ) {
-                    Row(
-                        modifier = Modifier.padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = EmeraldPrimary,
-                            modifier = Modifier.size(38.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(Icons.Filled.Visibility, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
-                            }
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = "İnceleme Modu: Kişi 1 & Kişi 2 👁️",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = EmeraldPrimary
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Surface(
-                                    shape = RoundedCornerShape(4.dp),
-                                    color = EmeraldPrimary
-                                ) {
-                                    Text(
-                                        text = "CANLI ÖNİZLEME",
-                                        fontSize = 8.sp,
-                                        fontWeight = FontWeight.Black,
-                                        color = Color.White,
-                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(3.dp))
-                            Text(
-                                text = "Giriş yapmadan arkadaş havuzunun (Kişi 1 & Kişi 2 canlı namaz matrisi, buton tepkileri ve sekmeler) nasıl çalıştığını aşağıdan deneyebilirsiniz. Başka cihazla anlık eşitlenmek için dilediğiniz an Google ile giriş yapabilirsiniz.",
-                                fontSize = 11.sp,
-                                color = TextSecondary,
-                                lineHeight = 15.sp
-                            )
-                        }
-                    }
-                }
-            }
-        }
 
         // -----------------------------------------------------------------
         // AİLE DURUM PANELİ (Canlı Bağlantı, Eşleşen Kişiler, Aktif Kod, Detaysız Kaza)

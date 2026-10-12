@@ -218,7 +218,7 @@ fun OnboardingLoginDialog(
                     modifier = Modifier.fillMaxWidth().testTag("onboarding_skip_button")
                 ) {
                     Text(
-                        text = "Şimdilik Giriş Yapmadan İncele",
+                        text = "Giriş Yapmadan Devam Et",
                         fontSize = 13.sp,
                         color = TextSecondary,
                         fontWeight = FontWeight.SemiBold
