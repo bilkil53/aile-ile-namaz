@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.components.OnboardingLoginDialog
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.MainViewModel
 
@@ -31,6 +32,8 @@ fun SettingsScreen(
     val context = LocalContext.current
     val statusMessage by viewModel.statusMessage.collectAsState()
     val appSettings by viewModel.settings.collectAsState()
+    var showLoginDialog by remember { mutableStateOf(false) }
+    val isLoggedIn = appSettings.isLoggedIn && appSettings.userEmail.isNotBlank()
 
     LazyColumn(
         modifier = modifier
@@ -178,19 +181,112 @@ fun SettingsScreen(
 
                     HorizontalDivider(color = Color.White.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 8.dp))
 
-                    // Veri Güvenliği
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(text = "Veri Güvenliği", fontSize = 13.sp, color = Color.White.copy(alpha = 0.85f))
-                        Text(
-                            text = "Çevrimdışı (Yerel Veritabanı)",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White
-                        )
+                    // Veritabanı ve Senkronizasyon Durumu
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = "Veritabanı Durumu", fontSize = 13.sp, color = Color.White.copy(alpha = 0.85f))
+                            Text(
+                                text = if (isLoggedIn) "Bulut Senkronize ☁️" else "Yerel Cihaz Hafızası 📱",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isLoggedIn) Color(0xFFC8E6C9) else Color(0xFFFFE082)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Detaylı Bilgilendirme ve E-Posta Yedekleme Alanı
+                        Surface(
+                            color = Color.White.copy(alpha = 0.12f),
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.25f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = if (isLoggedIn) Icons.Filled.CloudDone else Icons.Filled.PhoneAndroid,
+                                        contentDescription = null,
+                                        tint = if (isLoggedIn) Color(0xFFC8E6C9) else Color(0xFFFFE082),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = if (isLoggedIn) {
+                                            "Hesaba Bağlı Bulut Yedekleme Aktif"
+                                        } else {
+                                            "Yalnızca Bu Cihazda Kayıtlı (Yerel)"
+                                        },
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(5.dp))
+
+                                Text(
+                                    text = if (isLoggedIn) {
+                                        "Kıldı/kılmadı işaretlemeleriniz, kaza namazlarınız ve tüm ibadet geçmişiniz ${appSettings.userEmail} Google hesabınıza anlık olarak yedeklenmektedir. Uygulamayı silseniz veya telefon değiştirseniz bile bu e-posta ile giriş yaptığınızda bütün kayıtlarınız eksiksiz geri yüklenir."
+                                    } else {
+                                        "Kıldı/kılmadı ve kaza kayıtlarınız şu an sadece bu telefonda tutulmaktadır. Telefonu değiştirdiğinizde veya sildiğinizde verilerinizin kaybolmaması için Google hesabınızla giriş yaparak e-postanıza yedekleyebilirsiniz."
+                                    },
+                                    fontSize = 11.sp,
+                                    color = Color.White.copy(alpha = 0.90f),
+                                    lineHeight = 16.sp
+                                )
+
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                if (isLoggedIn) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Button(
+                                            onClick = { viewModel.backupNowToCloud() },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color.White.copy(alpha = 0.22f),
+                                                contentColor = Color.White
+                                            ),
+                                            shape = RoundedCornerShape(8.dp),
+                                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Icon(Icons.Filled.Sync, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text("Şimdi Yedekle ☁️", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        }
+
+                                        OutlinedButton(
+                                            onClick = { viewModel.logoutUser() },
+                                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.5f)),
+                                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                                            shape = RoundedCornerShape(8.dp),
+                                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                                        ) {
+                                            Text("Çıkış Yap", fontSize = 11.sp, color = Color.White)
+                                        }
+                                    }
+                                } else {
+                                    Button(
+                                        onClick = { showLoginDialog = true },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = EmeraldPrimary),
+                                        shape = RoundedCornerShape(8.dp),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Icon(Icons.Filled.AccountCircle, contentDescription = null, tint = EmeraldPrimary, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("Google ile Giriş Yap & Buluta Yedekle 🔐", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = EmeraldPrimary)
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     HorizontalDivider(color = Color.White.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 8.dp))
@@ -310,5 +406,12 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+
+    if (showLoginDialog) {
+        OnboardingLoginDialog(
+            viewModel = viewModel,
+            onDismiss = { showLoginDialog = false }
+        )
     }
 }

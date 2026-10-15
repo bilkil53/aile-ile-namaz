@@ -85,6 +85,9 @@ class PrayerRepository(
         // Broadcast to partner if matched
         broadcastCurrentStatusToPartner(todayDate = date, dailyPrayer = updated)
 
+        // Otomatik Bulut Yedekleme (Kullanıcı giriş yapmışsa anında buluta yedekle)
+        triggerAutoCloudBackup()
+
         // Cancel previous pending notification job for this prayer type
         // This prevents double notifications if user taps through or changes their mind (e.g. kıldı then kılınmadı)
         val prayerKey = prayerType.uppercase()
@@ -507,11 +510,28 @@ class PrayerRepository(
                 )
             }
 
+            // Günlük kıldı / kılmadı verilerini de buluta yedekle
+            val dailyPrayers = prayerDao.getAllDailyPrayersDirect()
+            val dailyArray = org.json.JSONArray()
+            dailyPrayers.forEach { dp ->
+                dailyArray.put(
+                    org.json.JSONObject().apply {
+                        put("date", dp.date)
+                        put("fajrStatus", dp.fajrStatus)
+                        put("dhuhrStatus", dp.dhuhrStatus)
+                        put("asrStatus", dp.asrStatus)
+                        put("maghribStatus", dp.maghribStatus)
+                        put("ishaStatus", dp.ishaStatus)
+                    }
+                )
+            }
+
             PartnerSyncManager.backupUserDataToCloud(
                 email = email,
                 name = settings.userName,
                 inviteCode = partner.myInviteCode,
                 kazalarJson = kazasArray.toString(),
+                dailyPrayersJson = dailyArray.toString(),
                 isMatched = partner.isMatched,
                 partnerCode = partner.partnerInviteCode,
                 partnerName = partner.partnerDisplayName
@@ -544,10 +564,11 @@ class PrayerRepository(
         )
 
         // Otomatik Bulut Kurtarma: Yeni telefonda veya yeniden kurulumda Google oturumu açılınca
-        // kullanıcının kayıtlı kaza ve aile bilgilerini buluttan otomatik geri yükle
+        // kullanıcının kayıtlı kaza, günlük kıldı/kılmadı ve aile bilgilerini buluttan otomatik geri yükle
         try {
             val cloudBackup = PartnerSyncManager.restoreUserDataFromCloud(email.trim())
             if (cloudBackup != null) {
+                // 1. Kaza namazları yedeği
                 val kazalarStr = cloudBackup.optString("kazalarJson", "[]")
                 val kazasArr = org.json.JSONArray(kazalarStr)
                 val list = mutableListOf<KazaPrayerEntity>()
@@ -565,6 +586,28 @@ class PrayerRepository(
                     prayerDao.insertAllKazaPrayers(list)
                 }
 
+                // 2. Günlük kıldı / kılmadı geçmişi yedeği
+                val dailyStr = cloudBackup.optString("dailyPrayersJson", "[]")
+                val dailyArr = org.json.JSONArray(dailyStr)
+                val dailyList = mutableListOf<DailyPrayerEntity>()
+                for (i in 0 until dailyArr.length()) {
+                    val item = dailyArr.getJSONObject(i)
+                    dailyList.add(
+                        DailyPrayerEntity(
+                            date = item.getString("date"),
+                            fajrStatus = item.optString("fajrStatus", "NONE"),
+                            dhuhrStatus = item.optString("dhuhrStatus", "NONE"),
+                            asrStatus = item.optString("asrStatus", "NONE"),
+                            maghribStatus = item.optString("maghribStatus", "NONE"),
+                            ishaStatus = item.optString("ishaStatus", "NONE")
+                        )
+                    )
+                }
+                if (dailyList.isNotEmpty()) {
+                    prayerDao.insertAllDailyPrayers(dailyList)
+                }
+
+                // 3. Eşleşme ve aile bilgileri yedeği
                 val savedPartnerCode = cloudBackup.optString("partnerCode", "")
                 val savedPartnerName = cloudBackup.optString("partnerName", "")
                 val savedIsMatched = cloudBackup.optBoolean("isMatched", false)

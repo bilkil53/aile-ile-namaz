@@ -479,13 +479,14 @@ object PartnerSyncManager {
 
     /**
      * Otomatik Bulut Yedekleme: Telefon internete bağlandığında veya veriler güncellendiğinde
-     * kullanıcının Gmail hesabı ile kaza namazı ve profil verilerini bulutta güvenle saklar.
+     * kullanıcının Gmail hesabı ile kaza namazı, günlük kıldı/kılmadı kayıtları ve profil verilerini bulutta güvenle saklar.
      */
     suspend fun backupUserDataToCloud(
         email: String,
         name: String,
         inviteCode: String,
         kazalarJson: String,
+        dailyPrayersJson: String = "[]",
         isMatched: Boolean,
         partnerCode: String,
         partnerName: String
@@ -505,6 +506,7 @@ object PartnerSyncManager {
                 put("partnerCode", partnerCode)
                 put("partnerName", partnerName)
                 put("kazalarJson", kazalarJson)
+                put("dailyPrayersJson", dailyPrayersJson)
                 put("timestamp", System.currentTimeMillis())
             }
 

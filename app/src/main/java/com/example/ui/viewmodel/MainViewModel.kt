@@ -594,6 +594,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun backupNowToCloud() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val current = settings.value
+            if (!current.isLoggedIn || current.userEmail.isBlank()) {
+                _statusMessage.value = "Yedekleme için lütfen önce Google ile giriş yapın."
+            } else {
+                repository.triggerAutoCloudBackup()
+                _statusMessage.value = "Tüm namaz ve kaza kayıtlarınız ${current.userEmail} hesabına başarıyla yedeklendi ☁️"
+            }
+            delay(3000)
+            _statusMessage.value = null
+        }
+    }
+
     // City & Location
     fun selectCity(city: PrayerCalculator.CityInfo) {
         viewModelScope.launch(Dispatchers.IO) {
