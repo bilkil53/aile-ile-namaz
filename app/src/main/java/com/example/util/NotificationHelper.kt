@@ -100,6 +100,14 @@ object NotificationHelper {
     }
 
     fun showMotivationNotification(context: Context, customDay: Int? = null) {
+        val todayStr = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+        val prefs = context.getSharedPreferences("daily_notification_prefs", Context.MODE_PRIVATE)
+        val lastSent = prefs.getString("last_sent_motivation_date", null)
+        if (lastSent == todayStr && customDay == null) {
+            // Bugün saat 12:00 bildirimi zaten 1 kere gönderildi. Ard arda tekrar gönderme.
+            return
+        }
+
         val quote = DailyContentProvider.getRandomRotatingNotificationQuote(customDay)
 
         val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
@@ -126,6 +134,7 @@ object NotificationHelper {
 
         try {
             NotificationManagerCompat.from(context).notify(1100, builder.build())
+            prefs.edit().putString("last_sent_motivation_date", todayStr).apply()
         } catch (_: SecurityException) {
         }
     }

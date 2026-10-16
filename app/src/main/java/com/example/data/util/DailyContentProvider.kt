@@ -226,21 +226,22 @@ object DailyContentProvider {
 
     fun getRandomRotatingNotificationQuote(customDay: Int? = null): DailyQuote {
         val cal = Calendar.getInstance()
-        val day = customDay ?: cal.get(Calendar.DAY_OF_YEAR)
-        // Her gün günün ayeti, hadisi yada duası sırasıyla saat 12'de iletilir
-        val cycle = day % 3
-        return when (cycle) {
+        val day = customDay ?: (cal.get(Calendar.DAY_OF_YEAR) + cal.get(Calendar.YEAR))
+        // Her gün saat 12:00'de: Ya dua, ya hadis, ya da özlü bir söz (tek ve 1 kereye mahsus)
+        val allOzluSozler = OZLU_SOZLER + MOTIVASYONLAR
+        val choice = (day + (cal.get(Calendar.DAY_OF_MONTH))) % 3
+        return when (choice) {
             0 -> {
-                val q = AYETLER[day % AYETLER.size]
-                q.copy(category = "Günün Ayeti · Diyanet Meali")
+                val q = DUALAR[day % DUALAR.size]
+                q.copy(category = "Günün Duası 🤲")
             }
             1 -> {
                 val q = HADISLER[day % HADISLER.size]
-                q.copy(category = "Günün Hadis-i Şerifi · Diyanet")
+                q.copy(category = "Günün Hadis-i Şerifi 📜")
             }
             else -> {
-                val q = DUALAR[day % DUALAR.size]
-                q.copy(category = "Günün Duası · Manevi Niyaz")
+                val q = allOzluSozler[day % allOzluSozler.size]
+                q.copy(category = "Günün Özlü Sözü 💡")
             }
         }
     }

@@ -33,7 +33,7 @@ fun SettingsScreen(
     val statusMessage by viewModel.statusMessage.collectAsState()
     val appSettings by viewModel.settings.collectAsState()
     var showLoginDialog by remember { mutableStateOf(false) }
-    val isLoggedIn = appSettings.isLoggedIn && appSettings.userEmail.isNotBlank()
+    val isLoggedIn = appSettings.isLoggedIn || appSettings.userEmail.isNotBlank()
 
     LazyColumn(
         modifier = modifier
@@ -146,38 +146,6 @@ fun SettingsScreen(
                             color = Color.White
                         )
                     }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Güncelleme Butonu
-                    OutlinedButton(
-                        onClick = { viewModel.checkForAppUpdate(silent = false) },
-                        shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.7f)),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(
-                            Icons.Filled.SystemUpdateAlt,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            "Güncellemeleri Şimdi Denetle 🔄",
-                            fontSize = 12.sp,
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-
-                    Text(
-                        text = "Sistem her gün saat 12:00'de otomatik denetler ve yeni sürüm varsa ekrana bildirir.",
-                        fontSize = 11.sp,
-                        color = Color.White.copy(alpha = 0.82f),
-                        modifier = Modifier.padding(top = 4.dp, start = 4.dp)
-                    )
 
                     HorizontalDivider(color = Color.White.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 8.dp))
 

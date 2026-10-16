@@ -101,17 +101,22 @@ object PrayerAlarmScheduler {
     fun scheduleDailyMotivation(context: Context) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
 
-        // Zorunlu her gün saat 12:00'de günün ayeti, hadisi veya duası bildirimi
+        // Her gün saat 12:00'de: Ya dua, ya hadis, ya da özlü bir söz (1 kereye mahsus)
         val targetHour = 12
         val targetMinute = 0
 
         val now = System.currentTimeMillis()
+        val todayStr = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date(now))
+        val prefs = context.getSharedPreferences("daily_notification_prefs", Context.MODE_PRIVATE)
+        val alreadySentToday = prefs.getString("last_sent_motivation_date", null) == todayStr
+
         val target = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, targetHour)
             set(Calendar.MINUTE, targetMinute)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
-            if (timeInMillis <= now) {
+            // Eğer saat 12:00 geçtiyse veya bugün zaten 1 kere gönderildiyse yarın saat 12:00'ye kur
+            if (timeInMillis <= now || alreadySentToday) {
                 add(Calendar.DAY_OF_YEAR, 1)
             }
         }
@@ -125,6 +130,10 @@ object PrayerAlarmScheduler {
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+
+        try {
+            alarmManager.cancel(pendingIntent)
+        } catch (_: Exception) {}
 
         setReliableAlarm(alarmManager, target.timeInMillis, pendingIntent, context)
     }

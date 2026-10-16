@@ -66,32 +66,33 @@ fun PartnerScreen(
 
     val childPrefs = remember {
         val prefs = context.getSharedPreferences("family_child_prefs", Context.MODE_PRIVATE)
-        if (!prefs.contains("family_defaults_v10")) {
+        // Kullanıcının açıkça eklemediği hiçbir hayalet/örnek kişi (Çocuk, Kişi 2, vb.) havuza ve tabloya gelmesin
+        if (!prefs.contains("family_cleanup_no_dummies_v16")) {
             prefs.edit().apply {
-                putString("p1_name", "Baba")
-                if (!prefs.contains("p1_icon")) putString("p1_icon", "🧔")
-
-                putString("p2_name", "Anne")
-                if (!prefs.contains("p2_icon")) putString("p2_icon", "🧕")
-                putBoolean("has_p2", true)
-
-                putString("p3_name", "Çocuk")
-                putString("p3_icon", "👧")
-                putBoolean("has_p3", true)
-
-                // Hayalet Kişi 4 ve sonrasını tamamen temizle (kullanıcı davet etmedikçe görünmesin)
-                for (id in 4..20) {
+                // Eski varsayılan örnek kişileri tamamen temizle
+                for (id in 2..25) {
                     remove("has_p$id")
                     remove("p${id}_name")
                     remove("p${id}_icon")
+                    for (dayIdx in 0..1) {
+                        for (pIdx in 0..4) {
+                            remove("m_${id}_d${dayIdx}_p$pIdx")
+                        }
+                    }
                 }
-
-                val extraSaved = prefs.getString("custom_extra_member_ids", null)
-                if (extraSaved == null || extraSaved == "3,4" || extraSaved == "4" || extraSaved == "3, 4") {
-                    putString("custom_extra_member_ids", "3")
-                }
-
-                putBoolean("family_defaults_v10", true)
+                remove("has_p2_customized")
+                remove("p2_fajr")
+                remove("p2_dhuhr")
+                remove("p2_asr")
+                remove("p2_maghrib")
+                remove("p2_isha")
+                remove("p2_yesterday_fajr")
+                remove("p2_yesterday_dhuhr")
+                remove("p2_yesterday_asr")
+                remove("p2_yesterday_maghrib")
+                remove("p2_yesterday_isha")
+                putString("custom_extra_member_ids", "NONE")
+                putBoolean("family_cleanup_no_dummies_v16", true)
                 apply()
             }
         }
@@ -104,28 +105,28 @@ fun PartnerScreen(
         mutableStateOf(saved ?: partnerInfo.myInviteCode.ifBlank { "EMB-5385" })
     }
 
-    // Kişi 1 (Baba / Siz)
+    // Kişi 1 (Siz / Kendiniz)
     var person1Icon by remember(refreshTrigger) { mutableStateOf(childPrefs.getString("p1_icon", "🧔") ?: "🧔") }
 
-    // Kişi 2 (Anne)
+    // Kişi 2 (Yalnızca eşleşmişse veya kullanıcı açıkça eklediyse aktiftir; varsayılan kapalı)
     var hasPerson2 by remember(partnerInfo.isMatched, refreshTrigger) {
-        mutableStateOf(partnerInfo.isMatched || childPrefs.getBoolean("has_p2", true))
+        mutableStateOf(partnerInfo.isMatched || childPrefs.getBoolean("has_p2_customized", false))
     }
     var person2Name by remember(refreshTrigger) {
-        val defaultName = partnerInfo.partnerDisplayName.ifBlank { childPrefs.getString("p2_name", "Anne") ?: "Anne" }
+        val defaultName = partnerInfo.partnerDisplayName.ifBlank { childPrefs.getString("p2_name", "Kişi 2") ?: "Kişi 2" }
         mutableStateOf(defaultName)
     }
     var person2Icon by remember(refreshTrigger) { mutableStateOf(childPrefs.getString("p2_icon", "🧕") ?: "🧕") }
 
-    // Ek Bireyler (Yalnızca kullanıcı eklediyse ve aktifse görünür; kaldırıldığında kesinlikle ekranda kalmaz)
+    // Ek Bireyler (Yalnızca kullanıcı eklediyse görünür; varsayılan olarak kesinlikle boştur)
     var extraMemberIds by remember(refreshTrigger) {
-        val saved = childPrefs.getString("custom_extra_member_ids", "3") ?: "3"
+        val saved = childPrefs.getString("custom_extra_member_ids", "NONE") ?: "NONE"
         val list = if (saved == "NONE" || saved.isBlank()) {
             emptyList<Int>()
         } else {
             saved.split(",")
                 .mapNotNull { it.trim().toIntOrNull() }
-                .filter { it >= 3 && childPrefs.getBoolean("has_p$it", it == 3) }
+                .filter { it >= 3 && childPrefs.getBoolean("has_p$it", false) }
                 .distinct()
         }
         mutableStateOf(list)
@@ -153,11 +154,11 @@ fun PartnerScreen(
 
     // Dinamik Birey Yardımcı Fonksiyonları
     fun getMemberName(id: Int): String {
-        return childPrefs.getString("p${id}_name", if (id == 3) "Çocuk" else "Kişi $id") ?: if (id == 3) "Çocuk" else "Kişi $id"
+        return childPrefs.getString("p${id}_name", "Kişi $id") ?: "Kişi $id"
     }
 
     fun getMemberIcon(id: Int): String {
-        return childPrefs.getString("p${id}_icon", if (id == 3) "👧" else if (id % 2 == 1) "👦" else "👧") ?: if (id == 3) "👧" else if (id % 2 == 1) "👦" else "👧"
+        return childPrefs.getString("p${id}_icon", if (id % 2 == 1) "👦" else "👧") ?: (if (id % 2 == 1) "👦" else "👧")
     }
 
     fun getMemberPrayers(memberId: Int, isToday: Boolean): List<String> {
@@ -793,17 +794,39 @@ fun PartnerScreen(
                                             fontWeight = FontWeight.SemiBold
                                         )
                                     }
-                                    IconButton(
-                                        onClick = {
-                                            editingPersonIndex = 2
-                                            editPersonNameInput = person2Name
-                                            editPersonIconInput = person2Icon
-                                            editPersonActiveInput = hasPerson2
-                                            showEditPersonDialog = true
-                                        },
-                                        modifier = Modifier.size(24.dp)
-                                    ) {
-                                        Icon(Icons.Filled.Edit, contentDescription = "Düzenle", tint = Color.White, modifier = Modifier.size(14.dp))
+                                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        IconButton(
+                                            onClick = {
+                                                editingPersonIndex = 2
+                                                editPersonNameInput = person2Name
+                                                editPersonIconInput = person2Icon
+                                                editPersonActiveInput = hasPerson2
+                                                showEditPersonDialog = true
+                                            },
+                                            modifier = Modifier.size(28.dp)
+                                        ) {
+                                            Icon(Icons.Filled.Edit, contentDescription = "Düzenle", tint = Color.White, modifier = Modifier.size(16.dp))
+                                        }
+                                        IconButton(
+                                            onClick = {
+                                                hasPerson2 = false
+                                                childPrefs.edit()
+                                                    .putBoolean("has_p2", false)
+                                                    .putBoolean("has_p2_customized", false)
+                                                    .remove("p2_name")
+                                                    .remove("p2_icon")
+                                                    .apply()
+                                                if (selectedFamilyTab == 1) selectedFamilyTab = 0
+                                                if (partnerInfo.isMatched) {
+                                                    viewModel.unmatchPartner()
+                                                }
+                                                refreshTrigger++
+                                                viewModel.showStatusMessage("Kişi 2 havuzdan kaldırıldı.")
+                                            },
+                                            modifier = Modifier.size(28.dp)
+                                        ) {
+                                            Icon(Icons.Filled.PersonRemove, contentDescription = "Kaldır", tint = Color(0xFFFFCDD2), modifier = Modifier.size(16.dp))
+                                        }
                                     }
                                 }
                             }
@@ -821,7 +844,7 @@ fun PartnerScreen(
                             }
                         }
 
-                        // Ek Bireyler (Yalnızca eklenmişse görünür)
+                        // Ek Bireyler (Yalnızca kullanıcı açıkça eklemişse görünür)
                         extraMemberIds.forEach { id ->
                             val mName = getMemberName(id)
                             val mIcon = getMemberIcon(id)
@@ -841,17 +864,43 @@ fun PartnerScreen(
                                         Text(text = mName, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
                                         Text(text = "Aile Havuzunda Aktif 🟢", fontSize = 10.sp, color = Color(0xFF86EFAC), fontWeight = FontWeight.SemiBold)
                                     }
-                                    IconButton(
-                                        onClick = {
-                                            editingPersonIndex = id
-                                            editPersonNameInput = mName
-                                            editPersonIconInput = mIcon
-                                            editPersonActiveInput = true
-                                            showEditPersonDialog = true
-                                        },
-                                        modifier = Modifier.size(24.dp)
-                                    ) {
-                                        Icon(Icons.Filled.Edit, contentDescription = "Düzenle", tint = Color.White, modifier = Modifier.size(14.dp))
+                                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        IconButton(
+                                            onClick = {
+                                                editingPersonIndex = id
+                                                editPersonNameInput = mName
+                                                editPersonIconInput = mIcon
+                                                editPersonActiveInput = true
+                                                showEditPersonDialog = true
+                                            },
+                                            modifier = Modifier.size(28.dp)
+                                        ) {
+                                            Icon(Icons.Filled.Edit, contentDescription = "Düzenle", tint = Color.White, modifier = Modifier.size(16.dp))
+                                        }
+                                        IconButton(
+                                            onClick = {
+                                                val targetId = id
+                                                val updated = extraMemberIds.filter { it != targetId }
+                                                extraMemberIds = updated
+                                                childPrefs.edit()
+                                                    .putString("custom_extra_member_ids", if (updated.isEmpty()) "NONE" else updated.joinToString(","))
+                                                    .remove("has_p$targetId")
+                                                    .remove("p${targetId}_name")
+                                                    .remove("p${targetId}_icon")
+                                                    .apply()
+                                                for (dayIdx in 0..1) {
+                                                    for (pIdx in 0..4) {
+                                                        childPrefs.edit().remove("m_${targetId}_d${dayIdx}_p$pIdx").apply()
+                                                    }
+                                                }
+                                                if (selectedFamilyTab == targetId) selectedFamilyTab = 0
+                                                refreshTrigger++
+                                                viewModel.showStatusMessage("$mName havuzdan ve tablodan kaldırıldı.")
+                                            },
+                                            modifier = Modifier.size(28.dp)
+                                        ) {
+                                            Icon(Icons.Filled.PersonRemove, contentDescription = "Kaldır", tint = Color(0xFFFFCDD2), modifier = Modifier.size(16.dp))
+                                        }
                                     }
                                 }
                             }
@@ -860,9 +909,15 @@ fun PartnerScreen(
                         // + Yeni Kişi Ekle Butonu
                         OutlinedButton(
                             onClick = {
-                                val nextId = if (extraMemberIds.isEmpty()) 3 else (extraMemberIds.maxOrNull() ?: 2) + 1
+                                val nextId = if (!hasPerson2 && !partnerInfo.isMatched) {
+                                    2
+                                } else if (extraMemberIds.isEmpty()) {
+                                    3
+                                } else {
+                                    (extraMemberIds.maxOrNull() ?: 2) + 1
+                                }
                                 editingPersonIndex = nextId
-                                editPersonNameInput = "Kişi $nextId"
+                                editPersonNameInput = ""
                                 editPersonIconInput = if (nextId % 2 == 1) "👦" else "👧"
                                 editPersonActiveInput = true
                                 showEditPersonDialog = true
@@ -875,7 +930,7 @@ fun PartnerScreen(
                             Icon(Icons.Filled.PersonAdd, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "+ Yeni Kişi Ekle (Kişi ${if (extraMemberIds.isEmpty()) 3 else (extraMemberIds.maxOrNull() ?: 2) + 1})",
+                                text = "+ Yeni Kişi Ekle",
                                 fontSize = 11.sp,
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold
@@ -970,9 +1025,15 @@ fun PartnerScreen(
                     // Sekme: + Yeni Kişi Ekle
                     Surface(
                         onClick = {
-                            val nextId = if (extraMemberIds.isEmpty()) 3 else (extraMemberIds.maxOrNull() ?: 2) + 1
+                            val nextId = if (!hasPerson2 && !partnerInfo.isMatched) {
+                                2
+                            } else if (extraMemberIds.isEmpty()) {
+                                3
+                            } else {
+                                (extraMemberIds.maxOrNull() ?: 2) + 1
+                            }
                             editingPersonIndex = nextId
-                            editPersonNameInput = "Kişi $nextId"
+                            editPersonNameInput = ""
                             editPersonIconInput = if (nextId % 2 == 1) "👦" else "👧"
                             editPersonActiveInput = true
                             showEditPersonDialog = true
@@ -1347,9 +1408,15 @@ fun PartnerScreen(
                                                 .clip(RoundedCornerShape(8.dp))
                                                 .background(Color.White.copy(alpha = 0.14f))
                                                 .clickable {
-                                                    val nextId = if (extraMemberIds.isEmpty()) 3 else (extraMemberIds.maxOrNull() ?: 2) + 1
+                                                    val nextId = if (!hasPerson2 && !partnerInfo.isMatched) {
+                                                        2
+                                                    } else if (extraMemberIds.isEmpty()) {
+                                                        3
+                                                    } else {
+                                                        (extraMemberIds.maxOrNull() ?: 2) + 1
+                                                    }
                                                     editingPersonIndex = nextId
-                                                    editPersonNameInput = "Kişi $nextId"
+                                                    editPersonNameInput = ""
                                                     editPersonIconInput = if (nextId % 2 == 1) "👦" else "👧"
                                                     editPersonActiveInput = true
                                                     showEditPersonDialog = true
@@ -1837,29 +1904,50 @@ fun PartnerScreen(
                     )
 
                     if (editingPersonIndex >= 2) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(
-                                checked = editPersonActiveInput,
-                                onCheckedChange = { editPersonActiveInput = it }
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Bu Kişi Aile Tablosunda Aktif Olsun", fontSize = 12.sp, color = TextPrimary)
-                        }
-
-                        if (editingPersonIndex >= 3 && editPersonActiveInput) {
-                            Spacer(modifier = Modifier.height(6.dp))
-                            OutlinedButton(
-                                onClick = { editPersonActiveInput = false },
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = MissedRed),
-                                border = BorderStroke(1.dp, MissedRed.copy(alpha = 0.5f)),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Icon(Icons.Filled.PersonRemove, contentDescription = null, tint = MissedRed, modifier = Modifier.size(14.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Bu Kişiyi Havuzdan Çıkar", fontSize = 11.sp, color = MissedRed)
-                            }
+                        Spacer(modifier = Modifier.height(14.dp))
+                        OutlinedButton(
+                            onClick = {
+                                if (editingPersonIndex == 2) {
+                                    hasPerson2 = false
+                                    childPrefs.edit()
+                                        .putBoolean("has_p2", false)
+                                        .putBoolean("has_p2_customized", false)
+                                        .remove("p2_name")
+                                        .remove("p2_icon")
+                                        .apply()
+                                    if (selectedFamilyTab == 1) selectedFamilyTab = 0
+                                    if (partnerInfo.isMatched) {
+                                        viewModel.unmatchPartner()
+                                    }
+                                } else {
+                                    val targetId = editingPersonIndex
+                                    val updated = extraMemberIds.filter { it != targetId }
+                                    extraMemberIds = updated
+                                    childPrefs.edit()
+                                        .putString("custom_extra_member_ids", if (updated.isEmpty()) "NONE" else updated.joinToString(","))
+                                        .remove("has_p$targetId")
+                                        .remove("p${targetId}_name")
+                                        .remove("p${targetId}_icon")
+                                        .apply()
+                                    for (dayIdx in 0..1) {
+                                        for (pIdx in 0..4) {
+                                            childPrefs.edit().remove("m_${targetId}_d${dayIdx}_p$pIdx").apply()
+                                        }
+                                    }
+                                    if (selectedFamilyTab == targetId) selectedFamilyTab = 0
+                                }
+                                refreshTrigger++
+                                showEditPersonDialog = false
+                                viewModel.showStatusMessage("Kişi havuzdan ve tablodan kaldırıldı.")
+                            },
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = MissedRed),
+                            border = BorderStroke(1.dp, MissedRed.copy(alpha = 0.6f)),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Filled.PersonRemove, contentDescription = null, tint = MissedRed, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Bu Kişiyi Havuzdan ve Tablodan Kaldır", fontSize = 12.sp, color = MissedRed, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -1877,47 +1965,31 @@ fun PartnerScreen(
                             2 -> {
                                 person2Name = name
                                 person2Icon = editPersonIconInput
-                                hasPerson2 = editPersonActiveInput
-                                if (!editPersonActiveInput && selectedFamilyTab == 1) selectedFamilyTab = 0
+                                hasPerson2 = true
                                 childPrefs.edit()
                                     .putString("p2_name", name)
                                     .putString("p2_icon", editPersonIconInput)
-                                    .putBoolean("has_p2", editPersonActiveInput)
+                                    .putBoolean("has_p2", true)
                                     .putBoolean("has_p2_customized", true)
                                     .apply()
                             }
                             else -> {
                                 val targetId = editingPersonIndex
-                                if (editPersonActiveInput) {
-                                    if (!extraMemberIds.contains(targetId)) {
-                                        val updated = (extraMemberIds + targetId).sorted()
-                                        extraMemberIds = updated
-                                        childPrefs.edit().putString("custom_extra_member_ids", updated.joinToString(",")).apply()
-                                    }
-                                    childPrefs.edit()
-                                        .putString("p${targetId}_name", name)
-                                        .putString("p${targetId}_icon", editPersonIconInput)
-                                        .putBoolean("has_p${targetId}", true)
-                                        .apply()
-                                } else {
-                                    val updated = extraMemberIds.filter { it != targetId }
+                                if (!extraMemberIds.contains(targetId)) {
+                                    val updated = (extraMemberIds + targetId).sorted()
                                     extraMemberIds = updated
-                                    childPrefs.edit()
-                                        .putString("custom_extra_member_ids", if (updated.isEmpty()) "NONE" else updated.joinToString(","))
-                                        .putBoolean("has_p${targetId}", false)
-                                        .remove("p${targetId}_name")
-                                        .remove("p${targetId}_icon")
-                                        .apply()
-                                    if (selectedFamilyTab == targetId) selectedFamilyTab = 0
+                                    childPrefs.edit().putString("custom_extra_member_ids", updated.joinToString(",")).apply()
                                 }
+                                childPrefs.edit()
+                                    .putString("p${targetId}_name", name)
+                                    .putString("p${targetId}_icon", editPersonIconInput)
+                                    .putBoolean("has_p${targetId}", true)
+                                    .apply()
                             }
                         }
                         refreshTrigger++
                         showEditPersonDialog = false
-                        viewModel.showStatusMessage(
-                            if (editPersonActiveInput) "$name bilgileri başarıyla kaydedildi! 🌟"
-                            else "$name havuzdan çıkarıldı."
-                        )
+                        viewModel.showStatusMessage("$name bilgileri kaydedildi! 🌟")
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary)
                 ) {

@@ -37,8 +37,6 @@ fun ReportScreen(
     val settings by viewModel.settings.collectAsState()
     val todayPrayer by viewModel.todayPrayer.collectAsState()
     val kazaPrayers by viewModel.kazaPrayers.collectAsState()
-    val isCheckingForUpdate by viewModel.isCheckingForUpdate.collectAsState()
-    val availableUpdate by viewModel.availableUpdate.collectAsState()
 
     // Calculate weekly statistics (last 7 days)
     val dayFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.US) }
@@ -556,98 +554,6 @@ fun ReportScreen(
                             color = Color.White.copy(alpha = 0.85f),
                             fontWeight = FontWeight.SemiBold
                         )
-                    }
-                }
-            }
-        }
-
-        // App Version & Automatic GitHub Updater Card
-        item {
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = EmeraldPrimary),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Surface(
-                                shape = CircleShape,
-                                color = Color.White.copy(alpha = 0.2f),
-                                modifier = Modifier.size(36.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        Icons.Filled.SystemUpdate,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(
-                                    text = "Uygulama Güncellemeleri",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                                Text(
-                                    text = "GitHub üzerinden otomatik APK güncellemesi",
-                                    fontSize = 11.sp,
-                                    color = Color.White.copy(alpha = 0.88f)
-                                )
-                            }
-                        }
-
-                        if (availableUpdate != null && availableUpdate!!.hasUpdate) {
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = Color.White.copy(alpha = 0.25f)
-                            ) {
-                                Text(
-                                    text = "Yeni!",
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Button(
-                        onClick = { viewModel.checkForAppUpdate(silent = false) },
-                        enabled = !isCheckingForUpdate,
-                        shape = RoundedCornerShape(10.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = EmeraldPrimary),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        if (isCheckingForUpdate) {
-                            CircularProgressIndicator(
-                                color = EmeraldPrimary,
-                                modifier = Modifier.size(16.dp),
-                                strokeWidth = 2.dp
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("GitHub Kontrol Ediliyor...", fontSize = 13.sp, color = EmeraldPrimary, fontWeight = FontWeight.Bold)
-                        } else if (availableUpdate != null && availableUpdate!!.hasUpdate) {
-                            Icon(Icons.Filled.Download, contentDescription = null, tint = EmeraldPrimary, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Yeni Sürümü İndir (${availableUpdate!!.latestVersionTag})", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = EmeraldPrimary)
-                        } else {
-                            Icon(Icons.Filled.Refresh, contentDescription = null, tint = EmeraldPrimary, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Güncellemeleri Denetle", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = EmeraldPrimary)
-                        }
                     }
                 }
             }
