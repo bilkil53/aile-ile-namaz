@@ -1,6 +1,7 @@
 package com.example.ui.viewmodel
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.local.AppDatabase
@@ -202,25 +203,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         // Automatic GitHub Release Update Check:
-        // Checks at startup, and automatically checks every day at 12:00 noon with popup
+        // Her daim kesintisiz sorgulama: Açılışta 1.5 sn sonra hemen kontrol eder, ardından uygulama açıkken her 45 dakikada bir otomatik yeniler
         viewModelScope.launch(Dispatchers.IO) {
-            delay(4000)
+            delay(1500)
             checkForAppUpdate(silent = true)
             while (true) {
-                val now = java.util.Calendar.getInstance()
-                val target = java.util.Calendar.getInstance().apply {
-                    set(java.util.Calendar.HOUR_OF_DAY, 12)
-                    set(java.util.Calendar.MINUTE, 0)
-                    set(java.util.Calendar.SECOND, 0)
-                    set(java.util.Calendar.MILLISECOND, 0)
-                    if (timeInMillis <= now.timeInMillis) {
-                        add(java.util.Calendar.DAY_OF_YEAR, 1)
-                    }
-                }
-                val delayMillis = (target.timeInMillis - now.timeInMillis).coerceAtLeast(60_000L)
-                delay(delayMillis)
-                // At 12:00 noon, check and display popup if update is found
-                checkForAppUpdate(silent = false)
+                delay(45 * 60 * 1000L) // 45 dakikada bir periyodik kontrol
+                checkForAppUpdate(silent = true)
             }
         }
     }
@@ -460,6 +449,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun ensureUniqueInviteCode() {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.ensureUniqueInviteCode()
+        }
+    }
+
     fun matchPartnerWithCode(code: String, partnerName: String = "", partnerEmail: String = "") {
         viewModelScope.launch(Dispatchers.IO) {
             _isRefreshingPartner.value = true
@@ -511,18 +506,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun broadcastFamilyDua(targetName: String, duaText: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val partner = repository.getPartnerInfo().firstOrNull()
-                if (partner != null && partner.isMatched && partner.partnerInviteCode.isNotBlank()) {
-                    com.example.util.PartnerSyncManager.broadcastPartnerEvent(
-                        codeA = partner.myInviteCode,
-                        codeB = partner.partnerInviteCode,
-                        myCode = partner.myInviteCode,
-                        myName = partner.myDisplayName.ifBlank { "Aile Ferdi" },
-                        eventType = "DUA",
-                        prayerName = "Manevi Dua",
-                        actionText = "🤲 $targetName için dua: \"$duaText\""
-                    )
-                }
+                repository.sendSpiritualDua(targetName, duaText)
             } catch (_: Exception) { }
             _statusMessage.value = "$targetName için dua kaydedildi ve iletildi: Allah kabul etsin! 🤲"
             delay(3000)
@@ -560,18 +544,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun loginWithGoogleBrowser(email: String = "", name: String = "") {
         if (email.isBlank()) return
-        val cleanName = if (name.isNotBlank() && name != "Mümin") {
+        val cleanEmail = email.trim()
+        val emailKey = cleanEmail.lowercase()
+        val childPrefs = getApplication<Application>().getSharedPreferences("family_child_prefs", Context.MODE_PRIVATE)
+        val savedNick = childPrefs.getString("user_nickname_$emailKey", null)
+        val cleanName = if (!savedNick.isNullOrBlank() && !savedNick.contains("@") && savedNick != "Mümin") {
+            savedNick.trim()
+        } else if (name.isNotBlank() && !name.contains("@") && name != "Mümin") {
             name.trim()
         } else {
-            val prefix = email.substringBefore("@").replace(".", " ").replace("_", " ")
-            val words = prefix.filter { it.isLetter() || it.isWhitespace() }.split(" ").filter { it.isNotBlank() }
-            if (words.isNotEmpty()) words.joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } } else "Mümin"
+            ""
         }
 
         viewModelScope.launch(Dispatchers.IO) {
-            repository.loginUser(cleanName, email.trim())
-            _statusMessage.value = "Hoş geldiniz, $cleanName! ($email)"
-            delay(3500)
+            repository.loginUser(cleanName, cleanEmail)
+            _statusMessage.value = "Google girişi başarılı ✓ Lütfen takma adınızı belirleyin."
+            delay(3000)
             _statusMessage.value = null
         }
     }
@@ -696,7 +684,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // App Updater methods
-    fun checkForAppUpdate(silent: Boolean = false) {
+    fun checkForAppUpdate(silent: Boolean = false, forceShow: Boolean = false) {
         viewModelScope.launch(Dispatchers.IO) {
             if (!silent) _isCheckingForUpdate.value = true
             val update = com.example.util.AppUpdateManager.checkForUpdates(
@@ -707,12 +695,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             if (update != null && update.hasUpdate) {
                 val prefs = getApplication<Application>().getSharedPreferences("app_updater_prefs", android.content.Context.MODE_PRIVATE)
+                val lastDismissedTime = prefs.getLong("last_dismissed_time", 0L)
                 val dismissedTag = prefs.getString("dismissed_update_tag", "")
-                if (!silent || dismissedTag != update.latestVersionTag) {
+                val hoursSinceDismiss = (System.currentTimeMillis() - lastDismissedTime) / (1000 * 60 * 60)
+
+                // Her daim sorgulama: Kullanıcı manuel basmışsa (forceShow), veya ilk defaysa, veya 2 saat geçmişse popup açılır
+                if (forceShow || !silent || dismissedTag != update.latestVersionTag || hoursSinceDismiss >= 2) {
                     _availableUpdate.value = update
                 }
                 if (!silent) {
-                    _statusMessage.value = "Yeni güncelleme bulundu: ${update.latestVersionTag}"
+                    _statusMessage.value = "Yeni güncelleme bulundu: ${update.latestVersionTag} 📲"
                     delay(3000)
                     _statusMessage.value = null
                 }
@@ -751,7 +743,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val currentTag = _availableUpdate.value?.latestVersionTag
         if (!currentTag.isNullOrBlank()) {
             val prefs = getApplication<Application>().getSharedPreferences("app_updater_prefs", android.content.Context.MODE_PRIVATE)
-            prefs.edit().putString("dismissed_update_tag", currentTag).apply()
+            prefs.edit()
+                .putString("dismissed_update_tag", currentTag)
+                .putLong("last_dismissed_time", System.currentTimeMillis())
+                .apply()
         }
         _availableUpdate.value = null
         _downloadProgress.value = null

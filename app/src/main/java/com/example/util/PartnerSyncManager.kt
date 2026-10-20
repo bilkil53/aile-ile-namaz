@@ -65,19 +65,24 @@ object PartnerSyncManager {
         .build()
 
     fun normalizeCode(code: String): String {
-        val clean = code.trim().filter { it.isLetterOrDigit() }.uppercase()
-        return if (clean.startsWith("EMB")) clean else if (clean.startsWith("ARK")) "EMB53" + clean.removePrefix("ARK") else "EMB53$clean"
+        return code.trim().filter { it.isLetterOrDigit() }.uppercase()
     }
 
     fun formatDisplayCode(code: String): String {
-        val clean = code.trim().filter { it.isLetterOrDigit() }.uppercase()
-        return if (clean.startsWith("EMB53") && clean.length > 5) {
-            "EMB-53" + clean.substring(5)
-        } else if (clean.startsWith("EMB") && clean.length > 3) {
-            "EMB-" + clean.substring(3)
-        } else {
-            "EMB-53${clean.takeLast(4).padStart(4, '0')}"
+        val clean = normalizeCode(code)
+        return when {
+            clean.startsWith("REIS") && clean.length > 4 -> "REIS-" + clean.substring(4)
+            clean.startsWith("00") && clean.length >= 4 -> "REIS-" + clean
+            clean.startsWith("EMB53") && clean.length > 5 -> "EMB-53" + clean.substring(5)
+            clean.startsWith("EMB") && clean.length > 3 -> "EMB-" + clean.substring(3)
+            clean.length > 4 -> clean.take(4) + "-" + clean.drop(4)
+            else -> clean
         }
+    }
+
+    fun getPoolTopic(poolCode: String): String {
+        val clean = normalizeCode(poolCode)
+        return "ain_pool_$clean"
     }
 
     fun getCanonicalPairTopic(codeA: String, codeB: String): String {
@@ -325,8 +330,87 @@ object PartnerSyncManager {
         }
     }
 
+    suspend fun broadcastPrayerStatusToPool(
+        poolCode: String,
+        myCode: String,
+        myName: String,
+        myEmail: String,
+        date: String,
+        fajr: String,
+        dhuhr: String,
+        asr: String,
+        maghrib: String,
+        isha: String,
+        kazaCompleted: Int,
+        kazaOwed: Int
+    ) = withContext(Dispatchers.IO) {
+        val topic = getPoolTopic(poolCode)
+        try {
+            val json = JSONObject().apply {
+                put("type", "PRAYER_UPDATE")
+                put("senderCode", normalizeCode(myCode))
+                put("senderName", myName.trim())
+                put("senderEmail", myEmail.trim())
+                put("date", date)
+                put("fajr", fajr)
+                put("dhuhr", dhuhr)
+                put("asr", asr)
+                put("maghrib", maghrib)
+                put("isha", isha)
+                put("kazaCompleted", kazaCompleted)
+                put("kazaOwed", kazaOwed)
+                put("timestamp", System.currentTimeMillis())
+            }
+
+            val request = Request.Builder()
+                .url("$BASE_URL/$topic")
+                .post(json.toString().toRequestBody(JSON_MEDIA_TYPE))
+                .build()
+
+            httpClient.newCall(request).execute().close()
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to broadcast prayer status to pool: ${e.message}")
+        }
+    }
+
     /**
-     * Fetches both the latest prayer status and any new events sent by partner since lastTimestamp.
+     * Broadcasts a real-time event (e.g. Dua, prayer completion) to the shared family pool topic.
+     */
+    suspend fun broadcastPoolEvent(
+        poolCode: String,
+        myCode: String,
+        myName: String,
+        eventType: String,
+        prayerName: String,
+        actionText: String
+    ) = withContext(Dispatchers.IO) {
+        val clean = normalizeCode(poolCode)
+        if (clean.isBlank()) return@withContext
+        val topic = getPoolTopic(poolCode)
+        try {
+            val json = JSONObject().apply {
+                put("type", "PARTNER_EVENT")
+                put("senderCode", normalizeCode(myCode))
+                put("senderName", myName.trim())
+                put("eventType", eventType)
+                put("prayerName", prayerName)
+                put("actionText", actionText)
+                put("timestamp", System.currentTimeMillis())
+            }
+
+            val request = Request.Builder()
+                .url("$BASE_URL/$topic")
+                .post(json.toString().toRequestBody(JSON_MEDIA_TYPE))
+                .build()
+
+            httpClient.newCall(request).execute().close()
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to broadcast pool event: ${e.message}")
+        }
+    }
+
+    /**
+     * Fetches both the latest prayer status and any new events sent by partner or family pool since lastTimestamp.
      */
     suspend fun fetchPartnerUpdatesAndEvents(
         codeA: String,
@@ -334,120 +418,139 @@ object PartnerSyncManager {
         partnerCode: String,
         myCode: String,
         todayDate: String,
-        lastProcessedEventTime: Long
+        lastProcessedEventTime: Long,
+        poolCode: String = ""
     ): SyncResult = withContext(Dispatchers.IO) {
-        val topic = getCanonicalPairTopic(codeA, codeB)
         val cleanPartner = normalizeCode(partnerCode)
         val cleanMyCode = normalizeCode(myCode)
+        val cleanPool = normalizeCode(poolCode)
+
+        val topicsToPoll = mutableListOf<String>()
+        if (codeA.isNotBlank() && codeB.isNotBlank() && normalizeCode(codeA) != normalizeCode(codeB)) {
+            topicsToPoll.add(getCanonicalPairTopic(codeA, codeB))
+        }
+        if (cleanPool.isNotBlank()) {
+            val pt = getPoolTopic(poolCode)
+            if (!topicsToPoll.contains(pt)) {
+                topicsToPoll.add(pt)
+            }
+        }
+        if (topicsToPoll.isEmpty()) {
+            return@withContext SyncResult(null, null, emptyList(), false)
+        }
 
         try {
-            val request = Request.Builder()
-                .url("$BASE_URL/$topic/json?poll=1")
-                .get()
-                .build()
+            var latestStatus: PartnerPrayerUpdate? = null
+            var yesterdayStatus: PartnerPrayerUpdate? = null
+            val newEvents = mutableListOf<PartnerRemoteEvent>()
+            var unmatchDetected = false
 
-            httpClient.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) return@withContext SyncResult(null, null, emptyList(), false)
-                val body = response.body?.string() ?: return@withContext SyncResult(null, null, emptyList(), false)
+            val yesterdayCal = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
+            val yesterdayDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(yesterdayCal.time)
 
-                var latestStatus: PartnerPrayerUpdate? = null
-                var yesterdayStatus: PartnerPrayerUpdate? = null
-                val newEvents = mutableListOf<PartnerRemoteEvent>()
-                var unmatchDetected = false
+            for (topic in topicsToPoll) {
+                try {
+                    val request = Request.Builder()
+                        .url("$BASE_URL/$topic/json?poll=1")
+                        .get()
+                        .build()
 
-                val yesterdayCal = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
-                val yesterdayDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(yesterdayCal.time)
+                    httpClient.newCall(request).execute().use { response ->
+                        if (response.isSuccessful) {
+                            val body = response.body?.string()
+                            if (!body.isNullOrBlank()) {
+                                BufferedReader(StringReader(body)).useLines { lines ->
+                                    for (line in lines) {
+                                        try {
+                                            val obj = JSONObject(line)
+                                            if (obj.optString("event") == "message") {
+                                                val msgStr = obj.optString("message", "")
+                                                val msgJson = JSONObject(msgStr)
+                                                val type = msgJson.optString("type", "")
+                                                val sender = normalizeCode(msgJson.optString("senderCode", ""))
+                                                val timestamp = msgJson.optLong("timestamp", 0L)
 
-                BufferedReader(StringReader(body)).useLines { lines ->
-                    for (line in lines) {
-                        try {
-                            val obj = JSONObject(line)
-                            if (obj.optString("event") == "message") {
-                                val msgStr = obj.optString("message", "")
-                                val msgJson = JSONObject(msgStr)
-                                val type = msgJson.optString("type", "")
-                                val sender = normalizeCode(msgJson.optString("senderCode", ""))
-                                val timestamp = msgJson.optLong("timestamp", 0L)
-
-                                when (type) {
-                                    "PRAYER_UPDATE" -> {
-                                        // Take updates from partner
-                                        if (sender == cleanPartner) {
-                                            val date = msgJson.optString("date", "")
-                                            if (date == todayDate) {
-                                                if (latestStatus == null || timestamp >= latestStatus!!.timestamp) {
-                                                    latestStatus = PartnerPrayerUpdate(
-                                                        senderCode = formatDisplayCode(sender),
-                                                        senderName = msgJson.optString("senderName", ""),
-                                                        senderEmail = msgJson.optString("senderEmail", ""),
-                                                        date = date,
-                                                        fajr = msgJson.optString("fajr", "NONE"),
-                                                        dhuhr = msgJson.optString("dhuhr", "NONE"),
-                                                        asr = msgJson.optString("asr", "NONE"),
-                                                        maghrib = msgJson.optString("maghrib", "NONE"),
-                                                        isha = msgJson.optString("isha", "NONE"),
-                                                        kazaCompleted = msgJson.optInt("kazaCompleted", 0),
-                                                        kazaOwed = msgJson.optInt("kazaOwed", 0),
-                                                        timestamp = timestamp
-                                                    )
-                                                }
-                                            } else if (date == yesterdayDate) {
-                                                if (yesterdayStatus == null || timestamp >= yesterdayStatus!!.timestamp) {
-                                                    yesterdayStatus = PartnerPrayerUpdate(
-                                                        senderCode = formatDisplayCode(sender),
-                                                        senderName = msgJson.optString("senderName", ""),
-                                                        senderEmail = msgJson.optString("senderEmail", ""),
-                                                        date = date,
-                                                        fajr = msgJson.optString("fajr", "NONE"),
-                                                        dhuhr = msgJson.optString("dhuhr", "NONE"),
-                                                        asr = msgJson.optString("asr", "NONE"),
-                                                        maghrib = msgJson.optString("maghrib", "NONE"),
-                                                        isha = msgJson.optString("isha", "NONE"),
-                                                        kazaCompleted = msgJson.optInt("kazaCompleted", 0),
-                                                        kazaOwed = msgJson.optInt("kazaOwed", 0),
-                                                        timestamp = timestamp
-                                                    )
+                                                when (type) {
+                                                    "PRAYER_UPDATE" -> {
+                                                        if (sender == cleanPartner || (cleanPool.isNotBlank() && sender != cleanMyCode)) {
+                                                            val date = msgJson.optString("date", "")
+                                                            if (date == todayDate) {
+                                                                if (latestStatus == null || timestamp >= latestStatus!!.timestamp) {
+                                                                    latestStatus = PartnerPrayerUpdate(
+                                                                        senderCode = formatDisplayCode(sender),
+                                                                        senderName = msgJson.optString("senderName", ""),
+                                                                        senderEmail = msgJson.optString("senderEmail", ""),
+                                                                        date = date,
+                                                                        fajr = msgJson.optString("fajr", "NONE"),
+                                                                        dhuhr = msgJson.optString("dhuhr", "NONE"),
+                                                                        asr = msgJson.optString("asr", "NONE"),
+                                                                        maghrib = msgJson.optString("maghrib", "NONE"),
+                                                                        isha = msgJson.optString("isha", "NONE"),
+                                                                        kazaCompleted = msgJson.optInt("kazaCompleted", 0),
+                                                                        kazaOwed = msgJson.optInt("kazaOwed", 0),
+                                                                        timestamp = timestamp
+                                                                    )
+                                                                }
+                                                            } else if (date == yesterdayDate) {
+                                                                if (yesterdayStatus == null || timestamp >= yesterdayStatus!!.timestamp) {
+                                                                    yesterdayStatus = PartnerPrayerUpdate(
+                                                                        senderCode = formatDisplayCode(sender),
+                                                                        senderName = msgJson.optString("senderName", ""),
+                                                                        senderEmail = msgJson.optString("senderEmail", ""),
+                                                                        date = date,
+                                                                        fajr = msgJson.optString("fajr", "NONE"),
+                                                                        dhuhr = msgJson.optString("dhuhr", "NONE"),
+                                                                        asr = msgJson.optString("asr", "NONE"),
+                                                                        maghrib = msgJson.optString("maghrib", "NONE"),
+                                                                        isha = msgJson.optString("isha", "NONE"),
+                                                                        kazaCompleted = msgJson.optInt("kazaCompleted", 0),
+                                                                        kazaOwed = msgJson.optInt("kazaOwed", 0),
+                                                                        timestamp = timestamp
+                                                                    )
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                    "PARTNER_EVENT" -> {
+                                                        if (sender != cleanMyCode && timestamp > lastProcessedEventTime) {
+                                                            val rawAction = msgJson.optString("actionText", "")
+                                                            val cleanAction = rawAction
+                                                                .replace("kazaya bıraktı", "kılmadı")
+                                                                .replace("Kazaya bıraktı", "kılmadı")
+                                                            newEvents.add(
+                                                                PartnerRemoteEvent(
+                                                                    senderCode = formatDisplayCode(sender),
+                                                                    senderName = msgJson.optString("senderName", ""),
+                                                                    eventType = msgJson.optString("eventType", ""),
+                                                                    prayerName = msgJson.optString("prayerName", ""),
+                                                                    actionText = cleanAction,
+                                                                    timestamp = timestamp
+                                                                )
+                                                            )
+                                                        }
+                                                    }
+                                                    "UNMATCH" -> {
+                                                        if (sender == cleanPartner) {
+                                                            unmatchDetected = true
+                                                        }
+                                                    }
                                                 }
                                             }
-                                        }
-                                    }
-                                    "PARTNER_EVENT" -> {
-                                        // New events from partner (not from me!)
-                                        if (sender != cleanMyCode && timestamp > lastProcessedEventTime) {
-                                            val rawAction = msgJson.optString("actionText", "")
-                                            val cleanAction = rawAction
-                                                .replace("kazaya bıraktı", "kılmadı")
-                                                .replace("Kazaya bıraktı", "kılmadı")
-                                            newEvents.add(
-                                                PartnerRemoteEvent(
-                                                    senderCode = formatDisplayCode(sender),
-                                                    senderName = msgJson.optString("senderName", ""),
-                                                    eventType = msgJson.optString("eventType", ""),
-                                                    prayerName = msgJson.optString("prayerName", ""),
-                                                    actionText = cleanAction,
-                                                    timestamp = timestamp
-                                                )
-                                            )
-                                        }
-                                    }
-                                    "UNMATCH" -> {
-                                        if (sender == cleanPartner) {
-                                            unmatchDetected = true
-                                        }
+                                        } catch (ignored: Exception) { }
                                     }
                                 }
                             }
-                        } catch (_: Exception) { }
+                        }
                     }
-                }
-
-                SyncResult(
-                    latestStatus = latestStatus,
-                    yesterdayStatus = yesterdayStatus,
-                    newEvents = newEvents,
-                    partnerUnmatched = unmatchDetected
-                )
+                } catch (ignored: Exception) { }
             }
+
+            SyncResult(
+                latestStatus = latestStatus,
+                yesterdayStatus = yesterdayStatus,
+                newEvents = newEvents,
+                partnerUnmatched = unmatchDetected
+            )
         } catch (e: Exception) {
             Log.w(TAG, "Failed to sync with partner: ${e.message}")
             SyncResult(null, null, emptyList(), false)

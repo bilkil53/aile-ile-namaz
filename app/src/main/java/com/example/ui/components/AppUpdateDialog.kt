@@ -2,6 +2,7 @@ package com.example.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -10,7 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,8 +21,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.ui.theme.DarkBackground
+import com.example.ui.theme.DarkSurface
+import com.example.ui.theme.DarkSurfaceCard
+import com.example.ui.theme.DarkTextPrimary
+import com.example.ui.theme.DarkTextSecondary
 import com.example.ui.theme.EmeraldPrimary
 import com.example.ui.theme.MissedRed
+import com.example.ui.theme.PureWhite
 import com.example.ui.theme.TextPrimary
 import com.example.ui.theme.TextSecondary
 import com.example.util.AppUpdateInfo
@@ -37,6 +44,19 @@ fun AppUpdateDialog(
 ) {
     val context = LocalContext.current
     val isDownloading = downloadProgress != null
+    val isDark = isSystemInDarkTheme()
+
+    // Highly readable, contrast-enforced color palette guaranteed to be crisp in both Dark and Light modes
+    val surfaceColor = if (isDark) Color(0xFF1B2724) else Color(0xFFFFFFFF)
+    val borderColor = if (isDark) Color(0xFF324A43) else Color(0xFFCBD5E1)
+    val textPrimaryColor = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A)
+    val textSecondaryColor = if (isDark) Color(0xFF94A3B8) else Color(0xFF475569)
+    val notesSurfaceColor = if (isDark) Color(0xFF111A18) else Color(0xFFF1F5F9)
+    val notesBorderColor = if (isDark) Color(0xFF273C36) else Color(0xFFCBD5E1)
+    val notesTitleColor = if (isDark) Color(0xFF34D399) else EmeraldPrimary
+    val notesBodyColor = if (isDark) Color(0xFFF8FAFC) else Color(0xFF1E293B)
+    val dismissBorderColor = if (isDark) Color(0xFF475569) else Color(0xFFCBD5E1)
+    val dismissTextColor = if (isDark) Color(0xFFE2E8F0) else Color(0xFF475569)
 
     Dialog(
         onDismissRequest = {
@@ -49,8 +69,9 @@ fun AppUpdateDialog(
     ) {
         Surface(
             shape = RoundedCornerShape(22.dp),
-            color = MaterialTheme.colorScheme.surface,
-            tonalElevation = 6.dp,
+            color = surfaceColor,
+            border = BorderStroke(1.dp, borderColor),
+            shadowElevation = 10.dp,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp)
@@ -67,14 +88,14 @@ fun AppUpdateDialog(
                 ) {
                     Surface(
                         shape = CircleShape,
-                        color = EmeraldPrimary.copy(alpha = 0.12f),
+                        color = EmeraldPrimary.copy(alpha = if (isDark) 0.35f else 0.12f),
                         modifier = Modifier.size(46.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 Icons.Filled.SystemUpdate,
                                 contentDescription = null,
-                                tint = EmeraldPrimary,
+                                tint = if (isDark) Color(0xFF34D399) else EmeraldPrimary,
                                 modifier = Modifier.size(24.dp)
                             )
                         }
@@ -87,7 +108,7 @@ fun AppUpdateDialog(
                             text = "Yeni Sürüm Hazır!",
                             fontSize = 17.sp,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            color = textPrimaryColor
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Surface(
@@ -107,43 +128,94 @@ fun AppUpdateDialog(
                             Text(
                                 text = "•  ${updateInfo.apkSizeFormatted}",
                                 fontSize = 11.sp,
-                                color = TextSecondary
+                                color = textSecondaryColor
                             )
                         }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))
-                HorizontalDivider(color = Color.LightGray.copy(alpha = 0.4f))
+                HorizontalDivider(color = if (isDark) Color(0xFF2A3D38) else Color.LightGray.copy(alpha = 0.4f))
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Release Title & Notes
-                Text(
-                    text = updateInfo.releaseTitle,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = TextPrimary
-                )
+                // Release Title & Notes Header
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(
+                        Icons.Filled.Description,
+                        contentDescription = null,
+                        tint = if (isDark) Color(0xFF34D399) else EmeraldPrimary,
+                        modifier = Modifier.size(17.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Güncelleme Açıklaması ve Yenilikler:",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = notesTitleColor
+                    )
+                }
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                Box(
+                // High-Contrast, Clean Readable Release Notes Box (Always clearly visible in dark theme)
+                val formattedNotes = remember(updateInfo.releaseNotes) {
+                    val raw = updateInfo.releaseNotes.ifBlank {
+                        "Yeni optimizasyonlar, performans artışı ve Aile ile Namaz havuz senkronizasyon geliştirmeleri."
+                    }
+                    raw.lines()
+                        .map { it.trim().removePrefix("##").removePrefix("#").trim() }
+                        .filter { it.isNotBlank() }
+                }
+
+                Surface(
+                    color = notesSurfaceColor,
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, notesBorderColor),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 140.dp)
-                        .background(
-                            Color.Black.copy(alpha = 0.03f),
-                            shape = RoundedCornerShape(10.dp)
-                        )
-                        .padding(10.dp)
+                        .heightIn(max = 220.dp)
                 ) {
-                    Text(
-                        text = updateInfo.releaseNotes.ifBlank { "Yeni optimizasyonlar ve Aile ile Namaz senkronizasyon güncellemeleri." },
-                        fontSize = 12.sp,
-                        lineHeight = 17.sp,
-                        color = TextSecondary,
-                        modifier = Modifier.verticalScroll(rememberScrollState())
-                    )
+                    Column(
+                        modifier = Modifier
+                            .padding(12.dp)
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        formattedNotes.forEach { line ->
+                            val cleanLine = line
+                                .replace("**", "")
+                                .removePrefix("*")
+                                .removePrefix("-")
+                                .trim()
+
+                            val isTitle = line.startsWith("🕌") || line.startsWith("Sürüm") || line.contains("Yenilikleri")
+                            
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                if (!isTitle) {
+                                    Text(
+                                        text = "•",
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isDark) Color(0xFF34D399) else EmeraldPrimary,
+                                        modifier = Modifier.padding(end = 6.dp)
+                                    )
+                                }
+                                Text(
+                                    text = cleanLine,
+                                    fontSize = if (isTitle) 13.sp else 12.5.sp,
+                                    fontWeight = if (isTitle) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isTitle) notesTitleColor else notesBodyColor,
+                                    lineHeight = 18.sp
+                                )
+                            }
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))
@@ -162,13 +234,13 @@ fun AppUpdateDialog(
                                 text = "Güncelleme indiriliyor...",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = TextPrimary
+                                color = textPrimaryColor
                             )
                             Text(
                                 text = "%$percent",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = EmeraldPrimary
+                                color = if (isDark) Color(0xFF34D399) else EmeraldPrimary
                             )
                         }
 
@@ -179,28 +251,28 @@ fun AppUpdateDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(8.dp),
-                            color = EmeraldPrimary,
-                            trackColor = EmeraldPrimary.copy(alpha = 0.2f),
+                            color = if (isDark) Color(0xFF34D399) else EmeraldPrimary,
+                            trackColor = EmeraldPrimary.copy(alpha = if (isDark) 0.3f else 0.2f),
                         )
 
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
                             text = "İndirme tamamlandığında doğrudan kurulum ekranı açılacaktır.",
                             fontSize = 10.sp,
-                            color = TextSecondary
+                            color = textSecondaryColor
                         )
                     }
                     Spacer(modifier = Modifier.height(10.dp))
                 } else if (errorMessage != null) {
                     Surface(
-                        color = MissedRed.copy(alpha = 0.1f),
+                        color = MissedRed.copy(alpha = if (isDark) 0.2f else 0.1f),
                         shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, MissedRed.copy(alpha = 0.3f)),
+                        border = BorderStroke(1.dp, MissedRed.copy(alpha = 0.4f)),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text(
                             text = errorMessage,
-                            color = MissedRed,
+                            color = if (isDark) Color(0xFFFCA5A5) else MissedRed,
                             fontSize = 11.sp,
                             modifier = Modifier.padding(8.dp)
                         )
@@ -217,10 +289,10 @@ fun AppUpdateDialog(
                         OutlinedButton(
                             onClick = onDismiss,
                             shape = RoundedCornerShape(10.dp),
-                            border = BorderStroke(1.dp, Color.LightGray),
+                            border = BorderStroke(1.dp, dismissBorderColor),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Daha Sonra", fontSize = 13.sp, color = TextSecondary)
+                            Text("Daha Sonra", fontSize = 13.sp, color = textSecondaryColor)
                         }
 
                         Button(

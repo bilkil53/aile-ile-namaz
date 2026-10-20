@@ -8,7 +8,7 @@
   <a href="https://github.com/bilkil53/aile-ile-namaz/releases/latest/download/Aile_Ile_Namaz.apk">
     <img src="https://img.shields.io/badge/İndir-Aile%20ile%20Namaz%20(APK)-0E5A4A?style=for-the-badge&logo=android&logoColor=white" alt="APK İndir" />
   </a>
-  <img src="https://img.shields.io/badge/Sürüm-v1.2%20(Resmi%20Sürüm)-0E5A4A?style=for-the-badge" alt="Sürüm" />
+  <img src="https://img.shields.io/badge/Sürüm-v1.4%20(Build%205)-0E5A4A?style=for-the-badge" alt="Sürüm" />
   <img src="https://img.shields.io/badge/Tema-Çam%20Yeşili%20%230E5A4A-0E5A4A?style=for-the-badge" alt="Tema" />
   <img src="https://img.shields.io/badge/Platform-Android%207.0%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android" />
   <img src="https://img.shields.io/badge/Vakitler-T.C.%20Diyanet-green?style=for-the-badge" alt="Diyanet" />
@@ -19,17 +19,17 @@
 
 ---
 
-## 📱 İndirme ve Resmi Kurulum (v1.2)
+## 📱 İndirme ve Resmi Kurulum (v1.4 - Build 5)
 
-Uygulamanın en güncel **v1.2** resmi sürümünü doğrudan cihazınıza kurabilirsiniz:
+Uygulamanın en güncel **v1.4 (Build 5)** resmi sürümünü doğrudan cihazınıza kurabilirsiniz:
 
-👉 **[📥 Aile ile Namaz v1.2 APK İndir](https://github.com/bilkil53/aile-ile-namaz/releases/latest/download/Aile_Ile_Namaz.apk)**
+👉 **[📥 Aile ile Namaz v1.4 APK İndir](https://github.com/bilkil53/aile-ile-namaz/releases/latest/download/Aile_Ile_Namaz.apk)**
 
-* **Yeni APK Dosya Yolu (Proje İçi):** `.build-outputs/Aile_Ile_Namaz.apk` (veya `.build-outputs/app-release.apk`)
+* **Yeni APK Dosya Yolu (Proje İçi):** `app/build/outputs/apk/release/app-release.apk`
 * **Resmi GitHub Deposu:** [https://github.com/bilkil53/aile-ile-namaz](https://github.com/bilkil53/aile-ile-namaz)
 * **Paket Kimliği (ApplicationId):** `com.app.aileilenamaz`
 * **Geliştirici:** `bilkil53`
-* **Hedef Kitle:** Eşler, anne, baba, çocuklar ve aile fertleri (2 kişiden sınırsız kişiye kadar genişleyebilir).
+* **Hedef Kitle:** Eşler, anne, baba, çocuklar ve tüm aile fertleri (2 kişiden sınırsız ferde kadar genişleyebilir).
 
 ---
 
@@ -68,10 +68,22 @@ Uygulamanın en güncel **v1.2** resmi sürümünü doğrudan cihazınıza kurab
 ### 6. 🧭 Canlı Manyetik Kıble Pusulası
 * Cihazın manyetik sensörleri kullanılarak harita veya internet gerektirmeden tam hassasiyetle Kâbe yönü tayin edilir. Çam Yeşili (#0E5A4A) estetiği ile yeniden tasarlandı.
 
-### 7. ☁️ Otomatik Bulut Senkronizasyonu & Tek Kodla Bağlantı
-* 1. Kişi aile lideri olarak bir Aile Kodu oluşturur (`EMB-XXXX`).
-* Diğer aile fertleri tek dokunuşla bu kodu girerek aynı havuza bağlanır.
-* Google ile giriş yapıldığında telefon değişse veya silinse dahi tüm aile havuzu anında yeni cihaza geri yüklenir.
+### 7. ☁️ Otomatik Bulut Senkronizasyonu & REIS-00 Aile Havuzu
+* **Aile Reisi ve Aile Ferdi Rolleri:** Giriş yapan kullanıcı doğrudan reis olarak ilan edilmez; havuza biri dahil olduğunda veya kendisi aile havuzu kurduğunda Aile Reisi olur.
+* **Tek Kodla Kolay Katılım:** Lider `REIS-00XXXX` formatındaki kodunu paylaşır; eş, kızım, oğlum veya diğer fertler kodu girerek anında havuza bağlanır.
+* **Canlı Dua & İbadet Bildirimleri:** Havuzdaki fertler namaz kıldığında veya tek tıkla dua gönderdiğinde tüm aile fertlerine anlık bildirim iletilir.
+* **Kişiselleştirilmiş Hitaplar:** Giriş yapıldığında seçilen unvanlar (Baba, Anne, Kızım, Oğlum) aile havuzunda doğru eşleşme ve doğru hitaplarla görünür.
+
+---
+
+## 📋 Sürüm Değişiklik Günlüğü (Changelog)
+
+### 🕌 v1.4 (Build 5) - Son Güncellemeler:
+* **👑 Aile Reisi & Ferdi Rol Ayrımı:** İlk girişte otomatik reis ilan edilme durumu düzeltildi. Kullanıcılar bağımsız olarak kod girip bir havuza katılabilir veya kendi aile havuzunu kurabilir. Havuza katılım gerçekleştiğinde lider "Aile Reisi", bağlanan kişi "Aile Ferdi" olarak listelenir.
+* **🏷️ Hitap ve Unvan Düzeltmesi:** Kız çocuk veya fertler giriş yaptığında oluşan isim/unvan karışıklığı giderildi; kod giriş alanı ve rol gösterimi ayrıştırıldı.
+* **🔔 Aile Havuzu Dua ve Namaz Bildirimleri:** `ntfy.sh` ve Firestore altyapısı üzerinden aile havuzuna (`ain_pool_`) gönderilen dua ve namaz kılındı bildirimlerinin tüm bağlı cihazlara anlık düşmesi sağlandı.
+* **🔗 Güncel Sürüm ve Detaylar Bağlantısı:** Ayarlar ekranındaki "Detaylar buradadır" tıklaması doğrudan GitHub'ın en güncel sürüm sayfasına (`/releases/latest`) yönlendirecek şekilde düzeltildi.
+* **📲 Otomatik Güncelleme Entegrasyonu:** Uygulama içi güncelleme kontrolü ve APK indirme altyapısı v1.4 ile senkronize edildi.
 
 ---
 

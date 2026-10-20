@@ -86,7 +86,7 @@ abstract class AppDatabase : RoomDatabase() {
             dao.savePartnerInfo(
                 PartnerInfoEntity(
                     id = 1,
-                    myInviteCode = "EMB-53${(10..99).random()}",
+                    myInviteCode = "REIS-00${(1000..9999).random()}",
                     myDisplayName = "",
                     myEmail = "",
                     isMatched = false,

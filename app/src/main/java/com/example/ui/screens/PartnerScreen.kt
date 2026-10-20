@@ -92,29 +92,109 @@ fun PartnerScreen(
                 remove("p2_yesterday_maghrib")
                 remove("p2_yesterday_isha")
                 putString("custom_extra_member_ids", "NONE")
+                putString("custom_extra_member_ids", "NONE")
                 putBoolean("family_cleanup_no_dummies_v16", true)
                 apply()
+            }
+            val savedPool = prefs.getString("family_pool_code", null)
+            val isJoined = prefs.getBoolean("is_pool_member_joined", false)
+            if (savedPool != null && (!savedPool.startsWith("REIS-00") && (!isJoined || savedPool.startsWith("EMB") || savedPool.startsWith("ARK") || savedPool == "REIS-5385"))) {
+                prefs.edit().remove("family_pool_code").apply()
             }
         }
         prefs
     }
 
-    // 1. Kişinin kodu üzerinden aile havuzu kodu oluştur / yükle
+    // Kodun REIS-00 ile başladığından daima emin ol
+    LaunchedEffect(partnerInfo.myInviteCode) {
+        if (partnerInfo.myInviteCode.isBlank() || !partnerInfo.myInviteCode.startsWith("REIS-00")) {
+            viewModel.ensureUniqueInviteCode()
+        }
+    }
+
+    // 1. Kişinin kodu üzerinden aile havuzu kodu oluştur / yükle (Asla EMB gibi eski kodlar gelmez)
     var familyPoolCode by remember(partnerInfo.myInviteCode) {
         val saved = childPrefs.getString("family_pool_code", null)
-        mutableStateOf(saved ?: partnerInfo.myInviteCode.ifBlank { "EMB-5385" })
+        val validCode = if (!saved.isNullOrBlank() && saved.startsWith("REIS-00")) {
+            saved
+        } else if (partnerInfo.myInviteCode.startsWith("REIS-00")) {
+            partnerInfo.myInviteCode
+        } else {
+            ""
+        }
+        mutableStateOf(validCode)
+    }
+
+    // Aile Havuzu Liderlik ve Dahiliyet Durumları (Aile Reisi ve Aile Fertleri)
+    val isPoolMemberJoined = remember(refreshTrigger) {
+        childPrefs.getBoolean("is_pool_member_joined", false)
+    }
+    // Başkasının havuzuna dahil olan aile ferdi mi?
+    val isJoinedMember = remember(isPoolMemberJoined, partnerInfo.isMatched, partnerInfo.partnerInviteCode, familyPoolCode, partnerInfo.myInviteCode, refreshTrigger) {
+        isPoolMemberJoined ||
+            (partnerInfo.isMatched && partnerInfo.partnerInviteCode.isNotBlank() && partnerInfo.partnerInviteCode != partnerInfo.myInviteCode) ||
+            (familyPoolCode.isNotBlank() && familyPoolCode != partnerInfo.myInviteCode && childPrefs.contains("family_pool_code"))
+    }
+    // Aile Reisi: Yalnızca kendi havuzuna en az bir aile ferdi dahil olduğunda (eşleşme sağlandığında) Aile Reisi unvanı verilir!
+    val isPoolLeader = remember(isJoinedMember, partnerInfo.isMatched, refreshTrigger) {
+        !isJoinedMember && (partnerInfo.isMatched || childPrefs.getBoolean("family_pool_has_members", false) || childPrefs.getBoolean("is_explicit_reis", false))
+    }
+    val isInFamilyPool = remember(settings.isLoggedIn, settings.userEmail, partnerInfo.isMatched, familyPoolCode, isPoolMemberJoined, refreshTrigger) {
+        (settings.isLoggedIn || settings.userEmail.isNotBlank()) &&
+            (childPrefs.getBoolean("family_pool_created", false) || partnerInfo.isMatched || isPoolMemberJoined || familyPoolCode.isNotBlank())
+    }
+
+    val poolLeaderDisplayName = remember(isPoolLeader, isJoinedMember, settings.userName, partnerInfo.partnerDisplayName, refreshTrigger) {
+        val raw = if (isPoolLeader) {
+            if (settings.userName.isNotBlank() && !settings.userName.contains("@") && settings.userName != "Mümin") {
+                settings.userName
+            } else {
+                childPrefs.getString("p1_name", "Aile Reisi") ?: "Aile Reisi"
+            }
+        } else if (isJoinedMember) {
+            if (partnerInfo.partnerDisplayName.isNotBlank() && !partnerInfo.partnerDisplayName.contains("@")) {
+                partnerInfo.partnerDisplayName
+            } else {
+                childPrefs.getString("p2_name", "Aile Reisi") ?: "Aile Reisi"
+            }
+        } else {
+            "Henüz Belirlenmedi"
+        }
+        if (raw.contains("@")) raw.substringBefore("@") else raw
+    }
+
+    // Kişi 1 Takma Adı (Asla e-posta adresi görünmez, takma ad garantisi)
+    val p1DisplayName = remember(settings.userName, settings.userEmail, refreshTrigger) {
+        val emailKey = settings.userEmail.trim().lowercase()
+        val savedNick = childPrefs.getString("user_nickname_$emailKey", null)
+            ?: childPrefs.getString("p1_name", null)
+        val raw = when {
+            !savedNick.isNullOrBlank() && !savedNick.contains("@") && savedNick != "Mümin" -> savedNick
+            settings.userName.isNotBlank() && !settings.userName.contains("@") && settings.userName != "Mümin" -> settings.userName
+            else -> "Kişi 1"
+        }
+        if (raw.contains("@")) raw.substringBefore("@") else raw
     }
 
     // Kişi 1 (Siz / Kendiniz)
     var person1Icon by remember(refreshTrigger) { mutableStateOf(childPrefs.getString("p1_icon", "🧔") ?: "🧔") }
 
-    // Kişi 2 (Yalnızca eşleşmişse veya kullanıcı açıkça eklediyse aktiftir; varsayılan kapalı)
-    var hasPerson2 by remember(partnerInfo.isMatched, refreshTrigger) {
-        mutableStateOf(partnerInfo.isMatched || childPrefs.getBoolean("has_p2_customized", false))
+    // Kişi 2 (Eşleşmişse, havuza katılmışsa veya açıkça eklenmişse aktiftir; varsayılan kapalı)
+    var hasPerson2 by remember(partnerInfo.isMatched, isJoinedMember, refreshTrigger) {
+        mutableStateOf(partnerInfo.isMatched || isJoinedMember || childPrefs.getBoolean("has_p2_customized", false))
     }
-    var person2Name by remember(refreshTrigger) {
-        val defaultName = partnerInfo.partnerDisplayName.ifBlank { childPrefs.getString("p2_name", "Kişi 2") ?: "Kişi 2" }
-        mutableStateOf(defaultName)
+    var person2Name by remember(partnerInfo.partnerDisplayName, isJoinedMember, poolLeaderDisplayName, refreshTrigger) {
+        val raw = if (isJoinedMember) {
+            if (partnerInfo.partnerDisplayName.isNotBlank() && !partnerInfo.partnerDisplayName.contains("@")) {
+                partnerInfo.partnerDisplayName
+            } else {
+                childPrefs.getString("p2_name", poolLeaderDisplayName) ?: poolLeaderDisplayName
+            }
+        } else {
+            partnerInfo.partnerDisplayName.ifBlank { childPrefs.getString("p2_name", "Kişi 2") ?: "Kişi 2" }
+        }
+        val clean = if (raw.contains("@")) raw.substringBefore("@") else raw
+        mutableStateOf(clean)
     }
     var person2Icon by remember(refreshTrigger) { mutableStateOf(childPrefs.getString("p2_icon", "🧕") ?: "🧕") }
 
@@ -154,7 +234,8 @@ fun PartnerScreen(
 
     // Dinamik Birey Yardımcı Fonksiyonları
     fun getMemberName(id: Int): String {
-        return childPrefs.getString("p${id}_name", "Kişi $id") ?: "Kişi $id"
+        val raw = childPrefs.getString("p${id}_name", "Kişi $id") ?: "Kişi $id"
+        return if (raw.contains("@")) raw.substringBefore("@") else raw
     }
 
     fun getMemberIcon(id: Int): String {
@@ -245,11 +326,7 @@ fun PartnerScreen(
         if (result.resultCode == android.app.Activity.RESULT_OK) {
             val accountName = result.data?.getStringExtra(AccountManager.KEY_ACCOUNT_NAME)
             if (!accountName.isNullOrBlank()) {
-                val displayName = accountName.substringBefore("@")
-                    .replace(".", " ")
-                    .split(" ")
-                    .joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
-                viewModel.loginWithGoogleBrowser(email = accountName, name = displayName)
+                viewModel.loginWithGoogleBrowser(email = accountName, name = "")
             }
         }
     }
@@ -357,9 +434,10 @@ fun PartnerScreen(
                         Spacer(modifier = Modifier.width(12.dp))
 
                         Column(modifier = Modifier.weight(1f)) {
+                            val myNick = p1DisplayName
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = settings.userName.ifBlank { "Kişi 1 (Siz)" },
+                                    text = myNick,
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
@@ -368,7 +446,7 @@ fun PartnerScreen(
                                 IconButton(
                                     onClick = {
                                         editingPersonIndex = 1
-                                        editPersonNameInput = settings.userName
+                                        editPersonNameInput = myNick
                                         editPersonIconInput = person1Icon
                                         editPersonActiveInput = true
                                         showEditPersonDialog = true
@@ -379,11 +457,17 @@ fun PartnerScreen(
                                 }
                             }
 
-                            if (settings.userEmail.isNotBlank()) {
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = Color.White.copy(alpha = 0.18f),
+                                modifier = Modifier.padding(top = 2.dp)
+                            ) {
                                 Text(
-                                    text = settings.userEmail,
-                                    fontSize = 12.sp,
-                                    color = Color(0xFF86EFAC)
+                                    text = "Google Hesabı Bağlı ✓",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color(0xFF86EFAC),
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
                             }
 
@@ -393,10 +477,10 @@ fun PartnerScreen(
                             ) {
                                 Surface(
                                     shape = RoundedCornerShape(4.dp),
-                                    color = Color.White.copy(alpha = 0.2f)
+                                    color = if (isPoolLeader) Color(0xFF16A34A) else if (isJoinedMember) Color(0xFF0284C7) else Color.White.copy(alpha = 0.2f)
                                 ) {
                                     Text(
-                                        text = "Google Aktif ✓ • Havuz Lideri",
+                                        text = if (isPoolLeader) "👑 Aile Reisi" else if (isJoinedMember) "👥 Aile Ferdi" else "👥 Aile Ferdi",
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = Color.White,
@@ -518,7 +602,79 @@ fun PartnerScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // 2. ÇOK KİŞİLİK YOLDAŞ HAVUZU BİLGİSİ
+                    // AİLE REİSİ BİLGİ KARTI (Sadece havuz kurulduğunda veya dahil olunduğunda)
+                    if (isPoolLeader || isJoinedMember) {
+                        Surface(
+                            color = Color.White.copy(alpha = 0.18f),
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, Color(0xFFFDE68A).copy(alpha = 0.6f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(if (isPoolLeader) "👑" else "🕌", fontSize = 18.sp)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = if (isPoolLeader) "Aile Reisi: $poolLeaderDisplayName (Siz)" else "Aile Reisi: $poolLeaderDisplayName",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFFEF3C7)
+                                    )
+                                    Text(
+                                        text = if (isPoolLeader) "Aile reisisiniz • Havuzunuz aktif 🟢" 
+                                               else "Aile havuzuna dahilsiniz • Kıldığınız namazlar havuza aktarılır 🟢",
+                                        fontSize = 10.sp,
+                                        color = Color.White.copy(alpha = 0.88f)
+                                    )
+                                }
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = if (isPoolLeader) Color(0xFF16A34A) else Color(0xFF0284C7)
+                                ) {
+                                    Text(
+                                        text = if (isPoolLeader) "AİLE REİSİ 👑" else "AİLE FERDİ 👥",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        Surface(
+                            color = Color.White.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.25f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("👨‍👩‍👧‍👦", fontSize = 18.sp)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Aile İbadet Havuzu",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFFEF3C7)
+                                    )
+                                    Text(
+                                        text = "Henüz bir havuza bağlı değilsiniz. Kod girerek katılabilir veya kendi havuzunuzu başlatabilirsiniz.",
+                                        fontSize = 10.sp,
+                                        color = Color.White.copy(alpha = 0.88f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
                     Surface(
                         color = Color.White.copy(alpha = 0.15f),
                         shape = RoundedCornerShape(10.dp),
@@ -638,81 +794,246 @@ fun PartnerScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // 4. AKTİF DAVET KODU BÖLÜMÜ (1. Kişinin Kodu Merkezli)
-                    Surface(
-                        color = Color.White.copy(alpha = 0.15f),
-                        shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.25f)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(10.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text("Aktif Aile Davet Kodu", fontSize = 11.sp, color = Color.White.copy(alpha = 0.85f))
-                                    Text(text = familyPoolCode, fontSize = 18.sp, fontWeight = FontWeight.Black, color = Color(0xFFFEF3C7))
-                                }
-
-                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    IconButton(
-                                        onClick = {
-                                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                            val clip = ClipData.newPlainText("Aile Davet Kodu", familyPoolCode)
-                                            clipboard.setPrimaryClip(clip)
-                                            viewModel.showStatusMessage("Aile Davet Kodu kopyalandı: $familyPoolCode 📋")
-                                        },
-                                        modifier = Modifier.size(32.dp)
-                                    ) {
-                                        Icon(Icons.Filled.ContentCopy, contentDescription = "Kodu Kopyala", tint = Color.White, modifier = Modifier.size(18.dp))
+                    // 4. AİLE HAVUZ KODU VEYA KATILIM ALANI
+                    if (isPoolLeader) {
+                        // Sadece Aile Reisi için: Aile Paylaşım Kodu kartı görünür
+                        Surface(
+                            color = Color.White.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.25f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text("Aile Havuz Paylaşım Kodunuz (👑 Aile Reisi)", fontSize = 11.sp, color = Color.White.copy(alpha = 0.85f))
+                                        Text(text = familyPoolCode.ifBlank { partnerInfo.myInviteCode.ifBlank { "REIS-00..." } }, fontSize = 18.sp, fontWeight = FontWeight.Black, color = Color(0xFFFEF3C7))
                                     }
 
-                                    IconButton(
-                                        onClick = {
-                                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                                type = "text/plain"
-                                                putExtra(
-                                                    Intent.EXTRA_TEXT,
-                                                    "Selamün Aleyküm! Aile ile Namaz uygulamamızda ortak aile havuzumuz açıldı. Aile Havuz Kodumuz: $familyPoolCode . Uygulamadan 'Kodu Onayla & Havuza Katıl' butonuna bu kodu girerek ibadet halkamıza dahil olabilirsiniz! 🤲"
-                                                )
-                                            }
-                                            context.startActivity(Intent.createChooser(shareIntent, "Aile Havuz Kodunu Paylaş"))
-                                        },
-                                        modifier = Modifier.size(32.dp)
+                                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        IconButton(
+                                            onClick = {
+                                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                                val clip = ClipData.newPlainText("Aile Davet Kodu", familyPoolCode)
+                                                clipboard.setPrimaryClip(clip)
+                                                viewModel.showStatusMessage("Aile Havuz Kodu kopyalandı: $familyPoolCode 📋")
+                                            },
+                                            modifier = Modifier.size(32.dp)
+                                        ) {
+                                            Icon(Icons.Filled.ContentCopy, contentDescription = "Kodu Kopyala", tint = Color.White, modifier = Modifier.size(18.dp))
+                                        }
+
+                                        IconButton(
+                                            onClick = {
+                                                val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                                    type = "text/plain"
+                                                    putExtra(
+                                                        Intent.EXTRA_TEXT,
+                                                        "Selamün Aleyküm! Aile ile Namaz uygulamamızda aile havuzumuz açıldı. Aile Havuz Kodumuz: $familyPoolCode . Uygulamaya bu kodu girerek ailemizin ibadet halkasına dahil olabilirsiniz! 🤲"
+                                                    )
+                                                }
+                                                context.startActivity(Intent.createChooser(shareIntent, "Aile Havuz Kodunu Paylaş"))
+                                            },
+                                            modifier = Modifier.size(32.dp)
+                                        ) {
+                                            Icon(Icons.Filled.Share, contentDescription = "Kodu Paylaş", tint = Color.White, modifier = Modifier.size(18.dp))
+                                        }
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Bu kodu aileniz ve çocuklarınızla paylaşın. Onlar uygulamadan bu kodu girince otomatik olarak havuza dahil olurlar.",
+                                    fontSize = 10.sp,
+                                    color = Color.White.copy(alpha = 0.85f)
+                                )
+                            }
+                        }
+                    } else if (isJoinedMember) {
+                        // Havuza dahil olan aile ferdi: Davet kodu ekranı tamamen kalkar!
+                        Surface(
+                            color = Color.White.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, Color(0xFF86EFAC).copy(alpha = 0.5f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("🕌", fontSize = 24.sp)
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "Aile İbadet Havuzundasınız",
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
+                                        )
+                                        Text(
+                                            text = "Aile Reisinizin ($poolLeaderDisplayName) ortak havuzuna dahilsiniz • Kıldığınız namazlar anlık havuza aktarılır 🟢",
+                                            fontSize = 11.sp,
+                                            color = Color(0xFFC8E6C9)
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End
+                                ) {
+                                    Text(
+                                        text = "Havuzdan Ayrıl / Kodu Değiştir",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFFCA5A5),
+                                        modifier = Modifier.clickable {
+                                            childPrefs.edit()
+                                                .putBoolean("is_pool_member_joined", false)
+                                                .remove("family_pool_code")
+                                                .apply()
+                                            viewModel.unmatchPartner()
+                                            refreshTrigger++
+                                            viewModel.showStatusMessage("Aile havuzundan ayrıldınız.")
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        // Havuza henüz katılmamış kullanıcı: Hem kod girerek katılma alanı hem kendi kodunu paylaşma alanı
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            // 1. KART: KOD GİREREK AİLE HAVUZUNA KATIL (GÖZ ÖNÜNDE VE ERİŞİLEBİLİR)
+                            Surface(
+                                color = Color.White.copy(alpha = 0.16f),
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, Color(0xFF86EFAC).copy(alpha = 0.7f)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text("📥", fontSize = 16.sp)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("Aile Havuzuna Katıl (Kod Gir)", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFEF3C7))
+                                    }
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text("Aile Reisinizin (babanız/eşiniz) size ilettiği REIS-00 kodunu girerek havuza bağlanın:", fontSize = 11.sp, color = Color.White.copy(alpha = 0.9f))
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Icon(Icons.Filled.Share, contentDescription = "Kodu Paylaş", tint = Color.White, modifier = Modifier.size(18.dp))
+                                        OutlinedTextField(
+                                            value = joinPoolCodeInput,
+                                            onValueChange = { joinPoolCodeInput = it.uppercase() },
+                                            placeholder = { Text("Örn: REIS-001234", color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp) },
+                                            singleLine = true,
+                                            colors = OutlinedTextFieldDefaults.colors(
+                                                focusedTextColor = Color.White,
+                                                unfocusedTextColor = Color.White,
+                                                focusedBorderColor = Color(0xFF86EFAC),
+                                                unfocusedBorderColor = Color.White.copy(alpha = 0.5f)
+                                            ),
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        Button(
+                                            onClick = {
+                                                if (!settings.isLoggedIn && settings.userEmail.isBlank()) {
+                                                    viewModel.showStatusMessage("⚠️ Aile havuzuna katılmak için lütfen önce Google ile giriş yapınız.")
+                                                    return@Button
+                                                }
+                                                val code = joinPoolCodeInput.trim().uppercase()
+                                                if (code.isNotBlank()) {
+                                                    familyPoolCode = code
+                                                    childPrefs.edit()
+                                                        .putString("family_pool_code", code)
+                                                        .putBoolean("is_pool_member_joined", true)
+                                                        .apply()
+                                                    viewModel.matchPartnerWithCode(code)
+                                                    refreshTrigger++
+                                                    viewModel.showStatusMessage("$code kodlu Aile Havuzuna katılımınız sağlandı! 🟢")
+                                                }
+                                            },
+                                            colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
+                                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                                        ) {
+                                            Text("Havuza Katıl", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                        }
                                     }
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            // 2. KART: KENDİ AİLE HAVUZUNU KUR (AİLE REİSİ OL)
+                            Surface(
+                                color = Color.White.copy(alpha = 0.12f),
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.25f)),
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                OutlinedButton(
-                                    onClick = { showEmailInviteDialog = true },
-                                    shape = RoundedCornerShape(8.dp),
-                                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.6f)),
-                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Icon(Icons.Filled.Email, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Mail ile Davet", fontSize = 10.sp, color = Color.White, fontWeight = FontWeight.Bold)
-                                }
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text("👑", fontSize = 14.sp)
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text("Veya Kendi Aile Havuzunuzu Başlatın", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFEF3C7))
+                                            }
+                                            Text(
+                                                text = partnerInfo.myInviteCode.ifBlank { "REIS-00..." },
+                                                fontSize = 16.sp,
+                                                fontWeight = FontWeight.Black,
+                                                color = Color.White
+                                            )
+                                        }
 
-                                Button(
-                                    onClick = { showJoinPoolDialog = true },
-                                    shape = RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Icon(Icons.Filled.Check, contentDescription = null, tint = EmeraldPrimary, modifier = Modifier.size(14.dp))
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Kodu Onayla & Katıl", fontSize = 10.sp, color = EmeraldPrimary, fontWeight = FontWeight.Bold)
+                                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                            IconButton(
+                                                onClick = {
+                                                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                                    val clip = ClipData.newPlainText("Aile Davet Kodu", partnerInfo.myInviteCode)
+                                                    clipboard.setPrimaryClip(clip)
+                                                    viewModel.showStatusMessage("Kod kopyalandı: ${partnerInfo.myInviteCode} 📋")
+                                                },
+                                                modifier = Modifier.size(32.dp)
+                                            ) {
+                                                Icon(Icons.Filled.ContentCopy, contentDescription = "Kodu Kopyala", tint = Color.White, modifier = Modifier.size(17.dp))
+                                            }
+
+                                            IconButton(
+                                                onClick = {
+                                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                                        type = "text/plain"
+                                                        putExtra(
+                                                            Intent.EXTRA_TEXT,
+                                                            "Selamün Aleyküm! Aile ile Namaz uygulamamızda aile havuzumuz açıldı. Aile Havuz Kodumuz: ${partnerInfo.myInviteCode} . Bu kodu girerek havuzumuza dahil olabilirsiniz! 🤲"
+                                                        )
+                                                    }
+                                                    context.startActivity(Intent.createChooser(shareIntent, "Kodu Paylaş"))
+                                                },
+                                                modifier = Modifier.size(32.dp)
+                                            ) {
+                                                Icon(Icons.Filled.Share, contentDescription = "Kodu Paylaş", tint = Color.White, modifier = Modifier.size(17.dp))
+                                            }
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Ailenizi davet etmek için bu kodu paylaşın. Birisi bu kodla bağlandığında otomatik olarak Aile Reisi olacaksınız.",
+                                        fontSize = 10.sp,
+                                        color = Color.White.copy(alpha = 0.85f)
+                                    )
                                 }
                             }
                         }
@@ -746,20 +1067,29 @@ fun PartnerScreen(
                                 Column(modifier = Modifier.weight(1f)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(
-                                            text = settings.userName.ifBlank { "Kişi 1" },
+                                            text = p1DisplayName,
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color.White
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
-                                        Text(text = "(Siz • Havuz Lideri)", fontSize = 10.sp, color = Color(0xFF86EFAC), fontWeight = FontWeight.SemiBold)
+                                        Text(
+                                            text = if (isPoolLeader) "(Siz • 👑 Aile Reisi)" else "(Siz • 👥 Aile Ferdi)",
+                                            fontSize = 10.sp,
+                                            color = if (isPoolLeader) Color(0xFFFEF3C7) else Color(0xFF86EFAC),
+                                            fontWeight = FontWeight.SemiBold
+                                        )
                                     }
-                                    Text(text = "Google ile Bağlı ✓ • Çevrimiçi", fontSize = 10.sp, color = Color.White.copy(alpha = 0.8f))
+                                    Text(
+                                        text = if (isPoolLeader) "Google ile Bağlı ✓ • Aile Reisi" else if (isJoinedMember) "Google ile Bağlı ✓ • Aile Ferdi" else "Google ile Bağlı ✓",
+                                        fontSize = 10.sp,
+                                        color = Color.White.copy(alpha = 0.8f)
+                                    )
                                 }
                                 IconButton(
                                     onClick = {
                                         editingPersonIndex = 1
-                                        editPersonNameInput = settings.userName
+                                        editPersonNameInput = p1DisplayName
                                         editPersonIconInput = person1Icon
                                         editPersonActiveInput = true
                                         showEditPersonDialog = true
@@ -772,7 +1102,7 @@ fun PartnerScreen(
                         }
 
                         // Kişi 2
-                        if (partnerInfo.isMatched || hasPerson2) {
+                        if (partnerInfo.isMatched || hasPerson2 || isJoinedMember) {
                             Surface(
                                 color = Color.White.copy(alpha = 0.15f),
                                 shape = RoundedCornerShape(10.dp),
@@ -786,61 +1116,80 @@ fun PartnerScreen(
                                     Text(text = person2Icon, fontSize = 20.sp)
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text(text = person2Name, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(text = person2Name, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text(
+                                                text = if (isPoolLeader) "• 👥 Aile Ferdi" else if (isJoinedMember) "• 👑 Aile Reisi" else "• Kişi 2",
+                                                fontSize = 10.sp,
+                                                color = if (isPoolLeader) Color(0xFF86EFAC) else Color(0xFFFEF3C7),
+                                                fontWeight = FontWeight.SemiBold
+                                            )
+                                        }
                                         Text(
-                                            text = if (partnerInfo.isMatched) "Çift Taraflı Bağlandı 🟢 • Aktif" else "Davet Bekleniyor ⏳ • Kod Gönderildi",
+                                            text = if (partnerInfo.isMatched || isJoinedMember) "Aile Havuzunda Bağlı 🟢 • Aktif" else "Davet Bekleniyor ⏳ • Kod Gönderildi",
                                             fontSize = 10.sp,
-                                            color = if (partnerInfo.isMatched) Color(0xFF86EFAC) else Color(0xFFFDE68A),
+                                            color = if (partnerInfo.isMatched || isJoinedMember) Color(0xFF86EFAC) else Color(0xFFFDE68A),
                                             fontWeight = FontWeight.SemiBold
                                         )
                                     }
-                                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                        IconButton(
-                                            onClick = {
-                                                editingPersonIndex = 2
-                                                editPersonNameInput = person2Name
-                                                editPersonIconInput = person2Icon
-                                                editPersonActiveInput = hasPerson2
-                                                showEditPersonDialog = true
-                                            },
-                                            modifier = Modifier.size(28.dp)
-                                        ) {
-                                            Icon(Icons.Filled.Edit, contentDescription = "Düzenle", tint = Color.White, modifier = Modifier.size(16.dp))
-                                        }
-                                        IconButton(
-                                            onClick = {
-                                                hasPerson2 = false
-                                                childPrefs.edit()
-                                                    .putBoolean("has_p2", false)
-                                                    .putBoolean("has_p2_customized", false)
-                                                    .remove("p2_name")
-                                                    .remove("p2_icon")
-                                                    .apply()
-                                                if (selectedFamilyTab == 1) selectedFamilyTab = 0
-                                                if (partnerInfo.isMatched) {
-                                                    viewModel.unmatchPartner()
-                                                }
-                                                refreshTrigger++
-                                                viewModel.showStatusMessage("Kişi 2 havuzdan kaldırıldı.")
-                                            },
-                                            modifier = Modifier.size(28.dp)
-                                        ) {
-                                            Icon(Icons.Filled.PersonRemove, contentDescription = "Kaldır", tint = Color(0xFFFFCDD2), modifier = Modifier.size(16.dp))
+                                    if (isPoolLeader) {
+                                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                            IconButton(
+                                                onClick = {
+                                                    editingPersonIndex = 2
+                                                    editPersonNameInput = person2Name
+                                                    editPersonIconInput = person2Icon
+                                                    editPersonActiveInput = hasPerson2
+                                                    showEditPersonDialog = true
+                                                },
+                                                modifier = Modifier.size(28.dp)
+                                            ) {
+                                                Icon(Icons.Filled.Edit, contentDescription = "Düzenle", tint = Color.White, modifier = Modifier.size(16.dp))
+                                            }
+                                            IconButton(
+                                                onClick = {
+                                                    hasPerson2 = false
+                                                    childPrefs.edit()
+                                                        .putBoolean("has_p2", false)
+                                                        .putBoolean("has_p2_customized", false)
+                                                        .remove("p2_name")
+                                                        .remove("p2_icon")
+                                                        .apply()
+                                                    if (selectedFamilyTab == 1) selectedFamilyTab = 0
+                                                    if (partnerInfo.isMatched) {
+                                                        viewModel.unmatchPartner()
+                                                    }
+                                                    refreshTrigger++
+                                                    viewModel.showStatusMessage("Kişi 2 havuzdan kaldırıldı.")
+                                                },
+                                                modifier = Modifier.size(28.dp)
+                                            ) {
+                                                Icon(Icons.Filled.PersonRemove, contentDescription = "Kaldır", tint = Color(0xFFFFCDD2), modifier = Modifier.size(16.dp))
+                                            }
                                         }
                                     }
                                 }
                             }
-                        } else {
-                            OutlinedButton(
-                                onClick = { showJoinPoolDialog = true },
+                        } else if (isPoolLeader) {
+                            Surface(
+                                color = Color.White.copy(alpha = 0.10f),
                                 shape = RoundedCornerShape(10.dp),
-                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.6f)),
-                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.20f)),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Icon(Icons.Filled.GroupAdd, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("+ Kişi 2 ile Kod Girerek Bağlan", fontSize = 11.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Filled.Groups, contentDescription = null, tint = Color(0xFFFEF3C7), modifier = Modifier.size(18.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Aile fertleriniz yukarıdaki REIS kodunuz ile havuza dahil oldukça burada listelenecektir ⏳",
+                                        fontSize = 11.sp,
+                                        color = Color.White.copy(alpha = 0.90f)
+                                    )
+                                }
                             }
                         }
 
@@ -861,80 +1210,55 @@ fun PartnerScreen(
                                     Text(text = mIcon, fontSize = 20.sp)
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Column(modifier = Modifier.weight(1f)) {
-                                        Text(text = mName, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(text = mName, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text(text = "• 👥 Aile Üyesi", fontSize = 10.sp, color = Color(0xFF86EFAC), fontWeight = FontWeight.SemiBold)
+                                        }
                                         Text(text = "Aile Havuzunda Aktif 🟢", fontSize = 10.sp, color = Color(0xFF86EFAC), fontWeight = FontWeight.SemiBold)
                                     }
-                                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                        IconButton(
-                                            onClick = {
-                                                editingPersonIndex = id
-                                                editPersonNameInput = mName
-                                                editPersonIconInput = mIcon
-                                                editPersonActiveInput = true
-                                                showEditPersonDialog = true
-                                            },
-                                            modifier = Modifier.size(28.dp)
-                                        ) {
-                                            Icon(Icons.Filled.Edit, contentDescription = "Düzenle", tint = Color.White, modifier = Modifier.size(16.dp))
-                                        }
-                                        IconButton(
-                                            onClick = {
-                                                val targetId = id
-                                                val updated = extraMemberIds.filter { it != targetId }
-                                                extraMemberIds = updated
-                                                childPrefs.edit()
-                                                    .putString("custom_extra_member_ids", if (updated.isEmpty()) "NONE" else updated.joinToString(","))
-                                                    .remove("has_p$targetId")
-                                                    .remove("p${targetId}_name")
-                                                    .remove("p${targetId}_icon")
-                                                    .apply()
-                                                for (dayIdx in 0..1) {
-                                                    for (pIdx in 0..4) {
-                                                        childPrefs.edit().remove("m_${targetId}_d${dayIdx}_p$pIdx").apply()
+                                    if (isPoolLeader) {
+                                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                            IconButton(
+                                                onClick = {
+                                                    editingPersonIndex = id
+                                                    editPersonNameInput = mName
+                                                    editPersonIconInput = mIcon
+                                                    editPersonActiveInput = true
+                                                    showEditPersonDialog = true
+                                                },
+                                                modifier = Modifier.size(28.dp)
+                                            ) {
+                                                Icon(Icons.Filled.Edit, contentDescription = "Düzenle", tint = Color.White, modifier = Modifier.size(16.dp))
+                                            }
+                                            IconButton(
+                                                onClick = {
+                                                    val targetId = id
+                                                    val updated = extraMemberIds.filter { it != targetId }
+                                                    extraMemberIds = updated
+                                                    childPrefs.edit()
+                                                        .putString("custom_extra_member_ids", if (updated.isEmpty()) "NONE" else updated.joinToString(","))
+                                                        .remove("has_p$targetId")
+                                                        .remove("p${targetId}_name")
+                                                        .remove("p${targetId}_icon")
+                                                        .apply()
+                                                    for (dayIdx in 0..1) {
+                                                        for (pIdx in 0..4) {
+                                                            childPrefs.edit().remove("m_${targetId}_d${dayIdx}_p$pIdx").apply()
+                                                        }
                                                     }
-                                                }
-                                                if (selectedFamilyTab == targetId) selectedFamilyTab = 0
-                                                refreshTrigger++
-                                                viewModel.showStatusMessage("$mName havuzdan ve tablodan kaldırıldı.")
-                                            },
-                                            modifier = Modifier.size(28.dp)
-                                        ) {
-                                            Icon(Icons.Filled.PersonRemove, contentDescription = "Kaldır", tint = Color(0xFFFFCDD2), modifier = Modifier.size(16.dp))
+                                                    if (selectedFamilyTab == targetId) selectedFamilyTab = 0
+                                                    refreshTrigger++
+                                                    viewModel.showStatusMessage("$mName havuzdan ve tablodan kaldırıldı.")
+                                                },
+                                                modifier = Modifier.size(28.dp)
+                                            ) {
+                                                Icon(Icons.Filled.PersonRemove, contentDescription = "Kaldır", tint = Color(0xFFFFCDD2), modifier = Modifier.size(16.dp))
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
-
-                        // + Yeni Kişi Ekle Butonu
-                        OutlinedButton(
-                            onClick = {
-                                val nextId = if (!hasPerson2 && !partnerInfo.isMatched) {
-                                    2
-                                } else if (extraMemberIds.isEmpty()) {
-                                    3
-                                } else {
-                                    (extraMemberIds.maxOrNull() ?: 2) + 1
-                                }
-                                editingPersonIndex = nextId
-                                editPersonNameInput = ""
-                                editPersonIconInput = if (nextId % 2 == 1) "👦" else "👧"
-                                editPersonActiveInput = true
-                                showEditPersonDialog = true
-                            },
-                            shape = RoundedCornerShape(10.dp),
-                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.7f)),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(Icons.Filled.PersonAdd, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = "+ Yeni Kişi Ekle",
-                                fontSize = 11.sp,
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold
-                            )
                         }
                     }
                 }
@@ -976,7 +1300,7 @@ fun PartnerScreen(
                         border = BorderStroke(1.dp, if (selectedFamilyTab == -1) EmeraldPrimary else SoftInfoCardBorder)
                     ) {
                         Text(
-                            text = "$person1Icon ${settings.userName.ifBlank { "Kişi 1" }.substringBefore(" ")}",
+                            text = "$person1Icon $p1DisplayName",
                             fontSize = 12.sp,
                             fontWeight = if (selectedFamilyTab == -1) FontWeight.Bold else FontWeight.Medium,
                             color = if (selectedFamilyTab == -1) Color.White else TextPrimary,
@@ -1018,41 +1342,6 @@ fun PartnerScreen(
                                 fontWeight = if (selectedFamilyTab == id) FontWeight.Bold else FontWeight.Medium,
                                 color = if (selectedFamilyTab == id) Color.White else TextPrimary,
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                            )
-                        }
-                    }
-
-                    // Sekme: + Yeni Kişi Ekle
-                    Surface(
-                        onClick = {
-                            val nextId = if (!hasPerson2 && !partnerInfo.isMatched) {
-                                2
-                            } else if (extraMemberIds.isEmpty()) {
-                                3
-                            } else {
-                                (extraMemberIds.maxOrNull() ?: 2) + 1
-                            }
-                            editingPersonIndex = nextId
-                            editPersonNameInput = ""
-                            editPersonIconInput = if (nextId % 2 == 1) "👦" else "👧"
-                            editPersonActiveInput = true
-                            showEditPersonDialog = true
-                        },
-                        shape = RoundedCornerShape(10.dp),
-                        color = EmeraldContainer.copy(alpha = 0.5f),
-                        border = BorderStroke(1.dp, SoftInfoCardBorder)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(Icons.Filled.PersonAdd, contentDescription = null, tint = EmeraldPrimary, modifier = Modifier.size(14.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "+ Kişi Ekle",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = EmeraldPrimary
                             )
                         }
                     }
@@ -1111,7 +1400,7 @@ fun PartnerScreen(
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Column {
                                         Text(
-                                            text = if (settings.userName.isNotBlank()) "${settings.userName.substringBefore(" ")} Ailesi" else "Aile İbadet Halkası",
+                                            text = if (p1DisplayName.isNotBlank() && p1DisplayName != "Kişi 1") "$p1DisplayName Ailesi" else "Aile İbadet Halkası",
                                             fontSize = 15.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color.White
@@ -1238,7 +1527,7 @@ fun PartnerScreen(
                                     ) {
                                         Box(modifier = Modifier.height(30.dp), contentAlignment = Alignment.Center) {
                                             Text(
-                                                text = "$person1Icon ${settings.userName.ifBlank { "Kişi 1" }.substringBefore(" ")}",
+                                                text = "$person1Icon $p1DisplayName",
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.Bold,
                                                 color = Color.White,
@@ -1392,52 +1681,7 @@ fun PartnerScreen(
                                             }
                                         }
                                     }
-
-                                    // SON SÜTUN: ➕ Yeni Kişi Ekle (Sınırsız)
-                                    Column(
-                                        modifier = Modifier.width(76.dp),
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    ) {
-                                        Box(modifier = Modifier.height(30.dp), contentAlignment = Alignment.Center) {
-                                            Text(text = "+ Kişi", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White.copy(alpha = 0.8f))
-                                        }
-                                        Box(
-                                            modifier = Modifier
-                                                .height(190.dp)
-                                                .fillMaxWidth()
-                                                .clip(RoundedCornerShape(8.dp))
-                                                .background(Color.White.copy(alpha = 0.14f))
-                                                .clickable {
-                                                    val nextId = if (!hasPerson2 && !partnerInfo.isMatched) {
-                                                        2
-                                                    } else if (extraMemberIds.isEmpty()) {
-                                                        3
-                                                    } else {
-                                                        (extraMemberIds.maxOrNull() ?: 2) + 1
-                                                    }
-                                                    editingPersonIndex = nextId
-                                                    editPersonNameInput = ""
-                                                    editPersonIconInput = if (nextId % 2 == 1) "👦" else "👧"
-                                                    editPersonActiveInput = true
-                                                    showEditPersonDialog = true
-                                                },
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                Icon(Icons.Filled.PersonAdd, contentDescription = "Kişi Ekle", tint = Color.White, modifier = Modifier.size(20.dp))
-                                                Spacer(modifier = Modifier.height(4.dp))
-                                                Text(
-                                                    text = "+ Yeni\nKişi Ekle",
-                                                    fontSize = 10.sp,
-                                                    color = Color.White,
-                                                    textAlign = TextAlign.Center,
-                                                    lineHeight = 13.sp
-                                                )
-                                            }
-                                        }
-                                    }
                                 }
-                            }
 
                             Spacer(modifier = Modifier.height(12.dp))
 
@@ -1468,14 +1712,14 @@ fun PartnerScreen(
                     val p1CurrentPrayers = if (isGuestMode) simP1Prayers else if (isViewingTodayInFamily) p1TodayPrayers else p1YesterdayPrayers
 
                     IndividualPersonCard(
-                        personName = "${settings.userName.ifBlank { "Kişi 1" }} (Siz)",
+                        personName = "$p1DisplayName (Siz)",
                         personIcon = person1Icon,
                         isToday = isViewingTodayInFamily,
                         prayers = p1CurrentPrayers,
                         yesterdayPrayers = p1YesterdayPrayers,
                         onEdit = {
                             editingPersonIndex = 1
-                            editPersonNameInput = settings.userName
+                            editPersonNameInput = p1DisplayName
                             editPersonIconInput = person1Icon
                             editPersonActiveInput = true
                             showEditPersonDialog = true
@@ -1514,7 +1758,7 @@ fun PartnerScreen(
                             }
                         },
                         onSendDua = {
-                            duaTargetName = "${settings.userName.ifBlank { "Kişi 1" }} (Siz)"
+                            duaTargetName = "$p1DisplayName (Siz)"
                             showSendDuaDialog = true
                         }
                     )
@@ -1624,6 +1868,7 @@ fun PartnerScreen(
                 }
             }
         }
+    }
 
     // =================================================================
     // DİALOGLAR (KİŞİ YÖNETİMİ, CİNSİYET İKONLARI, HAVUZ ONAY)
@@ -1656,147 +1901,179 @@ fun PartnerScreen(
             containerColor = PureWhite,
             text = {
                 Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
-                    // Kadın, Anne & Eş İkonları
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = EmeraldPrimary,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "Kadın / Anne / Eş İkonları",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        womenIcons.forEach { icon ->
-                            val isSel = (editPersonIconInput == icon)
-                            Surface(
-                                onClick = { editPersonIconInput = icon },
-                                shape = RoundedCornerShape(8.dp),
-                                color = if (isSel) EmeraldPrimary else EmeraldContainer.copy(alpha = 0.5f),
-                                border = BorderStroke(1.dp, if (isSel) EmeraldPrimary else SoftInfoCardBorder),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Box(modifier = Modifier.padding(vertical = 6.dp), contentAlignment = Alignment.Center) {
-                                    Text(text = icon, fontSize = 18.sp)
+                    if (isPoolLeader) {
+                        // Kadın, Anne & Eş İkonları
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = EmeraldPrimary,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Kadın / Anne / Eş İkonları (Aile Reisi Ayarı)",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            womenIcons.forEach { icon ->
+                                val isSel = (editPersonIconInput == icon)
+                                Surface(
+                                    onClick = { editPersonIconInput = icon },
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (isSel) EmeraldPrimary else EmeraldContainer.copy(alpha = 0.5f),
+                                    border = BorderStroke(1.dp, if (isSel) EmeraldPrimary else SoftInfoCardBorder),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Box(modifier = Modifier.padding(vertical = 6.dp), contentAlignment = Alignment.Center) {
+                                        Text(text = icon, fontSize = 18.sp)
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                    // Erkek, Baba & Eş İkonları
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = EmeraldPrimary,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "Erkek / Baba / Eş İkonları",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        menIcons.forEach { icon ->
-                            val isSel = (editPersonIconInput == icon)
-                            Surface(
-                                onClick = { editPersonIconInput = icon },
-                                shape = RoundedCornerShape(8.dp),
-                                color = if (isSel) EmeraldPrimary else EmeraldContainer.copy(alpha = 0.5f),
-                                border = BorderStroke(1.dp, if (isSel) EmeraldPrimary else SoftInfoCardBorder),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Box(modifier = Modifier.padding(vertical = 6.dp), contentAlignment = Alignment.Center) {
-                                    Text(text = icon, fontSize = 18.sp)
+                        // Erkek, Baba & Eş İkonları
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = EmeraldPrimary,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Erkek / Baba / Eş İkonları (Aile Reisi Ayarı)",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            menIcons.forEach { icon ->
+                                val isSel = (editPersonIconInput == icon)
+                                Surface(
+                                    onClick = { editPersonIconInput = icon },
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (isSel) EmeraldPrimary else EmeraldContainer.copy(alpha = 0.5f),
+                                    border = BorderStroke(1.dp, if (isSel) EmeraldPrimary else SoftInfoCardBorder),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Box(modifier = Modifier.padding(vertical = 6.dp), contentAlignment = Alignment.Center) {
+                                        Text(text = icon, fontSize = 18.sp)
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                    // Çocuk & Bebek İkonları
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = EmeraldPrimary,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "Çocuk & Bebek İkonları",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        childIcons.forEach { icon ->
-                            val isSel = (editPersonIconInput == icon)
-                            Surface(
-                                onClick = { editPersonIconInput = icon },
-                                shape = RoundedCornerShape(8.dp),
-                                color = if (isSel) EmeraldPrimary else EmeraldContainer.copy(alpha = 0.5f),
-                                border = BorderStroke(1.dp, if (isSel) EmeraldPrimary else SoftInfoCardBorder),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Box(modifier = Modifier.padding(vertical = 6.dp), contentAlignment = Alignment.Center) {
-                                    Text(text = icon, fontSize = 18.sp)
+                        // Çocuk & Bebek İkonları
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = EmeraldPrimary,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Çocuk & Bebek İkonları (Aile Reisi Ayarı)",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            childIcons.forEach { icon ->
+                                val isSel = (editPersonIconInput == icon)
+                                Surface(
+                                    onClick = { editPersonIconInput = icon },
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (isSel) EmeraldPrimary else EmeraldContainer.copy(alpha = 0.5f),
+                                    border = BorderStroke(1.dp, if (isSel) EmeraldPrimary else SoftInfoCardBorder),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Box(modifier = Modifier.padding(vertical = 6.dp), contentAlignment = Alignment.Center) {
+                                        Text(text = icon, fontSize = 18.sp)
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                    // Profil / Diğer
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = EmeraldPrimary,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "Profil & Diğer",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        generalIcons.forEach { icon ->
-                            val isSel = (editPersonIconInput == icon)
-                            Surface(
-                                onClick = { editPersonIconInput = icon },
-                                shape = RoundedCornerShape(8.dp),
-                                color = if (isSel) EmeraldPrimary else EmeraldContainer.copy(alpha = 0.5f),
-                                border = BorderStroke(1.dp, if (isSel) EmeraldPrimary else SoftInfoCardBorder),
-                                modifier = Modifier.weight(1f)
+                        // Profil / Diğer
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = EmeraldPrimary,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "Profil & Diğer",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            generalIcons.forEach { icon ->
+                                val isSel = (editPersonIconInput == icon)
+                                Surface(
+                                    onClick = { editPersonIconInput = icon },
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (isSel) EmeraldPrimary else EmeraldContainer.copy(alpha = 0.5f),
+                                    border = BorderStroke(1.dp, if (isSel) EmeraldPrimary else SoftInfoCardBorder),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Box(modifier = Modifier.padding(vertical = 6.dp), contentAlignment = Alignment.Center) {
+                                        Text(text = icon, fontSize = 18.sp)
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // İkon Seçimi Kilitli Uyarısı (Sadece Aile Reisi yetkilidir)
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = Color(0xFFFEF3C7),
+                            border = BorderStroke(1.dp, Color(0xFFF59E0B)),
+                            modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(10.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Box(modifier = Modifier.padding(vertical = 6.dp), contentAlignment = Alignment.Center) {
-                                    Text(text = icon, fontSize = 18.sp)
+                                Text("🔒", fontSize = 20.sp)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text(
+                                        text = "İkon Ayarlama Yetkisi Aile Reisindedir",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF92400E)
+                                    )
+                                    Text(
+                                        text = "Aile havuzunda ikonları sadece Aile Reisi ($poolLeaderDisplayName) ayarlayabilir. Siz aile havuzunda görünecek takma adınızı düzenleyebilirsiniz.",
+                                        fontSize = 11.sp,
+                                        color = Color(0xFFB45309),
+                                        lineHeight = 14.sp
+                                    )
                                 }
                             }
                         }
@@ -1828,12 +2105,14 @@ fun PartnerScreen(
                             Surface(
                                 onClick = {
                                     editPersonNameInput = role
-                                    when (role) {
-                                        "Eş" -> editPersonIconInput = if (editingPersonIndex % 2 == 0) "🧕" else "🧔"
-                                        "Çocuk" -> editPersonIconInput = if (editingPersonIndex % 2 == 0) "👧" else "👦"
-                                        "Bebek" -> editPersonIconInput = "👶"
-                                        "Anne" -> editPersonIconInput = "🧕"
-                                        "Baba" -> editPersonIconInput = "🧔"
+                                    if (isPoolLeader) {
+                                        when (role) {
+                                            "Eş" -> editPersonIconInput = if (editingPersonIndex % 2 == 0) "🧕" else "🧔"
+                                            "Çocuk" -> editPersonIconInput = if (editingPersonIndex % 2 == 0) "👧" else "👦"
+                                            "Bebek" -> editPersonIconInput = "👶"
+                                            "Anne" -> editPersonIconInput = "🧕"
+                                            "Baba" -> editPersonIconInput = "🧔"
+                                        }
                                     }
                                 },
                                 shape = RoundedCornerShape(6.dp),
@@ -1903,7 +2182,8 @@ fun PartnerScreen(
                         shape = RoundedCornerShape(10.dp)
                     )
 
-                    if (editingPersonIndex >= 2) {
+                    // Yalnızca Aile Reisi bireyleri havuzdan çıkarabilir
+                    if (editingPersonIndex >= 2 && isPoolLeader) {
                         Spacer(modifier = Modifier.height(14.dp))
                         OutlinedButton(
                             onClick = {
@@ -1955,20 +2235,34 @@ fun PartnerScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        val name = editPersonNameInput.trim().ifBlank { "Kişi $editingPersonIndex" }
+                        val raw = editPersonNameInput.trim()
+                        if (raw.contains("@")) {
+                            viewModel.showStatusMessage("E-posta adresi değil, lütfen kendinize özel bir isim/takma ad yazınız.")
+                            return@Button
+                        }
+                        if (raw.length < 2) {
+                            viewModel.showStatusMessage("Lütfen en az 2 harfli bir takma ad yazınız.")
+                            return@Button
+                        }
+                        val name = raw
                         when (editingPersonIndex) {
                             1 -> {
-                                person1Icon = editPersonIconInput
-                                childPrefs.edit().putString("p1_icon", editPersonIconInput).apply()
-                                if (name.isNotBlank()) viewModel.updateMyProfileName(name)
+                                if (isPoolLeader) {
+                                    person1Icon = editPersonIconInput
+                                    childPrefs.edit().putString("p1_icon", editPersonIconInput).apply()
+                                }
+                                childPrefs.edit().putString("p1_name", name).apply()
+                                viewModel.updateMyProfileName(name)
                             }
                             2 -> {
                                 person2Name = name
-                                person2Icon = editPersonIconInput
+                                if (isPoolLeader) {
+                                    person2Icon = editPersonIconInput
+                                    childPrefs.edit().putString("p2_icon", editPersonIconInput).apply()
+                                }
                                 hasPerson2 = true
                                 childPrefs.edit()
                                     .putString("p2_name", name)
-                                    .putString("p2_icon", editPersonIconInput)
                                     .putBoolean("has_p2", true)
                                     .putBoolean("has_p2_customized", true)
                                     .apply()
@@ -1980,9 +2274,11 @@ fun PartnerScreen(
                                     extraMemberIds = updated
                                     childPrefs.edit().putString("custom_extra_member_ids", updated.joinToString(",")).apply()
                                 }
+                                if (isPoolLeader) {
+                                    childPrefs.edit().putString("p${targetId}_icon", editPersonIconInput).apply()
+                                }
                                 childPrefs.edit()
                                     .putString("p${targetId}_name", name)
-                                    .putString("p${targetId}_icon", editPersonIconInput)
                                     .putBoolean("has_p${targetId}", true)
                                     .apply()
                             }
@@ -2011,12 +2307,12 @@ fun PartnerScreen(
             title = { Text("Aile Havuzuna Katıl ve Onayla", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary) },
             text = {
                 Column {
-                    Text("1. Kişiden (Aile liderinden) aldığınız Aile Kodunu girerek ortak havuza dahil olun:", fontSize = 12.sp, color = TextSecondary)
+                    Text("Aile Reisinden aldığınız Aile Kodunu girerek ortak havuza dahil olun:", fontSize = 12.sp, color = TextSecondary)
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = joinPoolCodeInput,
-                        onValueChange = { joinPoolCodeInput = it },
-                        label = { Text("Aile Kodu (örn: EMB-5385)") },
+                        onValueChange = { joinPoolCodeInput = it.uppercase() },
+                        label = { Text("Aile Kodu (örn: REIS-001234)") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp)
@@ -2052,11 +2348,20 @@ fun PartnerScreen(
             confirmButton = {
                 Button(
                     onClick = {
+                        if (!settings.isLoggedIn && settings.userEmail.isBlank()) {
+                            viewModel.showStatusMessage("⚠️ Aile havuzuna katılmak için lütfen önce Google ile giriş yapınız.")
+                            showJoinPoolDialog = false
+                            return@Button
+                        }
                         val code = joinPoolCodeInput.trim().uppercase()
                         if (code.isNotBlank()) {
                             familyPoolCode = code
-                            childPrefs.edit().putString("family_pool_code", code).apply()
+                            childPrefs.edit()
+                                .putString("family_pool_code", code)
+                                .putBoolean("is_pool_member_joined", true)
+                                .apply()
                             viewModel.matchPartnerWithCode(code)
+                            refreshTrigger++
                             viewModel.showStatusMessage("$code kodlu Aile Ortak Havuzuna katılımınız ONAYLANDI! 🟢")
                         }
                         showJoinPoolDialog = false
@@ -2164,7 +2469,12 @@ fun PartnerScreen(
             confirmButton = {
                 Button(
                     onClick = {
+                        childPrefs.edit()
+                            .remove("is_pool_member_joined")
+                            .remove("family_pool_code")
+                            .apply()
                         viewModel.unmatchPartner()
+                        refreshTrigger++
                         showResetHandshakeDialog = false
                         viewModel.showStatusMessage("Eski bağlantı sıfırlandı. Yeni kodla tekrar bağlanabilirsiniz.")
                     },

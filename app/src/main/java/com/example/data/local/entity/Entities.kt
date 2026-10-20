@@ -26,7 +26,7 @@ data class KazaPrayerEntity(
 @Entity(tableName = "partner_info")
 data class PartnerInfoEntity(
     @PrimaryKey val id: Int = 1,
-    val myInviteCode: String = "EMB-5385",
+    val myInviteCode: String = "",
     val myDisplayName: String = "",
     val myEmail: String = "",
     val isMatched: Boolean = false,

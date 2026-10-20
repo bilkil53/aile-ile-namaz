@@ -212,7 +212,7 @@ fun KazaScreen(
                         // 1. Kişi (Siz)
                         FamilyMemberKazaRow(
                             icon = p1Icon,
-                            name = settings.userName.ifBlank { "Kişi 1 (Siz)" },
+                            name = if (settings.userName.isNotBlank() && !settings.userName.contains("@")) settings.userName else "Kişi 1 (Siz)",
                             owed = totalOwed,
                             completed = totalCompleted,
                             isMe = true

@@ -5,6 +5,7 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -32,8 +33,14 @@ fun SettingsScreen(
     val context = LocalContext.current
     val statusMessage by viewModel.statusMessage.collectAsState()
     val appSettings by viewModel.settings.collectAsState()
+    val isCheckingForUpdate by viewModel.isCheckingForUpdate.collectAsState()
+    val availableUpdate by viewModel.availableUpdate.collectAsState()
     var showLoginDialog by remember { mutableStateOf(false) }
     val isLoggedIn = appSettings.isLoggedIn || appSettings.userEmail.isNotBlank()
+
+    LaunchedEffect(Unit) {
+        viewModel.checkForAppUpdate(silent = true)
+    }
 
     LazyColumn(
         modifier = modifier
@@ -132,19 +139,90 @@ fun SettingsScreen(
 
                     HorizontalDivider(color = Color.White.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 8.dp))
 
-                    // Sürüm
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(text = "Sürüm", fontSize = 13.sp, color = Color.White.copy(alpha = 0.85f))
-                        Text(
-                            text = com.example.BuildConfig.VERSION_NAME,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
+                    // Sürüm ve Kesintisiz Güncelleme Sorgulama
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    try {
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/bilkil53/aile-ile-namaz/releases/latest")).apply {
+                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }
+                                        context.startActivity(intent)
+                                    } catch (_: Exception) {}
+                                },
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = "Sürüm", fontSize = 13.sp, color = Color.White.copy(alpha = 0.85f))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "${com.example.BuildConfig.VERSION_NAME} (${com.example.BuildConfig.VERSION_CODE})",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Icon(Icons.Filled.OpenInNew, contentDescription = null, tint = Color.White.copy(alpha = 0.7f), modifier = Modifier.size(12.dp))
+                            }
+                        }
+
+                        if (availableUpdate != null && availableUpdate?.hasUpdate == true) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Surface(
+                                color = Color(0xFFFEF3C7),
+                                shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.dp, Color(0xFFF59E0B)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Filled.SystemUpdate, contentDescription = null, tint = Color(0xFFB45309), modifier = Modifier.size(22.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text("Yeni Sürüm Yayında: ${availableUpdate?.latestVersionTag}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF92400E))
+                                        Text("İndirip güncellemek için dokunun.", fontSize = 10.sp, color = Color(0xFFB45309))
+                                    }
+                                    Button(
+                                        onClick = { viewModel.checkForAppUpdate(silent = false, forceShow = true) },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                        modifier = Modifier.height(32.dp)
+                                    ) {
+                                        Text("Güncelle", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            OutlinedButton(
+                                onClick = { viewModel.checkForAppUpdate(silent = false, forceShow = true) },
+                                enabled = !isCheckingForUpdate,
+                                shape = RoundedCornerShape(8.dp),
+                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.5f)),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                if (isCheckingForUpdate) {
+                                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Sorgulanıyor...", fontSize = 11.sp, color = Color.White)
+                                } else {
+                                    Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.White)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text("Güncellemeleri Kontrol Et", fontSize = 11.sp, color = Color.White)
+                                }
+                            }
+                        }
                     }
 
                     HorizontalDivider(color = Color.White.copy(alpha = 0.2f), modifier = Modifier.padding(vertical = 8.dp))
@@ -296,10 +374,19 @@ fun SettingsScreen(
                         Surface(
                             onClick = {
                                 try {
-                                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/bilkil53/aile-ile-namaz"))
+                                    val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/bilkil53/aile-ile-namaz/releases/latest")).apply {
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    }
                                     context.startActivity(browserIntent)
                                 } catch (_: Exception) {
-                                    Toast.makeText(context, "Bağlantı açılamadı.", Toast.LENGTH_SHORT).show()
+                                    try {
+                                        val fallbackIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/bilkil53/aile-ile-namaz/releases")).apply {
+                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        }
+                                        context.startActivity(fallbackIntent)
+                                    } catch (_: Exception) {
+                                        Toast.makeText(context, "Tarayıcı açılamadı.", Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                             },
                             shape = RoundedCornerShape(8.dp),
@@ -311,7 +398,7 @@ fun SettingsScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Detaylar buradadır",
+                                    text = "Detaylar & Son Sürüm Notları",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
@@ -319,7 +406,7 @@ fun SettingsScreen(
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Icon(
                                     Icons.Filled.OpenInNew,
-                                    contentDescription = "GitHub",
+                                    contentDescription = "GitHub Son Sürüm",
                                     tint = Color.White,
                                     modifier = Modifier.size(13.dp)
                                 )

@@ -42,11 +42,7 @@ fun OnboardingLoginDialog(
         if (result.resultCode == android.app.Activity.RESULT_OK) {
             val accountName = result.data?.getStringExtra(AccountManager.KEY_ACCOUNT_NAME)
             if (!accountName.isNullOrBlank()) {
-                val displayName = accountName.substringBefore("@")
-                    .replace(".", " ")
-                    .split(" ")
-                    .joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
-                viewModel.loginWithGoogleBrowser(email = accountName, name = displayName)
+                viewModel.loginWithGoogleBrowser(email = accountName, name = "")
                 onDismiss()
             }
         }

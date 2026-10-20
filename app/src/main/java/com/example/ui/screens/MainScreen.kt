@@ -27,7 +27,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
 import com.example.R
+import com.example.ui.components.MandatoryNicknameDialog
 import com.example.ui.components.OnboardingLoginDialog
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.MainViewModel
@@ -50,6 +53,7 @@ fun MainScreen(
     onRequestPermissions: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     var selectedTab by remember { mutableStateOf(AppTab.TRACKER) }
     val settings by viewModel.settings.collectAsState()
     var hasDismissedOnboarding by remember { mutableStateOf(false) }
@@ -331,6 +335,34 @@ fun MainScreen(
                 OnboardingLoginDialog(
                     viewModel = viewModel,
                     onDismiss = { hasDismissedOnboarding = true }
+                )
+            }
+
+            // Login Olduktan Sonra Zorunlu Takma Ad / İsim Belirleme Ekranı
+            val childPrefs = remember {
+                context.getSharedPreferences("family_child_prefs", Context.MODE_PRIVATE)
+            }
+            var refreshNickTrigger by remember { mutableStateOf(0) }
+            val currentEmailKey = settings.userEmail.trim().lowercase()
+            val hasConfirmedNickname = remember(settings.userName, settings.userEmail, refreshNickTrigger) {
+                if (currentEmailKey.isBlank()) {
+                    false
+                } else {
+                    val hasConfirmedForEmail = childPrefs.getBoolean("confirmed_nickname_v3_$currentEmailKey", false)
+                    val savedNick = childPrefs.getString("user_nickname_$currentEmailKey", "") ?: ""
+                    hasConfirmedForEmail && savedNick.isNotBlank() && !savedNick.contains("@") && savedNick != "Mümin"
+                }
+            }
+            val needsMandatoryNickname = (settings.isLoggedIn || settings.userEmail.isNotBlank()) && !hasConfirmedNickname
+
+            if (needsMandatoryNickname) {
+                MandatoryNicknameDialog(
+                    viewModel = viewModel,
+                    userEmail = settings.userEmail,
+                    currentName = settings.userName,
+                    onConfirmed = { confirmedName, icon ->
+                        refreshNickTrigger++
+                    }
                 )
             }
         }

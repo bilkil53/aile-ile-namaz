@@ -116,15 +116,16 @@ fun ReportScreen(
         // Top Header
         item {
             Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                val userNick = if (settings.isLoggedIn && settings.userName.isNotBlank() && !settings.userName.contains("@")) settings.userName else null
                 Text(
-                    text = if (settings.isLoggedIn && settings.userName.isNotBlank()) "KULLANICI: ${settings.userName.uppercase()}" else "HAFTALIK MANEVİ KARNE",
+                    text = if (userNick != null) "KULLANICI: ${userNick.uppercase()}" else "HAFTALIK MANEVİ KARNE",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = EmeraldPrimary,
                     letterSpacing = 1.sp
                 )
                 Text(
-                    text = if (settings.isLoggedIn && settings.userName.isNotBlank()) "${settings.userName} · Karnesi" else "İbadet Karnesi & Rozetler",
+                    text = if (userNick != null) "$userNick · Karnesi" else "İbadet Karnesi & Rozetler",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary

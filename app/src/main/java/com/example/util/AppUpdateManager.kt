@@ -42,8 +42,22 @@ object AppUpdateManager {
         .readTimeout(20, TimeUnit.SECONDS)
         .build()
 
+    private const val GITHUB_LATEST_WEB_URL = "https://github.com/bilkil53/aile-ile-namaz/releases/latest"
+
     suspend fun checkForUpdates(context: Context, notifyIfFound: Boolean = true): AppUpdateInfo? = withContext(Dispatchers.IO) {
-        try {
+        // 1. Birinci Aşama: GitHub REST API ile sorgula (Tam detaylar ve sürüm notları)
+        val apiResult = checkViaGitHubApi(context, notifyIfFound)
+        if (apiResult != null) {
+            return@withContext apiResult
+        }
+
+        // 2. İkinci Aşama (Kalıcı Çözüm): API limitine veya hataya takılırsa Web 302 yönlendirmesiyle sorgula (Sıfır limit, kesintisiz)
+        Log.i(TAG, "API sorgusu başarısız, web 302 yönlendirme sorgusuna geçiliyor...")
+        return@withContext checkViaWebRedirect(context, notifyIfFound)
+    }
+
+    private fun checkViaGitHubApi(context: Context, notifyIfFound: Boolean): AppUpdateInfo? {
+        return try {
             val request = Request.Builder()
                 .url(GITHUB_LATEST_RELEASE_URL)
                 .header("Accept", "application/vnd.github.v3+json")
@@ -53,11 +67,11 @@ object AppUpdateManager {
 
             httpClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
-                    Log.w(TAG, "Update check failed with code: ${response.code}")
-                    return@withContext null
+                    Log.w(TAG, "Update check API returned code: ${response.code}")
+                    return null
                 }
 
-                val bodyStr = response.body?.string() ?: return@withContext null
+                val bodyStr = response.body?.string() ?: return null
                 val json = JSONObject(bodyStr)
 
                 val tagName = json.optString("tag_name", "").trim()
@@ -94,12 +108,10 @@ object AppUpdateManager {
                     "25 MB"
                 }
 
-                // Check version differences (SemVer: only prompt if GitHub tag is strictly higher than installed app)
                 val currentVersion = BuildConfig.VERSION_NAME
                 val currentVersionTag = if (currentVersion.startsWith("v", ignoreCase = true)) currentVersion else "v$currentVersion"
 
                 val isNewerVersionTag = tagName.isNotBlank() && isTagHigher(tagName, currentVersionTag)
-
                 val hasUpdate = isNewerVersionTag
 
                 val updateInfo = AppUpdateInfo(
@@ -130,7 +142,69 @@ object AppUpdateManager {
                 updateInfo
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error checking for update: ${e.message}")
+            Log.e(TAG, "checkViaGitHubApi error: ${e.message}")
+            null
+        }
+    }
+
+    private fun checkViaWebRedirect(context: Context, notifyIfFound: Boolean): AppUpdateInfo? {
+        return try {
+            val noRedirectClient = httpClient.newBuilder()
+                .followRedirects(false)
+                .followSslRedirects(false)
+                .build()
+
+            val request = Request.Builder()
+                .url(GITHUB_LATEST_WEB_URL)
+                .header("User-Agent", "AileIleNamaz-Android")
+                .head()
+                .build()
+
+            noRedirectClient.newCall(request).execute().use { response ->
+                val location = response.header("Location") ?: ""
+                val tagName = if (location.contains("/tag/")) {
+                    location.substringAfterLast("/tag/").trim().removeSuffix("/")
+                } else ""
+
+                if (tagName.isBlank()) {
+                    Log.w(TAG, "Web redirect Location did not contain tag: $location")
+                    return null
+                }
+
+                val currentVersion = BuildConfig.VERSION_NAME
+                val currentVersionTag = if (currentVersion.startsWith("v", ignoreCase = true)) currentVersion else "v$currentVersion"
+                val hasUpdate = isTagHigher(tagName, currentVersionTag)
+
+                val downloadUrl = "https://github.com/bilkil53/aile-ile-namaz/releases/download/$tagName/Aile_Ile_Namaz.apk"
+
+                val updateInfo = AppUpdateInfo(
+                    hasUpdate = hasUpdate,
+                    latestVersionTag = tagName,
+                    releaseTitle = "Aile ile Namaz $tagName Güncellemesi",
+                    releaseNotes = "Yeni özellikler, performans geliştirmeleri ve aile havuzu güncellemeleri içerir.",
+                    apkDownloadUrl = downloadUrl,
+                    apkSizeFormatted = "25 MB",
+                    publishedAt = "",
+                    assetUpdatedAtMillis = System.currentTimeMillis()
+                )
+
+                if (hasUpdate && notifyIfFound) {
+                    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                    val lastNotified = prefs.getString(KEY_LAST_NOTIFIED_TAG, "")
+                    if (lastNotified != tagName) {
+                        prefs.edit().putString(KEY_LAST_NOTIFIED_TAG, tagName).apply()
+                        NotificationHelper.showAppUpdateNotification(
+                            context = context,
+                            versionTag = updateInfo.latestVersionTag,
+                            releaseNotes = updateInfo.releaseNotes.take(150)
+                        )
+                    }
+                }
+
+                updateInfo
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "checkViaWebRedirect error: ${e.message}")
             null
         }
     }
@@ -165,8 +239,8 @@ object AppUpdateManager {
             return false
         }
 
-        val latestParts = cleanLatest.split(".").mapNotNull { it.toIntOrNull() }
-        val currentParts = cleanCurrent.split(".").mapNotNull { it.toIntOrNull() }
+        val latestParts = cleanLatest.split(".").mapNotNull { it.filter { ch -> ch.isDigit() }.toIntOrNull() }
+        val currentParts = cleanCurrent.split(".").mapNotNull { it.filter { ch -> ch.isDigit() }.toIntOrNull() }
 
         val length = maxOf(latestParts.size, currentParts.size)
         for (i in 0 until length) {

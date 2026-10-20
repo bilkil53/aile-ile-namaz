@@ -29,8 +29,9 @@ class PrayerRepository(
 
     private val repositoryScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val pendingPrayerEventJobs = ConcurrentHashMap<String, Job>()
+    private val processedEventSignatures = java.util.Collections.newSetFromMap(ConcurrentHashMap<String, Boolean>())
 
-    private var lastProcessedEventTime: Long = System.currentTimeMillis()
+    private var lastProcessedEventTime: Long = System.currentTimeMillis() - 60_000L
 
     private fun getTodayDateString(): String {
         return SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
@@ -38,10 +39,10 @@ class PrayerRepository(
 
     suspend fun ensureUniqueInviteCode(): PartnerInfoEntity {
         val current = prayerDao.getPartnerInfo().firstOrNull() ?: PartnerInfoEntity()
-        // If code is default placeholder or blank, generate a truly unique random code with EMB-53 prefix
-        if (current.myInviteCode.isBlank() || current.myInviteCode.startsWith("ARK") || current.myInviteCode == "EMB-5385") {
+        // Ensure code starts with REIS-00 prefix
+        if (current.myInviteCode.isBlank() || !current.myInviteCode.startsWith("REIS-00")) {
             val randomSuffix = (1000..9999).random()
-            val newCode = "EMB-53$randomSuffix"
+            val newCode = "REIS-00$randomSuffix"
             val updated = current.copy(myInviteCode = newCode)
             prayerDao.savePartnerInfo(updated)
             return updated
@@ -102,13 +103,13 @@ class PrayerRepository(
             else -> prayerType
         }
 
-        // Send prayer notification to partner after a 5-second delay (debounce)
+        // Send prayer notification to partner after a 1.2-second delay (debounce)
         if (status == "PRAYED" || status == "MISSED") {
             pendingPrayerEventJobs[prayerKey] = repositoryScope.launch {
                 try {
-                    delay(5000L) // Aile fertlerine 5 saniye sonra gitsin
+                    delay(1200L) // Hızlı ve güvenilir teyit (1.2 saniye)
 
-                    // Verify latest status from database after 5 seconds to ensure user didn't change it again
+                    // Verify latest status from database
                     val latest = prayerDao.getPrayerForDate(date).firstOrNull() ?: return@launch
                     val currentStatus = when (prayerKey) {
                         "FAJR", "SABAH" -> latest.fajrStatus
@@ -144,9 +145,7 @@ class PrayerRepository(
                             )
                         }
                     }
-                } catch (_: CancellationException) {
-                    // Job was cancelled by a newer status change within 5 seconds, do nothing
-                }
+                } catch (_: Exception) { }
             }
         }
     }
@@ -187,22 +186,50 @@ class PrayerRepository(
                 prayerName = trName,
                 actionText = "1 vakit $trName kaza namazı kıldı. Tebrikler! 🤲"
             )
+            val childPrefs = context?.getSharedPreferences("family_child_prefs", android.content.Context.MODE_PRIVATE)
+            val poolCode = childPrefs?.getString("family_pool_code", null) ?: partner.partnerInviteCode.ifBlank { partner.myInviteCode }
+            if (poolCode.isNotBlank()) {
+                PartnerSyncManager.broadcastPoolEvent(
+                    poolCode = poolCode,
+                    myCode = partner.myInviteCode,
+                    myName = partner.myDisplayName.ifBlank { "Aile Ferdi" },
+                    eventType = "KAZA",
+                    prayerName = trName,
+                    actionText = "1 vakit $trName kaza namazı kıldı. Tebrikler! 🤲"
+                )
+            }
         }
     }
 
     suspend fun sendSpiritualDua(targetName: String, messageText: String) {
-        val partner = prayerDao.getPartnerInfo().firstOrNull()
-        if (partner != null && partner.isMatched && partner.partnerInviteCode.isNotBlank()) {
+        val partner = prayerDao.getPartnerInfo().firstOrNull() ?: return
+        val childPrefs = context?.getSharedPreferences("family_child_prefs", android.content.Context.MODE_PRIVATE)
+        val poolCode = childPrefs?.getString("family_pool_code", null) ?: partner.partnerInviteCode.ifBlank { partner.myInviteCode }
+        val myName = partner.myDisplayName.ifBlank { "Aile Ferdi" }
+        val actionText = "$targetName için dua: \"$messageText\" 🤲"
+
+        if (partner.isMatched && partner.partnerInviteCode.isNotBlank()) {
             PartnerSyncManager.broadcastPartnerEvent(
                 codeA = partner.myInviteCode,
                 codeB = partner.partnerInviteCode,
                 myCode = partner.myInviteCode,
-                myName = partner.myDisplayName.ifBlank { "Aile Ferdi" },
+                myName = myName,
                 eventType = "DUA",
                 prayerName = "Dua ve Tebrik",
-                actionText = "$targetName için dua: \"$messageText\" 🤲"
+                actionText = actionText
             )
         }
+        if (poolCode.isNotBlank()) {
+            PartnerSyncManager.broadcastPoolEvent(
+                poolCode = poolCode,
+                myCode = partner.myInviteCode,
+                myName = myName,
+                eventType = "DUA",
+                prayerName = "Dua ve Tebrik",
+                actionText = actionText
+            )
+        }
+        prayerDao.updatePartnerReceivedDua("Sizden $targetName için dua: \"$messageText\"")
     }
 
     suspend fun undoCompleteOneKaza(type: String) {
@@ -227,33 +254,53 @@ class PrayerRepository(
         dailyPrayer: DailyPrayerEntity? = null
     ) {
         val partner = prayerDao.getPartnerInfo().firstOrNull() ?: return
-        if (!partner.isMatched || partner.partnerInviteCode.isBlank()) return
+        if (partner.myInviteCode.isBlank() && partner.partnerInviteCode.isBlank()) return
 
         val prayers = dailyPrayer ?: prayerDao.getPrayerForDate(todayDate).firstOrNull() ?: DailyPrayerEntity(date = todayDate)
         val kazas = prayerDao.getAllKazaPrayers().firstOrNull() ?: emptyList()
         val totalCompleted = kazas.sumOf { it.completedCount }
         val totalOwed = kazas.sumOf { it.owedCount }
 
-        PartnerSyncManager.broadcastPrayerStatus(
-            codeA = partner.myInviteCode,
-            codeB = partner.partnerInviteCode,
-            myCode = partner.myInviteCode,
-            myName = partner.myDisplayName.ifBlank { "Aile Ferdi" },
-            myEmail = partner.myEmail,
-            date = todayDate,
-            fajr = prayers.fajrStatus,
-            dhuhr = prayers.dhuhrStatus,
-            asr = prayers.asrStatus,
-            maghrib = prayers.maghribStatus,
-            isha = prayers.ishaStatus,
-            kazaCompleted = totalCompleted,
-            kazaOwed = totalOwed
-        )
+        if (partner.isMatched && partner.partnerInviteCode.isNotBlank()) {
+            PartnerSyncManager.broadcastPrayerStatus(
+                codeA = partner.myInviteCode,
+                codeB = partner.partnerInviteCode,
+                myCode = partner.myInviteCode,
+                myName = partner.myDisplayName.ifBlank { "Aile Ferdi" },
+                myEmail = partner.myEmail,
+                date = todayDate,
+                fajr = prayers.fajrStatus,
+                dhuhr = prayers.dhuhrStatus,
+                asr = prayers.asrStatus,
+                maghrib = prayers.maghribStatus,
+                isha = prayers.ishaStatus,
+                kazaCompleted = totalCompleted,
+                kazaOwed = totalOwed
+            )
+        }
+
+        val poolCode = if (partner.partnerInviteCode.isNotBlank()) partner.partnerInviteCode else partner.myInviteCode
+        if (poolCode.isNotBlank()) {
+            PartnerSyncManager.broadcastPrayerStatusToPool(
+                poolCode = poolCode,
+                myCode = partner.myInviteCode,
+                myName = partner.myDisplayName.ifBlank { "Aile Ferdi" },
+                myEmail = partner.myEmail,
+                date = todayDate,
+                fajr = prayers.fajrStatus,
+                dhuhr = prayers.dhuhrStatus,
+                asr = prayers.asrStatus,
+                maghrib = prayers.maghribStatus,
+                isha = prayers.ishaStatus,
+                kazaCompleted = totalCompleted,
+                kazaOwed = totalOwed
+            )
+        }
     }
 
     suspend fun refreshPartnerData(): PartnerInfoEntity {
         var current = prayerDao.getPartnerInfo().firstOrNull() ?: PartnerInfoEntity()
-        if (current.myInviteCode.isBlank() || current.myInviteCode == "ARK-8521") {
+        if (current.myInviteCode.isBlank() || !current.myInviteCode.startsWith("REIS-00")) {
             current = ensureUniqueInviteCode()
         }
 
@@ -310,14 +357,21 @@ class PrayerRepository(
             return current
         }
 
-        // 2. If MATCHED: Fetch updates, events and check unmatch in single call
+        val childPrefs = context?.getSharedPreferences("family_child_prefs", android.content.Context.MODE_PRIVATE)
+        val savedPoolCode = childPrefs?.getString("family_pool_code", null) ?: ""
+        val effectivePoolCode = savedPoolCode.ifBlank {
+            if (current.isMatched) current.partnerInviteCode else current.myInviteCode
+        }
+
+        // 2. If MATCHED or IN POOL: Fetch updates, events and check unmatch in single call
         val syncResult = PartnerSyncManager.fetchPartnerUpdatesAndEvents(
             codeA = current.myInviteCode,
             codeB = current.partnerInviteCode,
             partnerCode = current.partnerInviteCode,
             myCode = current.myInviteCode,
             todayDate = today,
-            lastProcessedEventTime = lastProcessedEventTime
+            lastProcessedEventTime = lastProcessedEventTime,
+            poolCode = effectivePoolCode
         )
 
         // Handle unmatch from partner
@@ -341,7 +395,13 @@ class PrayerRepository(
 
         // Trigger notifications for new events from spouse!
         if (syncResult.newEvents.isNotEmpty()) {
-            val validEvents = syncResult.newEvents.filter { it.timestamp > lastProcessedEventTime }
+            val now = System.currentTimeMillis()
+            val validEvents = syncResult.newEvents.filter { event ->
+                val sig = "${event.senderCode}_${event.eventType}_${event.prayerName}_${event.timestamp}"
+                val isRecent = (now - event.timestamp) < 15 * 60 * 1000L && (event.timestamp - now) < 5 * 60 * 1000L
+                val notProcessed = !processedEventSignatures.contains(sig)
+                (notProcessed && isRecent) || (event.timestamp > lastProcessedEventTime)
+            }
             if (validEvents.isNotEmpty()) {
                 // Group by prayerName so only the latest status per prayer is notified (prevents both kıldı & kılmadı)
                 val latestPerPrayer = validEvents
@@ -352,6 +412,8 @@ class PrayerRepository(
                     .sortedBy { it.timestamp }
 
                 for (event in latestPerPrayer) {
+                    val sig = "${event.senderCode}_${event.eventType}_${event.prayerName}_${event.timestamp}"
+                    processedEventSignatures.add(sig)
                     if (event.timestamp > lastProcessedEventTime) {
                         lastProcessedEventTime = event.timestamp
                     }
@@ -401,7 +463,7 @@ class PrayerRepository(
 
     suspend fun matchPartner(code: String, partnerName: String = "", partnerEmail: String = ""): Boolean {
         var current = prayerDao.getPartnerInfo().firstOrNull() ?: PartnerInfoEntity()
-        if (current.myInviteCode.isBlank() || current.myInviteCode == "ARK-8521") {
+        if (current.myInviteCode.isBlank() || !current.myInviteCode.startsWith("REIS-00")) {
             current = ensureUniqueInviteCode()
         }
 
@@ -744,8 +806,18 @@ class PrayerRepository(
             if (root.has("partner")) {
                 val pObj = root.getJSONObject("partner")
                 val currentPartner = prayerDao.getPartnerInfo().firstOrNull() ?: PartnerInfoEntity()
+                val deviceCode = if (currentPartner.myInviteCode.isNotBlank() && currentPartner.myInviteCode.startsWith("REIS-00")) {
+                    currentPartner.myInviteCode
+                } else {
+                    val fromBackup = pObj.optString("myInviteCode", "")
+                    if (fromBackup.isNotBlank() && fromBackup.startsWith("REIS-00")) {
+                        fromBackup
+                    } else {
+                        "REIS-00${(1000..9999).random()}"
+                    }
+                }
                 val updatedPartner = currentPartner.copy(
-                    myInviteCode = pObj.optString("myInviteCode", currentPartner.myInviteCode),
+                    myInviteCode = deviceCode,
                     isMatched = pObj.optBoolean("isMatched", currentPartner.isMatched),
                     partnerDisplayName = pObj.optString("partnerDisplayName", currentPartner.partnerDisplayName),
                     partnerEmail = pObj.optString("partnerEmail", currentPartner.partnerEmail),
