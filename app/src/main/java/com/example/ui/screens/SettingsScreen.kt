@@ -158,7 +158,7 @@ fun SettingsScreen(
                             Text(text = "Sürüm", fontSize = 13.sp, color = Color.White.copy(alpha = 0.85f))
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = "${com.example.BuildConfig.VERSION_NAME} (${com.example.BuildConfig.VERSION_CODE})",
+                                    text = com.example.BuildConfig.VERSION_NAME,
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White

@@ -8,7 +8,7 @@
   <a href="https://github.com/bilkil53/aile-ile-namaz/releases/latest/download/Aile_Ile_Namaz.apk">
     <img src="https://img.shields.io/badge/İndir-Aile%20ile%20Namaz%20(APK)-0E5A4A?style=for-the-badge&logo=android&logoColor=white" alt="APK İndir" />
   </a>
-  <img src="https://img.shields.io/badge/Sürüm-v1.4%20(Build%205)-0E5A4A?style=for-the-badge" alt="Sürüm" />
+  <img src="https://img.shields.io/badge/Sürüm-v1.5-0E5A4A?style=for-the-badge" alt="Sürüm" />
   <img src="https://img.shields.io/badge/Tema-Çam%20Yeşili%20%230E5A4A-0E5A4A?style=for-the-badge" alt="Tema" />
   <img src="https://img.shields.io/badge/Platform-Android%207.0%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android" />
   <img src="https://img.shields.io/badge/Vakitler-T.C.%20Diyanet-green?style=for-the-badge" alt="Diyanet" />
@@ -19,11 +19,11 @@
 
 ---
 
-## 📱 İndirme ve Resmi Kurulum (v1.4 - Build 5)
+## 📱 İndirme ve Resmi Kurulum (v1.5)
 
-Uygulamanın en güncel **v1.4 (Build 5)** resmi sürümünü doğrudan cihazınıza kurabilirsiniz:
+Uygulamanın en güncel **v1.5** resmi sürümünü doğrudan cihazınıza kurabilirsiniz:
 
-👉 **[📥 Aile ile Namaz v1.4 APK İndir](https://github.com/bilkil53/aile-ile-namaz/releases/latest/download/Aile_Ile_Namaz.apk)**
+👉 **[📥 Aile ile Namaz v1.5 APK İndir](https://github.com/bilkil53/aile-ile-namaz/releases/latest/download/Aile_Ile_Namaz.apk)**
 
 * **Yeni APK Dosya Yolu (Proje İçi):** `app/build/outputs/apk/release/app-release.apk`
 * **Resmi GitHub Deposu:** [https://github.com/bilkil53/aile-ile-namaz](https://github.com/bilkil53/aile-ile-namaz)
@@ -78,12 +78,12 @@ Uygulamanın en güncel **v1.4 (Build 5)** resmi sürümünü doğrudan cihazın
 
 ## 📋 Sürüm Değişiklik Günlüğü (Changelog)
 
-### 🕌 v1.4 (Build 5) - Son Güncellemeler:
+### 🕌 v1.5 - Son Güncellemeler:
 * **👑 Aile Reisi & Ferdi Rol Ayrımı:** İlk girişte otomatik reis ilan edilme durumu düzeltildi. Kullanıcılar bağımsız olarak kod girip bir havuza katılabilir veya kendi aile havuzunu kurabilir. Havuza katılım gerçekleştiğinde lider "Aile Reisi", bağlanan kişi "Aile Ferdi" olarak listelenir.
 * **🏷️ Hitap ve Unvan Düzeltmesi:** Kız çocuk veya fertler giriş yaptığında oluşan isim/unvan karışıklığı giderildi; kod giriş alanı ve rol gösterimi ayrıştırıldı.
 * **🔔 Aile Havuzu Dua ve Namaz Bildirimleri:** `ntfy.sh` ve Firestore altyapısı üzerinden aile havuzuna (`ain_pool_`) gönderilen dua ve namaz kılındı bildirimlerinin tüm bağlı cihazlara anlık düşmesi sağlandı.
 * **🔗 Güncel Sürüm ve Detaylar Bağlantısı:** Ayarlar ekranındaki "Detaylar buradadır" tıklaması doğrudan GitHub'ın en güncel sürüm sayfasına (`/releases/latest`) yönlendirecek şekilde düzeltildi.
-* **📲 Otomatik Güncelleme Entegrasyonu:** Uygulama içi güncelleme kontrolü ve APK indirme altyapısı v1.4 ile senkronize edildi.
+* **📲 Otomatik Güncelleme & Temiz Versiyonlama:** Versiyon numaralandırması sadeleştirildi (`v1.5`), versionCode yükseltilerek tüm Android cihazlarda güncellemenin sorunsuz kurulması sağlandı.
 
 ---
 
