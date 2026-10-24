@@ -45,13 +45,14 @@ object AppUpdateManager {
 
     private const val GITHUB_LATEST_WEB_URL = "https://github.com/bilkil53/aile-ile-namaz/releases/latest"
 
-    const val DEFAULT_FULL_RELEASE_NOTES = """🕌 Aile ile Namaz v1.4 - Resmi Güncel Sürüm Yenilikleri:
+    const val DEFAULT_FULL_RELEASE_NOTES = """🕌 Aile ile Namaz v1.5 - Resmi Güncel Sürüm Yenilikleri:
 
+✨ Sade ve Şık Üst Bar: Üst barda ayarlar çarkının yanındaki gereksiz "Aktif" çipi kaldırıldı; daha ferah ve temiz bir görünüm sağlandı.
 🕌 Cuma Namazı Özel Bildirimi: Cuma günleri öğle saatinde bildirim başlığı otomatik olarak "🕌 Hayırlı Cumalar! Cuma Namazına 10 Dakika Kaldı" olarak güncellendi; Cuma Sûresi, hutbe hatırlatması ve salavat-ı şerifler ile zenginleştirildi.
 🔄 Dönen Zengin Manevi Dualar & Hadisler: Namaz yaklaştığında (10 dk kala) her vakit için (Sabah, Cuma, Öğle, İkindi, Akşam, Yatsı) günlere göre otomatik değişen zengin Diyanet mealli ayet, sahih hadis ve manevi niyaz koleksiyonu getirildi. Artık günlerce aynı dua tekrarlanmaz.
 👥 Aile Reisi & Fert Hitap Doğruluğu: Havuza katılan fertler için doğru unvanlar ("Oğlu", "Kızı") ve reis bildirimleri korundu.
 👦 Cinsiyet & İkon Doğrulaması: Seçilen profil ikonu ve aile rolleri tüm cihazlar arasında kusursuz senkronize edilir.
-🚀 Doğrudan Uygulama İçi Güncelleme: GitHub üzerindeki v1.4 ve sonrası yeni sürümler anında tespit edilir, uygulama içinden tek tıkla doğrudan kurulur.
+🚀 Doğrudan Uygulama İçi Güncelleme: GitHub üzerindeki v1.5 ve sonrası yeni sürümler anında tespit edilir, uygulama içinden tek tıkla doğrudan kurulur.
 🌲 Çam Yeşili Tasarım Standardı (#0E5A4A): Tüm ekranlar ve üst barlar huzur veren çam yeşiliyle uyumlu hale getirildi.
 🤲 Ortak Aile Havuzu & Diyanet Takvimi: Canlı namaz senkronizasyonu, manyetik kıble pusulası ve mahremiyet korumalı kaza takibi."""
 
@@ -254,7 +255,7 @@ object AppUpdateManager {
         }
         t = t.trim()
         t = t.removePrefix("v.").removePrefix("V.").removePrefix("v").removePrefix("V").trim()
-        return if (t.isNotBlank()) "v$t" else "v1.4"
+        return if (t.isNotBlank()) "v$t" else "v1.5"
     }
 
     fun cleanReleaseTitle(title: String): String {
@@ -286,6 +287,22 @@ object AppUpdateManager {
         return false
     }
 
+    fun isTrustedGitHubDownloadUrl(url: String): Boolean {
+        return try {
+            val uri = Uri.parse(url)
+            val scheme = uri.scheme?.lowercase()
+            val host = uri.host?.lowercase() ?: return false
+            scheme == "https" && (
+                host == "github.com" ||
+                host.endsWith(".github.com") ||
+                host == "githubusercontent.com" ||
+                host.endsWith(".githubusercontent.com")
+            )
+        } catch (_: Exception) {
+            false
+        }
+    }
+
     /**
      * Downloads the APK file from GitHub and triggers direct Android package installation.
      */
@@ -296,6 +313,13 @@ object AppUpdateManager {
         onComplete: (File) -> Unit,
         onError: (String) -> Unit
     ) = withContext(Dispatchers.IO) {
+        if (!isTrustedGitHubDownloadUrl(downloadUrl)) {
+            withContext(Dispatchers.Main) {
+                onError("Güvenlik Uyarısı: İndirme adresi doğrulanmış güvenli GitHub sunucusu değil.")
+            }
+            return@withContext
+        }
+
         try {
             val request = Request.Builder()
                 .url(downloadUrl)

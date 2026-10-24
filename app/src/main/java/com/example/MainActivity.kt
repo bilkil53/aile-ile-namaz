@@ -123,9 +123,9 @@ class MainActivity : ComponentActivity() {
     private fun handleAuthIntent(intent: Intent?) {
         val data = intent?.data
         if (data != null && (data.scheme == "aileilenamaz" || data.scheme == "aileilesecdeye") && data.host == "login") {
-            val email = data.getQueryParameter("email")
-            val name = data.getQueryParameter("name") ?: ""
-            if (!email.isNullOrBlank()) {
+            val email = data.getQueryParameter("email")?.trim() ?: ""
+            val name = data.getQueryParameter("name")?.trim() ?: ""
+            if (email.isNotBlank() && android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
                 viewModel.loginWithGoogleBrowser(email, name)
             }
         }
