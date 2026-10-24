@@ -16,6 +16,7 @@ import com.example.data.util.DailyContentProvider
 import com.example.data.util.PrayerCalculator
 import com.example.util.GpsLocationHelper
 import com.example.util.NotificationHelper
+import com.example.util.PartnerSyncManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -224,7 +225,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val remainingMillis = times.nextPrayerRemainingMillis
         val remainingMinutes = remainingMillis / (60 * 1000L)
 
-        val isStandardPrayer = listOf("imsak", "sabah", "öğle", "ogle", "ikindi", "akşam", "aksam", "yatsı", "yatsi")
+        val isStandardPrayer = listOf("imsak", "sabah", "cuma", "öğle", "ogle", "ikindi", "akşam", "aksam", "yatsı", "yatsi")
             .any { nextPrayerName.lowercase().contains(it) }
 
         if (!isStandardPrayer) return
@@ -243,14 +244,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun testPrayerNotification() {
-        val prayerName = _prayerTimes.value?.nextPrayerName?.ifBlank { "Öğle" } ?: "Öğle"
+        val cal = java.util.Calendar.getInstance()
+        val isFriday = cal.get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.FRIDAY
+        val rawNext = _prayerTimes.value?.nextPrayerName?.ifBlank { null }
+        val prayerName = rawNext ?: if (isFriday) "Cuma Namazı" else "Öğle"
         NotificationHelper.showPrayerApproachingNotification(
             context = getApplication(),
             prayerName = prayerName,
             minutesRemaining = 10
         )
         viewModelScope.launch {
-            _statusMessage.value = "🕌 10 dk öncesi Diyanet vakit & hadis bildirimi örneklendi!"
+            val isCuma = prayerName.contains("cuma", ignoreCase = true) || (isFriday && (prayerName.contains("öğle", ignoreCase = true) || prayerName.contains("ogle", ignoreCase = true)))
+            val label = if (isCuma) {
+                "🕌 Cuma Namazı 10 dk öncesi Diyanet Cuma Sûresi & salavat bildirimi örneklendi!"
+            } else {
+                "🕌 10 dk öncesi Diyanet vakit & hadis bildirimi örneklendi!"
+            }
+            _statusMessage.value = label
             delay(3000)
             _statusMessage.value = null
         }
@@ -458,14 +468,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun matchPartnerWithCode(code: String, partnerName: String = "", partnerEmail: String = "") {
         viewModelScope.launch(Dispatchers.IO) {
             _isRefreshingPartner.value = true
-            val success = repository.matchPartner(code, partnerName, partnerEmail)
+            val canonical = PartnerSyncManager.formatDisplayCode(code)
+            val success = repository.matchPartner(canonical, partnerName, partnerEmail)
             _isRefreshingPartner.value = false
             if (success) {
                 val current = partnerInfo.value
                 val name = if (current.partnerDisplayName.isNotBlank()) current.partnerDisplayName else "Aile ferdiniz"
-                _statusMessage.value = "$name ile başarıyla eşleştiniz!"
+                _statusMessage.value = "$name ile başarıyla eşleştiniz! 🟢"
             } else {
-                _statusMessage.value = "Davet kodu doğrulanamadı. Lütfen kontrol edin."
+                val myClean = PartnerSyncManager.normalizeCode(partnerInfo.value.myInviteCode)
+                val targetClean = PartnerSyncManager.normalizeCode(code)
+                if (targetClean.isNotBlank() && targetClean == myClean) {
+                    _statusMessage.value = "⚠️ Kendi aile kodunuzu girdiniz. Başka bir aile ferdinizin kodunu girmelisiniz."
+                } else {
+                    _statusMessage.value = "Davet kodu doğrulanamadı. Lütfen kodu kontrol edin."
+                }
             }
             delay(3000)
             _statusMessage.value = null
@@ -514,13 +531,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun unmatchPartner() {
+    fun leaveFamilyPool(poolCode: String = "") {
         viewModelScope.launch(Dispatchers.IO) {
-            repository.unmatchPartner()
-            _statusMessage.value = "Partner eşleşmesi sonlandırıldı."
+            repository.leaveFamilyPool(poolCode)
+            _statusMessage.value = "Aile havuzundan ayrıldınız."
             delay(3000)
             _statusMessage.value = null
         }
+    }
+
+    fun unmatchPartner() {
+        leaveFamilyPool()
     }
 
     fun updatePartnerName(name: String) {
@@ -693,23 +714,32 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             )
             if (!silent) _isCheckingForUpdate.value = false
 
-            if (update != null && update.hasUpdate) {
+            if (update != null) {
                 val prefs = getApplication<Application>().getSharedPreferences("app_updater_prefs", android.content.Context.MODE_PRIVATE)
                 val lastDismissedTime = prefs.getLong("last_dismissed_time", 0L)
                 val dismissedTag = prefs.getString("dismissed_update_tag", "")
                 val hoursSinceDismiss = (System.currentTimeMillis() - lastDismissedTime) / (1000 * 60 * 60)
 
-                // Her daim sorgulama: Kullanıcı manuel basmışsa (forceShow), veya ilk defaysa, veya 2 saat geçmişse popup açılır
-                if (forceShow || !silent || dismissedTag != update.latestVersionTag || hoursSinceDismiss >= 2) {
-                    _availableUpdate.value = update
-                }
-                if (!silent) {
-                    _statusMessage.value = "Yeni güncelleme bulundu: ${update.latestVersionTag} 📲"
-                    delay(3000)
-                    _statusMessage.value = null
+                if (update.hasUpdate) {
+                    if (forceShow || !silent || dismissedTag != update.latestVersionTag || hoursSinceDismiss >= 2) {
+                        _availableUpdate.value = update
+                    }
+                    if (!silent) {
+                        _statusMessage.value = "Yeni güncelleme bulundu: ${update.latestVersionTag} 📲"
+                        delay(3000)
+                        _statusMessage.value = null
+                    }
+                } else {
+                    // Uygulama güncel (v1.2 == v1.2) - Güncelleme kartını ve diyaloğunu kesinlikle sıfırla
+                    _availableUpdate.value = null
+                    if (!silent) {
+                        _statusMessage.value = "Uygulamanız en güncel sürümde! (${com.example.BuildConfig.VERSION_NAME})"
+                        delay(3000)
+                        _statusMessage.value = null
+                    }
                 }
             } else if (!silent) {
-                _statusMessage.value = "Uygulamanız güncel! (Sürüm: ${com.example.BuildConfig.VERSION_NAME})"
+                _statusMessage.value = "Güncelleme sunucusuna ulaşılamadı. Lütfen bağlantınızı kontrol edin."
                 delay(3000)
                 _statusMessage.value = null
             }

@@ -94,6 +94,10 @@ fun TrackerScreen(
         com.example.data.util.PrayerCalculator.isPrayerTimeArrived("ISHA", prayerTimes, isViewingToday)
     }
 
+    val isTodayFriday = remember {
+        java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.FRIDAY
+    }
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -402,13 +406,18 @@ fun TrackerScreen(
 
         item {
             PrayerListItemPineCard(
-                name = "Öğle",
+                name = if (isTodayFriday) "Cuma Namazı 🕌" else "Öğle",
                 time = prayerTimes.ogle,
                 status = todayPrayer.dhuhrStatus,
                 icon = Icons.Outlined.WbSunny,
                 isTimeArrived = isDhuhrArrived,
                 onLockedClick = {
-                    viewModel.showStatusMessage("Öğle namazı vakti henüz girmedi (Giriş: ${prayerTimes.ogle})")
+                    val msg = if (isTodayFriday) {
+                        "Cuma namazı vakti henüz girmedi (Giriş: ${prayerTimes.ogle}) 🕌"
+                    } else {
+                        "Öğle namazı vakti henüz girmedi (Giriş: ${prayerTimes.ogle})"
+                    }
+                    viewModel.showStatusMessage(msg)
                 },
                 onToggle = {
                     val next = getNextStatus(todayPrayer.dhuhrStatus)
@@ -571,7 +580,7 @@ private fun HeroPineCard(
 
                 val nextTime = when (prayerTimes.nextPrayerName) {
                     "İmsak / Sabah" -> prayerTimes.imsak
-                    "Öğle" -> prayerTimes.ogle
+                    "Öğle", "Cuma", "Cuma Namazı" -> prayerTimes.ogle
                     "İkindi" -> prayerTimes.ikindi
                     "Akşam" -> prayerTimes.aksam
                     "Yatsı" -> prayerTimes.yatsi

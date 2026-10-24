@@ -117,10 +117,13 @@ object PrayerCalculator {
         val currentSec = calendar.get(Calendar.SECOND)
         val currentTotalSec = currentHour * 3600 + currentMin * 60 + currentSec
 
+        val isFriday = calendar.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY
+        val noonName = if (isFriday) "Cuma" else "Öğle"
+
         val prayerTimesInSec = listOf(
             Pair("İmsak", timeStrToSeconds(imsakStr)),
             Pair("Güneş", timeStrToSeconds(gunesStr)),
-            Pair("Öğle", timeStrToSeconds(ogleStr)),
+            Pair(noonName, timeStrToSeconds(ogleStr)),
             Pair("İkindi", timeStrToSeconds(ikindiStr)),
             Pair("Akşam", timeStrToSeconds(aksamStr)),
             Pair("Yatsı", timeStrToSeconds(yatsiStr))

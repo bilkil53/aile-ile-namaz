@@ -32,9 +32,12 @@ object PrayerAlarmScheduler {
             }
             val times = PrayerCalculator.calculatePrayerTimes(lat, lng, calendar)
 
+            val isFriday = calendar.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY
+            val noonPrayerName = if (isFriday) "Cuma Namazı" else "Öğle"
+
             val prayerList = listOf(
                 Pair("Sabah", times.imsak),
-                Pair("Öğle", times.ogle),
+                Pair(noonPrayerName, times.ogle),
                 Pair("İkindi", times.ikindi),
                 Pair("Akşam", times.aksam),
                 Pair("Yatsı", times.yatsi)

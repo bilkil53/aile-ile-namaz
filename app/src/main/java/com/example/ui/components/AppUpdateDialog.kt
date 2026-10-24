@@ -162,11 +162,13 @@ fun AppUpdateDialog(
 
                 // High-Contrast, Clean Readable Release Notes Box (Always clearly visible in dark theme)
                 val formattedNotes = remember(updateInfo.releaseNotes) {
-                    val raw = updateInfo.releaseNotes.ifBlank {
-                        "Yeni optimizasyonlar, performans artışı ve Aile ile Namaz havuz senkronizasyon geliştirmeleri."
+                    val raw = if (updateInfo.releaseNotes.isBlank() || updateInfo.releaseNotes.length < 25) {
+                        com.example.util.AppUpdateManager.DEFAULT_FULL_RELEASE_NOTES
+                    } else {
+                        updateInfo.releaseNotes
                     }
                     raw.lines()
-                        .map { it.trim().removePrefix("##").removePrefix("#").trim() }
+                        .map { it.trim().removePrefix("##").removePrefix("#").replace(Regex("(?i)\\s*\\(?build\\s*\\d+\\)?"), "").trim() }
                         .filter { it.isNotBlank() }
                 }
 

@@ -38,7 +38,7 @@ object DiyanetPrayerService {
                 connectTimeout = 7000
                 readTimeout = 7000
                 requestMethod = "GET"
-                setRequestProperty("User-Agent", "NamazArkadasim-Android/1.6")
+                setRequestProperty("User-Agent", "AileIleNamaz-Android/1.1")
             }
 
             if (connection.responseCode == HttpURLConnection.HTTP_OK) {
@@ -71,10 +71,14 @@ object DiyanetPrayerService {
                     )
                 }
             } else {
-                Log.w(TAG, "Failed response code: ${connection.responseCode}")
+                Log.w(TAG, "Diyanet API HTTP yanıt kodu: ${connection.responseCode}")
             }
+        } catch (e: java.net.UnknownHostException) {
+            Log.w(TAG, "Cihaz çevrimdışı veya DNS sunucusuna ulaşılamıyor. Kesintisiz yerel Diyanet algoritması devrede.")
+        } catch (e: java.io.IOException) {
+            Log.w(TAG, "Diyanet vakit servisi ağ hatası (${e.message}). Yerel hesaplama devrede.")
         } catch (e: Exception) {
-            Log.e(TAG, "Error fetching Diyanet prayer times: ${e.message}", e)
+            Log.w(TAG, "Diyanet vakit servisi hatası: ${e.message}")
         }
         return@withContext null
     }
@@ -105,10 +109,13 @@ object DiyanetPrayerService {
         val currentSec = calendar.get(Calendar.SECOND)
         val currentTotalSec = currentHour * 3600 + currentMin * 60 + currentSec
 
+        val isFriday = calendar.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY
+        val noonName = if (isFriday) "Cuma" else "Öğle"
+
         val prayerList = listOf(
             Pair("İmsak", timeStrToSeconds(imsak)),
             Pair("Güneş", timeStrToSeconds(gunes)),
-            Pair("Öğle", timeStrToSeconds(ogle)),
+            Pair(noonName, timeStrToSeconds(ogle)),
             Pair("İkindi", timeStrToSeconds(ikindi)),
             Pair("Akşam", timeStrToSeconds(aksam)),
             Pair("Yatsı", timeStrToSeconds(yatsi))

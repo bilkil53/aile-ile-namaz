@@ -58,13 +58,57 @@ class ExampleUnitTest {
     val day2 = DailyContentProvider.getRandomRotatingNotificationQuote(2)
     assertNotNull(day1.text)
     assertNotNull(day2.text)
-    assertTrue(day1.category.contains("1. Gün"))
-    assertTrue(day2.category.contains("2. Gün"))
+    assertTrue(day1.category.contains("Günün"))
+    assertTrue(day2.category.contains("Günün"))
 
     val staticGreetings = DailyContentProvider.STATIC_GREETINGS_AND_DUAS
     assertTrue(staticGreetings.isNotEmpty())
     assertTrue(staticGreetings.any { it.category == "Tebrik" })
     assertTrue(staticGreetings.any { it.category == "Dua" })
+  }
+
+  @Test
+  fun testVersionTagCleanup_removesBuildNumbers() {
+    assertEquals("v1.1", com.example.util.AppUpdateManager.cleanVersionTag("v1.1(2)"))
+    assertEquals("v1.1", com.example.util.AppUpdateManager.cleanVersionTag("v1.1-build2"))
+    assertEquals("v1.1", com.example.util.AppUpdateManager.cleanVersionTag("1.1"))
+    assertEquals("v1.1", com.example.util.AppUpdateManager.cleanVersionTag("v1.1"))
+
+    assertEquals("Aile ile Namaz v1.1", com.example.util.AppUpdateManager.cleanReleaseTitle("Aile ile Namaz v1.1 (Build 2)"))
+    assertEquals("Aile ile Namaz v1.1", com.example.util.AppUpdateManager.cleanReleaseTitle("Aile ile Namaz v1.1 Build 2"))
+
+    val method = com.example.util.AppUpdateManager::class.java.getDeclaredMethod("isTagHigher", String::class.java, String::class.java)
+    method.isAccessible = true
+    // v1.1 should NOT be higher than v1.1
+    val result = method.invoke(com.example.util.AppUpdateManager, "v1.1", "v1.1") as Boolean
+    assertFalse("v1.1 should NOT be higher than v1.1", result)
+
+    // v1.2 SHOULD be higher than v1.1
+    val result2 = method.invoke(com.example.util.AppUpdateManager, "v1.2", "v1.1") as Boolean
+    assertTrue("v1.2 SHOULD be higher than v1.1", result2)
+  }
+
+  @Test
+  fun testPartnerSyncManager_normalizeAndFormatCode() {
+    val norm1 = com.example.util.PartnerSyncManager.normalizeCode("5391")
+    assertEquals("REIS005391", norm1)
+    assertEquals("REIS-005391", com.example.util.PartnerSyncManager.formatDisplayCode("5391"))
+
+    val norm2 = com.example.util.PartnerSyncManager.normalizeCode("005391")
+    assertEquals("REIS005391", norm2)
+    assertEquals("REIS-005391", com.example.util.PartnerSyncManager.formatDisplayCode("005391"))
+
+    val norm3 = com.example.util.PartnerSyncManager.normalizeCode("REIS-5391")
+    assertEquals("REIS005391", norm3)
+    assertEquals("REIS-005391", com.example.util.PartnerSyncManager.formatDisplayCode("REIS-5391"))
+
+    val norm4 = com.example.util.PartnerSyncManager.normalizeCode("reis 005391")
+    assertEquals("REIS005391", norm4)
+    assertEquals("REIS-005391", com.example.util.PartnerSyncManager.formatDisplayCode("reis 005391"))
+
+    val norm5 = com.example.util.PartnerSyncManager.normalizeCode("REIS-005391")
+    assertEquals("REIS005391", norm5)
+    assertEquals("REIS-005391", com.example.util.PartnerSyncManager.formatDisplayCode("REIS-005391"))
   }
 }
 

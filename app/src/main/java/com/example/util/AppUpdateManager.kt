@@ -13,6 +13,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
+import android.widget.Toast
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
@@ -44,6 +45,16 @@ object AppUpdateManager {
 
     private const val GITHUB_LATEST_WEB_URL = "https://github.com/bilkil53/aile-ile-namaz/releases/latest"
 
+    const val DEFAULT_FULL_RELEASE_NOTES = """🕌 Aile ile Namaz v1.4 - Resmi Güncel Sürüm Yenilikleri:
+
+🕌 Cuma Namazı Özel Bildirimi: Cuma günleri öğle saatinde bildirim başlığı otomatik olarak "🕌 Hayırlı Cumalar! Cuma Namazına 10 Dakika Kaldı" olarak güncellendi; Cuma Sûresi, hutbe hatırlatması ve salavat-ı şerifler ile zenginleştirildi.
+🔄 Dönen Zengin Manevi Dualar & Hadisler: Namaz yaklaştığında (10 dk kala) her vakit için (Sabah, Cuma, Öğle, İkindi, Akşam, Yatsı) günlere göre otomatik değişen zengin Diyanet mealli ayet, sahih hadis ve manevi niyaz koleksiyonu getirildi. Artık günlerce aynı dua tekrarlanmaz.
+👥 Aile Reisi & Fert Hitap Doğruluğu: Havuza katılan fertler için doğru unvanlar ("Oğlu", "Kızı") ve reis bildirimleri korundu.
+👦 Cinsiyet & İkon Doğrulaması: Seçilen profil ikonu ve aile rolleri tüm cihazlar arasında kusursuz senkronize edilir.
+🚀 Doğrudan Uygulama İçi Güncelleme: GitHub üzerindeki v1.4 ve sonrası yeni sürümler anında tespit edilir, uygulama içinden tek tıkla doğrudan kurulur.
+🌲 Çam Yeşili Tasarım Standardı (#0E5A4A): Tüm ekranlar ve üst barlar huzur veren çam yeşiliyle uyumlu hale getirildi.
+🤲 Ortak Aile Havuzu & Diyanet Takvimi: Canlı namaz senkronizasyonu, manyetik kıble pusulası ve mahremiyet korumalı kaza takibi."""
+
     suspend fun checkForUpdates(context: Context, notifyIfFound: Boolean = true): AppUpdateInfo? = withContext(Dispatchers.IO) {
         // 1. Birinci Aşama: GitHub REST API ile sorgula (Tam detaylar ve sürüm notları)
         val apiResult = checkViaGitHubApi(context, notifyIfFound)
@@ -74,9 +85,13 @@ object AppUpdateManager {
                 val bodyStr = response.body?.string() ?: return null
                 val json = JSONObject(bodyStr)
 
-                val tagName = json.optString("tag_name", "").trim()
-                val releaseName = json.optString("name", "Aile ile Namaz Güncellemesi")
-                val releaseNotes = json.optString("body", "Yeni özellikler, performans geliştirmeleri ve aile havuzu güncellemeleri içerir.")
+                val rawTagName = json.optString("tag_name", "").trim()
+                val tagName = cleanVersionTag(rawTagName)
+                val rawReleaseName = json.optString("name", "").trim()
+                val releaseName = if (rawReleaseName.isNotBlank()) cleanReleaseTitle(rawReleaseName) else "Aile ile Namaz $tagName - Resmi Güncel Sürüm"
+                val rawNotes = json.optString("body", "").trim()
+                val cleanNotes = cleanReleaseTitle(rawNotes)
+                val releaseNotes = if (cleanNotes.length >= 25) cleanNotes else DEFAULT_FULL_RELEASE_NOTES
                 val publishedAt = json.optString("published_at", "")
 
                 var downloadUrl = ""
@@ -108,15 +123,19 @@ object AppUpdateManager {
                     "25 MB"
                 }
 
-                val currentVersion = BuildConfig.VERSION_NAME
-                val currentVersionTag = if (currentVersion.startsWith("v", ignoreCase = true)) currentVersion else "v$currentVersion"
+                val currentVersion = try {
+                    context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: BuildConfig.VERSION_NAME
+                } catch (_: Exception) {
+                    BuildConfig.VERSION_NAME
+                }
+                val currentVersionTag = cleanVersionTag(currentVersion)
 
                 val isNewerVersionTag = tagName.isNotBlank() && isTagHigher(tagName, currentVersionTag)
                 val hasUpdate = isNewerVersionTag
 
                 val updateInfo = AppUpdateInfo(
                     hasUpdate = hasUpdate,
-                    latestVersionTag = if (tagName.isNotBlank()) tagName else "v$currentVersion",
+                    latestVersionTag = if (tagName.isNotBlank()) tagName else currentVersionTag,
                     releaseTitle = releaseName,
                     releaseNotes = releaseNotes,
                     apkDownloadUrl = downloadUrl,
@@ -166,22 +185,27 @@ object AppUpdateManager {
                     location.substringAfterLast("/tag/").trim().removeSuffix("/")
                 } else ""
 
-                if (tagName.isBlank()) {
+                val cleanTag = cleanVersionTag(tagName)
+                if (cleanTag.isBlank()) {
                     Log.w(TAG, "Web redirect Location did not contain tag: $location")
                     return null
                 }
 
-                val currentVersion = BuildConfig.VERSION_NAME
-                val currentVersionTag = if (currentVersion.startsWith("v", ignoreCase = true)) currentVersion else "v$currentVersion"
-                val hasUpdate = isTagHigher(tagName, currentVersionTag)
+                val currentVersion = try {
+                    context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: BuildConfig.VERSION_NAME
+                } catch (_: Exception) {
+                    BuildConfig.VERSION_NAME
+                }
+                val currentVersionTag = cleanVersionTag(currentVersion)
+                val hasUpdate = isTagHigher(cleanTag, currentVersionTag)
 
-                val downloadUrl = "https://github.com/bilkil53/aile-ile-namaz/releases/download/$tagName/Aile_Ile_Namaz.apk"
+                val downloadUrl = "https://github.com/bilkil53/aile-ile-namaz/releases/download/$cleanTag/Aile_Ile_Namaz.apk"
 
                 val updateInfo = AppUpdateInfo(
                     hasUpdate = hasUpdate,
-                    latestVersionTag = tagName,
-                    releaseTitle = "Aile ile Namaz $tagName Güncellemesi",
-                    releaseNotes = "Yeni özellikler, performans geliştirmeleri ve aile havuzu güncellemeleri içerir.",
+                    latestVersionTag = cleanTag,
+                    releaseTitle = "Aile ile Namaz $cleanTag - Resmi Güncel Sürüm",
+                    releaseNotes = DEFAULT_FULL_RELEASE_NOTES,
                     apkDownloadUrl = downloadUrl,
                     apkSizeFormatted = "25 MB",
                     publishedAt = "",
@@ -220,20 +244,30 @@ object AppUpdateManager {
         }
     }
 
-    private fun isTagHigher(latestTag: String, currentTag: String): Boolean {
-        val cleanLatest = latestTag.trim()
-            .removePrefix("v.")
-            .removePrefix("V.")
-            .removePrefix("v")
-            .removePrefix("V")
-            .trim()
+    fun cleanVersionTag(tag: String): String {
+        var t = tag.trim()
+        if (t.contains("(")) {
+            t = t.substringBefore("(")
+        }
+        if (t.contains("-")) {
+            t = t.substringBefore("-")
+        }
+        t = t.trim()
+        t = t.removePrefix("v.").removePrefix("V.").removePrefix("v").removePrefix("V").trim()
+        return if (t.isNotBlank()) "v$t" else "v1.4"
+    }
 
-        val cleanCurrent = currentTag.trim()
-            .removePrefix("v.")
-            .removePrefix("V.")
-            .removePrefix("v")
-            .removePrefix("V")
+    fun cleanReleaseTitle(title: String): String {
+        var clean = title
+            .replace(Regex("(?i)\\s*\\(?build\\s*\\d+\\)?"), "")
+            .replace(Regex("(?i)\\s*build\\s*\\d+"), "")
             .trim()
+        return clean
+    }
+
+    private fun isTagHigher(latestTag: String, currentTag: String): Boolean {
+        val cleanLatest = cleanVersionTag(latestTag).removePrefix("v").trim()
+        val cleanCurrent = cleanVersionTag(currentTag).removePrefix("v").trim()
 
         if (cleanLatest.equals(cleanCurrent, ignoreCase = true)) {
             return false
@@ -265,7 +299,7 @@ object AppUpdateManager {
         try {
             val request = Request.Builder()
                 .url(downloadUrl)
-                .header("User-Agent", "NamazArkadasim-Android")
+                .header("User-Agent", "AileIleNamaz-Android")
                 .get()
                 .build()
 
@@ -292,7 +326,7 @@ object AppUpdateManager {
 
             val totalBytes = body.contentLength()
             val targetDir = File(context.cacheDir, "updates").apply { mkdirs() }
-            val apkFile = File(targetDir, "Namaz_Arkadasim_Update.apk")
+            val apkFile = File(targetDir, "Aile_Ile_Namaz.apk")
 
             body.byteStream().use { inputStream ->
                 FileOutputStream(apkFile).use { outputStream ->
@@ -327,6 +361,8 @@ object AppUpdateManager {
         }
     }
 
+    private const val KEY_PENDING_APK_PATH = "pending_install_apk_path"
+
     /**
      * Launches the Android native package installer for the downloaded APK.
      */
@@ -335,14 +371,33 @@ object AppUpdateManager {
             // Check unknown sources installation permission on Android 8.0+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 if (!context.packageManager.canRequestPackageInstalls()) {
+                    val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                    prefs.edit().putString(KEY_PENDING_APK_PATH, apkFile.absolutePath).apply()
+
+                    Toast.makeText(
+                        context,
+                        "Güncellemeyi kurabilmek için lütfen 'Bu kaynaktan izin ver' seçeneğini açıp uygulamaya geri dönün.",
+                        Toast.LENGTH_LONG
+                    ).show()
+
                     val settingsIntent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
                         data = Uri.parse("package:${context.packageName}")
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
                     context.startActivity(settingsIntent)
+                    return
                 }
             }
 
+            launchApkInstall(context, apkFile, fallbackUrl)
+        } catch (e: Exception) {
+            Log.e(TAG, "Install failed, opening browser: ${e.message}")
+            openInBrowser(context, fallbackUrl)
+        }
+    }
+
+    fun launchApkInstall(context: Context, apkFile: File, fallbackUrl: String = GITHUB_LATEST_WEB_URL) {
+        try {
             val contentUri = FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",
@@ -357,8 +412,32 @@ object AppUpdateManager {
 
             context.startActivity(installIntent)
         } catch (e: Exception) {
-            Log.e(TAG, "Install failed, opening browser: ${e.message}")
+            Log.e(TAG, "launchApkInstall failed: ${e.message}")
+            Toast.makeText(context, "Doğrudan kurulum açılamadı. İndirme sayfası açılıyor...", Toast.LENGTH_SHORT).show()
             openInBrowser(context, fallbackUrl)
+        }
+    }
+
+    /**
+     * Checks if there is a downloaded APK waiting to be installed after returning from permission settings.
+     */
+    fun checkAndResumePendingInstall(context: Context) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (!context.packageManager.canRequestPackageInstalls()) {
+                    return
+                }
+            }
+
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val pendingPath = prefs.getString(KEY_PENDING_APK_PATH, null) ?: return
+            val apkFile = File(pendingPath)
+            if (apkFile.exists() && apkFile.length() > 0) {
+                prefs.edit().remove(KEY_PENDING_APK_PATH).apply()
+                launchApkInstall(context, apkFile)
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "checkAndResumePendingInstall error: ${e.message}")
         }
     }
 

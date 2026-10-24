@@ -6,6 +6,7 @@ import com.example.data.local.entity.AppSettingsEntity
 import com.example.data.local.entity.DailyPrayerEntity
 import com.example.data.local.entity.KazaPrayerEntity
 import com.example.data.local.entity.PartnerInfoEntity
+import com.example.util.FamilyRoleHelper
 import com.example.util.NotificationHelper
 import com.example.util.PartnerSyncManager
 import kotlinx.coroutines.CancellationException
@@ -325,16 +326,28 @@ class PrayerRepository(
             prayerDao.savePartnerInfo(current)
         }
 
-        // 1. If NOT matched yet: check if someone has claimed my invite code!
-        if (!current.isMatched) {
-            // Re-publish my profile so spouse can see my name/email upon entering code
-            PartnerSyncManager.publishMyProfile(current.myInviteCode, current.myDisplayName, current.myEmail)
+        val childPrefs = context?.getSharedPreferences("family_child_prefs", android.content.Context.MODE_PRIVATE)
+        val userExplicitlyDisconnected = childPrefs?.getBoolean("user_explicitly_disconnected", false) ?: false
+
+        // 1. If NOT matched yet and not explicitly disconnected: check if someone has claimed my invite code!
+        if (!current.isMatched && !userExplicitlyDisconnected) {
+            // Re-publish my profile so spouse can see my name/email/icon upon entering code
+            val myIcon = childPrefs?.getString("p1_icon", "🧔") ?: "🧔"
+            PartnerSyncManager.publishMyProfile(current.myInviteCode, current.myDisplayName, current.myEmail, myIcon)
 
             val incomingMatch = PartnerSyncManager.checkForIncomingMatch(current.myInviteCode)
             if (incomingMatch != null && incomingMatch.partnerCode.isNotBlank()) {
+                val normPartnerName = FamilyRoleHelper.normalizeRoleTitle(incomingMatch.partnerName.ifBlank { "Aile Ferdi" })
+                val roleIcon = if (incomingMatch.partnerIcon.isNotBlank() && !FamilyRoleHelper.isIconConflictingWithRole(incomingMatch.partnerIcon, normPartnerName)) {
+                    incomingMatch.partnerIcon
+                } else {
+                    FamilyRoleHelper.getDefaultIconForRole(normPartnerName)
+                }
+                childPrefs?.edit()?.putString("p2_name", normPartnerName)?.putString("p2_icon", roleIcon)?.apply()
+
                 val matched = current.copy(
                     isMatched = true,
-                    partnerDisplayName = incomingMatch.partnerName.ifBlank { "Aile Ferdi" },
+                    partnerDisplayName = normPartnerName,
                     partnerEmail = incomingMatch.partnerEmail,
                     partnerInviteCode = PartnerSyncManager.formatDisplayCode(incomingMatch.partnerCode),
                     lastSyncTime = System.currentTimeMillis()
@@ -345,8 +358,8 @@ class PrayerRepository(
                 if (context != null) {
                     NotificationHelper.showPartnerAlertNotification(
                         context,
-                        matched.partnerDisplayName,
-                        "Eşleşme sağlandı! Artık namaz ve kaza durumlarınızı anlık paylaşabilirsiniz. 🤝"
+                        normPartnerName,
+                        FamilyRoleHelper.formatJoinMessageForReis(normPartnerName)
                     )
                 }
 
@@ -354,16 +367,14 @@ class PrayerRepository(
                 broadcastCurrentStatusToPartner(todayDate = today)
                 return matched
             }
-            return current
         }
 
-        val childPrefs = context?.getSharedPreferences("family_child_prefs", android.content.Context.MODE_PRIVATE)
         val savedPoolCode = childPrefs?.getString("family_pool_code", null) ?: ""
         val effectivePoolCode = savedPoolCode.ifBlank {
             if (current.isMatched) current.partnerInviteCode else current.myInviteCode
         }
 
-        // 2. If MATCHED or IN POOL: Fetch updates, events and check unmatch in single call
+        // 2. Fetch updates, events and check unmatch in single call
         val syncResult = PartnerSyncManager.fetchPartnerUpdatesAndEvents(
             codeA = current.myInviteCode,
             codeB = current.partnerInviteCode,
@@ -373,6 +384,36 @@ class PrayerRepository(
             lastProcessedEventTime = lastProcessedEventTime,
             poolCode = effectivePoolCode
         )
+
+        // Check if an incoming match claim was delivered via pool or inbox (only if user did not explicitly disconnect)
+        val claim = syncResult.incomingClaim
+        if (!userExplicitlyDisconnected && claim != null && claim.partnerCode.isNotBlank() && (!current.isMatched || current.partnerInviteCode != claim.partnerCode)) {
+            val normClaimName = FamilyRoleHelper.normalizeRoleTitle(claim.partnerName.ifBlank { "Aile Ferdi" })
+            val claimIcon = if (claim.partnerIcon.isNotBlank() && !FamilyRoleHelper.isIconConflictingWithRole(claim.partnerIcon, normClaimName)) {
+                claim.partnerIcon
+            } else {
+                FamilyRoleHelper.getDefaultIconForRole(normClaimName)
+            }
+            childPrefs?.edit()?.putString("p2_name", normClaimName)?.putString("p2_icon", claimIcon)?.apply()
+
+            val matched = current.copy(
+                isMatched = true,
+                partnerDisplayName = normClaimName,
+                partnerEmail = claim.partnerEmail,
+                partnerInviteCode = claim.partnerCode,
+                lastSyncTime = System.currentTimeMillis()
+            )
+            prayerDao.savePartnerInfo(matched)
+            current = matched
+            if (context != null) {
+                NotificationHelper.showPartnerAlertNotification(
+                    context,
+                    normClaimName,
+                    FamilyRoleHelper.formatJoinMessageForReis(normClaimName)
+                )
+            }
+            broadcastCurrentStatusToPartner(todayDate = today)
+        }
 
         // Handle unmatch from partner
         if (syncResult.partnerUnmatched) {
@@ -393,7 +434,7 @@ class PrayerRepository(
             return unmatchEntity
         }
 
-        // Trigger notifications for new events from spouse!
+        // Trigger notifications for new events (prayers, pool join/leave, etc.)
         if (syncResult.newEvents.isNotEmpty()) {
             val now = System.currentTimeMillis()
             val validEvents = syncResult.newEvents.filter { event ->
@@ -403,29 +444,77 @@ class PrayerRepository(
                 (notProcessed && isRecent) || (event.timestamp > lastProcessedEventTime)
             }
             if (validEvents.isNotEmpty()) {
-                // Group by prayerName so only the latest status per prayer is notified (prevents both kıldı & kılmadı)
-                val latestPerPrayer = validEvents
-                    .groupBy { it.prayerName.ifBlank { it.eventType } }
-                    .mapValues { (_, list) -> list.maxByOrNull { it.timestamp } }
-                    .values
-                    .filterNotNull()
-                    .sortedBy { it.timestamp }
-
-                for (event in latestPerPrayer) {
+                for (event in validEvents.sortedBy { it.timestamp }) {
                     val sig = "${event.senderCode}_${event.eventType}_${event.prayerName}_${event.timestamp}"
                     processedEventSignatures.add(sig)
                     if (event.timestamp > lastProcessedEventTime) {
                         lastProcessedEventTime = event.timestamp
                     }
-                    if (context != null) {
-                        val sanitized = event.actionText
-                            .replace("kazaya bıraktı", "kılmadı")
-                            .replace("Kazaya bıraktı", "kılmadı")
-                        NotificationHelper.showPartnerAlertNotification(
-                            context = context,
-                            partnerName = current.partnerDisplayName.ifBlank { event.senderName.ifBlank { "Aile Ferdi" } },
-                            actionText = sanitized
-                        )
+
+                    if (event.eventType == "MEMBER_JOINED") {
+                        val normEventName = FamilyRoleHelper.normalizeRoleTitle(event.senderName.ifBlank { "Aile Ferdi" })
+                        val eventIcon = if (event.senderIcon.isNotBlank() && !FamilyRoleHelper.isIconConflictingWithRole(event.senderIcon, normEventName)) {
+                            event.senderIcon
+                        } else {
+                            FamilyRoleHelper.getDefaultIconForRole(normEventName)
+                        }
+                        childPrefs?.edit()?.putString("p2_name", normEventName)?.putString("p2_icon", eventIcon)?.apply()
+
+                        if (context != null) {
+                            NotificationHelper.showPartnerAlertNotification(
+                                context = context,
+                                partnerName = normEventName,
+                                actionText = FamilyRoleHelper.formatJoinMessageForReis(normEventName)
+                            )
+                        }
+                        if (!current.isMatched || current.partnerInviteCode.isBlank()) {
+                            val matched = current.copy(
+                                isMatched = true,
+                                partnerDisplayName = normEventName,
+                                partnerInviteCode = event.senderCode,
+                                lastSyncTime = System.currentTimeMillis()
+                            )
+                            prayerDao.savePartnerInfo(matched)
+                            current = matched
+                            broadcastCurrentStatusToPartner(todayDate = today)
+                        }
+                    } else if (event.eventType == "MEMBER_LEFT") {
+                        val normLeftName = FamilyRoleHelper.normalizeRoleTitle(event.senderName.ifBlank { "Aile Ferdi" })
+                        if (context != null) {
+                            NotificationHelper.showPartnerAlertNotification(
+                                context = context,
+                                partnerName = normLeftName,
+                                actionText = FamilyRoleHelper.formatLeftMessageForReis(normLeftName)
+                            )
+                        }
+                        if (current.partnerInviteCode == event.senderCode) {
+                            val unmatchEntity = current.copy(
+                                isMatched = false,
+                                partnerDisplayName = "",
+                                partnerEmail = "",
+                                partnerInviteCode = "",
+                                partnerFajr = "NONE",
+                                partnerDhuhr = "NONE",
+                                partnerAsr = "NONE",
+                                partnerMaghrib = "NONE",
+                                partnerIsha = "NONE",
+                                partnerKazaCompleted = 0,
+                                partnerKazaOwed = 0
+                            )
+                            prayerDao.savePartnerInfo(unmatchEntity)
+                            current = unmatchEntity
+                        }
+                    } else {
+                        if (context != null) {
+                            val sanitized = event.actionText
+                                .replace("kazaya bıraktı", "kılmadı")
+                                .replace("Kazaya bıraktı", "kılmadı")
+                            NotificationHelper.showPartnerAlertNotification(
+                                context = context,
+                                partnerName = current.partnerDisplayName.ifBlank { event.senderName.ifBlank { "Aile Ferdi" } },
+                                actionText = sanitized
+                            )
+                        }
                     }
                 }
             }
@@ -462,15 +551,30 @@ class PrayerRepository(
     }
 
     suspend fun matchPartner(code: String, partnerName: String = "", partnerEmail: String = ""): Boolean {
+        val childPrefs = context?.getSharedPreferences("family_child_prefs", android.content.Context.MODE_PRIVATE)
+        childPrefs?.edit()?.putBoolean("user_explicitly_disconnected", false)?.apply()
+
         var current = prayerDao.getPartnerInfo().firstOrNull() ?: PartnerInfoEntity()
         if (current.myInviteCode.isBlank() || !current.myInviteCode.startsWith("REIS-00")) {
             current = ensureUniqueInviteCode()
         }
 
         val targetCode = PartnerSyncManager.normalizeCode(code)
-        val myCleanCode = PartnerSyncManager.normalizeCode(current.myInviteCode)
-        if (targetCode.isBlank() || targetCode == myCleanCode) {
+        if (targetCode.isBlank() || targetCode.length < 5) {
             return false
+        }
+
+        var myCleanCode = PartnerSyncManager.normalizeCode(current.myInviteCode)
+        if (targetCode == myCleanCode) {
+            // If this device had the same code (e.g. from a shared cloud backup restore), generate a unique code for this device
+            var randomSuffix = (1000..9999).random()
+            while ("REIS00$randomSuffix" == targetCode) {
+                randomSuffix = (1000..9999).random()
+            }
+            val newCode = "REIS-00$randomSuffix"
+            current = current.copy(myInviteCode = newCode)
+            prayerDao.savePartnerInfo(current)
+            myCleanCode = PartnerSyncManager.normalizeCode(newCode)
         }
 
         val displayTargetCode = PartnerSyncManager.formatDisplayCode(code)
@@ -478,12 +582,13 @@ class PrayerRepository(
         // Look up partner's profile from cloud
         val cloudProfile = PartnerSyncManager.lookupProfileByCode(targetCode)
 
-        val determinedName = when {
+        val rawDeterminedName = when {
             partnerName.isNotBlank() -> partnerName.trim()
             !cloudProfile?.first.isNullOrBlank() -> cloudProfile!!.first.trim()
             !cloudProfile?.second.isNullOrBlank() -> cloudProfile!!.second.substringBefore("@")
-            else -> "Aile Ferdi"
+            else -> "Aile Reisi"
         }
+        val determinedName = FamilyRoleHelper.normalizeRoleTitle(rawDeterminedName)
 
         val determinedEmail = when {
             !cloudProfile?.second.isNullOrBlank() -> cloudProfile!!.second.trim()
@@ -491,12 +596,45 @@ class PrayerRepository(
             else -> ""
         }
 
-        // Send claim to partner's inbox so they get matched automatically
+        val partnerIcon = cloudProfile?.third ?: ""
+        val resolvedPartnerIcon = if (partnerIcon.isNotBlank() && !FamilyRoleHelper.isIconConflictingWithRole(partnerIcon, determinedName)) {
+            partnerIcon
+        } else {
+            FamilyRoleHelper.getDefaultIconForRole(determinedName)
+        }
+        childPrefs?.edit()?.putString("p2_name", determinedName)?.putString("p2_icon", resolvedPartnerIcon)?.apply()
+
+        val myIcon = childPrefs?.getString("p1_icon", "👦") ?: "👦"
+        val myDisplayName = FamilyRoleHelper.normalizeRoleTitle(current.myDisplayName.ifBlank { "Aile Ferdi" })
+
+        // 1. Send claim to partner's inbox so they get matched automatically
         PartnerSyncManager.sendPairClaim(
             targetCode = displayTargetCode,
             myCode = current.myInviteCode,
-            myName = current.myDisplayName.ifBlank { "Aile Ferdi" },
-            myEmail = current.myEmail
+            myName = myDisplayName,
+            myEmail = current.myEmail,
+            myIcon = myIcon
+        )
+
+        // 2. Broadcast to the family pool topic so everyone in the pool gets notified
+        PartnerSyncManager.broadcastPoolMemberJoined(
+            poolCode = displayTargetCode,
+            myCode = current.myInviteCode,
+            myName = myDisplayName,
+            myEmail = current.myEmail,
+            myIcon = myIcon
+        )
+
+        // 3. Broadcast direct event to canonical pair topic
+        PartnerSyncManager.broadcastPartnerEvent(
+            codeA = current.myInviteCode,
+            codeB = displayTargetCode,
+            myCode = current.myInviteCode,
+            myName = myDisplayName,
+            eventType = "MEMBER_JOINED",
+            prayerName = "Aile Havuzu",
+            actionText = FamilyRoleHelper.formatJoinMessageForReis(myDisplayName),
+            senderIcon = myIcon
         )
 
         val updated = current.copy(
@@ -508,20 +646,48 @@ class PrayerRepository(
         )
         prayerDao.savePartnerInfo(updated)
 
-        // Immediately broadcast our status to spouse
+        // Immediately broadcast our status to spouse and pool
         broadcastCurrentStatusToPartner()
+        // And immediately fetch partner's latest status from cloud
+        try {
+            refreshPartnerData()
+        } catch (_: Exception) { }
         return true
     }
 
-    suspend fun unmatchPartner() {
+    suspend fun leaveFamilyPool(poolCode: String = "") {
+        val childPrefs = context?.getSharedPreferences("family_child_prefs", android.content.Context.MODE_PRIVATE)
+        childPrefs?.edit()?.putBoolean("user_explicitly_disconnected", true)?.apply()
+
         val current = prayerDao.getPartnerInfo().firstOrNull() ?: PartnerInfoEntity()
+        val effectivePool = if (poolCode.isNotBlank()) poolCode else current.partnerInviteCode
+        val myName = current.myDisplayName.ifBlank { "Aile Ferdi" }
+
+        if (effectivePool.isNotBlank()) {
+            PartnerSyncManager.broadcastPoolMemberLeft(
+                poolCode = effectivePool,
+                myCode = current.myInviteCode,
+                myName = myName
+            )
+        }
+
         if (current.isMatched && current.partnerInviteCode.isNotBlank()) {
+            PartnerSyncManager.broadcastPartnerEvent(
+                codeA = current.myInviteCode,
+                codeB = current.partnerInviteCode,
+                myCode = current.myInviteCode,
+                myName = myName,
+                eventType = "MEMBER_LEFT",
+                prayerName = "Aile Havuzu",
+                actionText = "$myName aile havuzundan ayrıldı 🔴"
+            )
             PartnerSyncManager.broadcastUnmatch(
                 codeA = current.myInviteCode,
                 codeB = current.partnerInviteCode,
                 myCode = current.myInviteCode
             )
         }
+
         prayerDao.savePartnerInfo(
             current.copy(
                 isMatched = false,
@@ -537,6 +703,10 @@ class PrayerRepository(
                 partnerKazaOwed = 0
             )
         )
+    }
+
+    suspend fun unmatchPartner() {
+        leaveFamilyPool()
     }
 
     suspend fun updatePartnerName(name: String) {

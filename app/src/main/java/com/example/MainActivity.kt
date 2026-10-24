@@ -112,6 +112,7 @@ class MainActivity : ComponentActivity() {
             isAppearanceLightStatusBars = true
             isAppearanceLightNavigationBars = true
         }
+        com.example.util.AppUpdateManager.checkAndResumePendingInstall(this)
     }
 
     override fun onNewIntent(intent: Intent) {

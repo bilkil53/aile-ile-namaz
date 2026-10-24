@@ -35,6 +35,8 @@ fun SettingsScreen(
     val appSettings by viewModel.settings.collectAsState()
     val isCheckingForUpdate by viewModel.isCheckingForUpdate.collectAsState()
     val availableUpdate by viewModel.availableUpdate.collectAsState()
+    val downloadProgress by viewModel.downloadProgress.collectAsState()
+    val updateDownloadError by viewModel.updateDownloadError.collectAsState()
     var showLoginDialog by remember { mutableStateOf(false) }
     val isLoggedIn = appSettings.isLoggedIn || appSettings.userEmail.isNotBlank()
 
@@ -163,7 +165,42 @@ fun SettingsScreen(
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
                                 )
-                                Spacer(modifier = Modifier.width(4.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                if (availableUpdate != null && availableUpdate?.hasUpdate == true) {
+                                    Surface(
+                                        color = Color(0xFFF59E0B),
+                                        shape = RoundedCornerShape(4.dp)
+                                    ) {
+                                        Text(
+                                            text = "Yeni Sürüm!",
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White,
+                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                } else {
+                                    Surface(
+                                        color = Color(0xFF0E5A4A),
+                                        shape = RoundedCornerShape(4.dp),
+                                        border = BorderStroke(1.dp, Color(0xFF34D399).copy(alpha = 0.5f))
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                        ) {
+                                            Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = Color(0xFF34D399), modifier = Modifier.size(10.dp))
+                                            Spacer(modifier = Modifier.width(2.dp))
+                                            Text(
+                                                text = "Güncel",
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFF34D399)
+                                            )
+                                        }
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(6.dp))
                                 Icon(Icons.Filled.OpenInNew, contentDescription = null, tint = Color.White.copy(alpha = 0.7f), modifier = Modifier.size(12.dp))
                             }
                         }
@@ -172,27 +209,96 @@ fun SettingsScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             Surface(
                                 color = Color(0xFFFEF3C7),
-                                shape = RoundedCornerShape(10.dp),
+                                shape = RoundedCornerShape(12.dp),
                                 border = BorderStroke(1.dp, Color(0xFFF59E0B)),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(10.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(Icons.Filled.SystemUpdate, contentDescription = null, tint = Color(0xFFB45309), modifier = Modifier.size(22.dp))
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text("Yeni Sürüm Yayında: ${availableUpdate?.latestVersionTag}", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF92400E))
-                                        Text("İndirip güncellemek için dokunun.", fontSize = 10.sp, color = Color(0xFFB45309))
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Filled.SystemUpdate, contentDescription = null, tint = Color(0xFFB45309), modifier = Modifier.size(24.dp))
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = "Yeni Sürüm Yayında: ${availableUpdate?.latestVersionTag}",
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFF92400E)
+                                            )
+                                            Text(
+                                                text = "${availableUpdate?.apkSizeFormatted} • Resmi GitHub APK Dağıtımı",
+                                                fontSize = 11.sp,
+                                                color = Color(0xFFB45309)
+                                            )
+                                        }
                                     }
-                                    Button(
-                                        onClick = { viewModel.checkForAppUpdate(silent = false, forceShow = true) },
-                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
-                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                                        modifier = Modifier.height(32.dp)
+
+                                    if (downloadProgress != null) {
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                        val percent = ((downloadProgress ?: 0f) * 100).toInt()
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Text("APK İndiriliyor...", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF92400E))
+                                            Text("%$percent", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFB45309))
+                                        }
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        LinearProgressIndicator(
+                                            progress = { downloadProgress ?: 0f },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .height(6.dp),
+                                            color = Color(0xFFD97706),
+                                            trackColor = Color(0xFFFDE68A)
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = "İndirme bitince Android kurulum ekranı açılacaktır.",
+                                            fontSize = 10.sp,
+                                            color = Color(0xFF92400E)
+                                        )
+                                    } else if (updateDownloadError != null) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = updateDownloadError ?: "",
+                                            color = MissedRed,
+                                            fontSize = 11.sp
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        Text("Güncelle", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                        Button(
+                                            onClick = { viewModel.startApkUpdateDownload() },
+                                            enabled = downloadProgress == null,
+                                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706)),
+                                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                                            modifier = Modifier.weight(1.2f)
+                                        ) {
+                                            Icon(Icons.Filled.Download, contentDescription = null, tint = Color.White, modifier = Modifier.size(15.dp))
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text("Hemen Güncelle", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                        }
+
+                                        OutlinedButton(
+                                            onClick = {
+                                                com.example.util.AppUpdateManager.openInBrowser(
+                                                    context,
+                                                    availableUpdate?.apkDownloadUrl ?: "https://github.com/bilkil53/aile-ile-namaz/releases/latest"
+                                                )
+                                            },
+                                            border = BorderStroke(1.dp, Color(0xFFD97706)),
+                                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Icon(Icons.Filled.OpenInBrowser, contentDescription = null, tint = Color(0xFF92400E), modifier = Modifier.size(14.dp))
+                                            Spacer(modifier = Modifier.width(4.dp))
+                                            Text("Tarayıcıda İndir", fontSize = 11.sp, color = Color(0xFF92400E), fontWeight = FontWeight.Medium)
+                                        }
                                     }
                                 }
                             }
@@ -205,7 +311,7 @@ fun SettingsScreen(
                             horizontalArrangement = Arrangement.End
                         ) {
                             OutlinedButton(
-                                onClick = { viewModel.checkForAppUpdate(silent = false, forceShow = true) },
+                                onClick = { viewModel.checkForAppUpdate(silent = false) },
                                 enabled = !isCheckingForUpdate,
                                 shape = RoundedCornerShape(8.dp),
                                 border = BorderStroke(1.dp, Color.White.copy(alpha = 0.5f)),

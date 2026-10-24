@@ -75,11 +75,13 @@ fun MandatoryNicknameDialog(
 
     val iconOptions = listOf("🧔", "🧕", "👦", "👧", "👶", "👴", "👵", "🕌", "🤲")
     val roleSuggestions = listOf(
-        "Baba" to "🧔",
-        "Anne" to "🧕",
-        "Eşim" to "💍",
-        "Kızım" to "👧",
-        "Oğlum" to "👦",
+        "Oğlu" to "👦",
+        "Kızı" to "👧",
+        "Eşi" to "🧕",
+        "Annesi" to "🧕",
+        "Babası" to "🧔",
+        "Kardeşi" to "🧒",
+        "Torunu" to "👶",
         "Dede" to "👴",
         "Nine" to "👵"
     )
@@ -128,7 +130,7 @@ fun MandatoryNicknameDialog(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = "Aile İçi Takma Adınızı Belirleyin",
+                    text = "Aile İçi Rolünüzü / Hitabınızı Belirleyin",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = textPrimaryColor,
@@ -138,7 +140,7 @@ fun MandatoryNicknameDialog(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = "Giriş yapıldı: $userEmail\n\nAile havuzunda ve ibadet tablosunda e-posta adresiniz yerine aile fertlerinin sizi tanıyacağı bir isim veya ailedeki rolünüzün görünmesi zorunludur.",
+                    text = "Giriş yapıldı: $userEmail\n\nAile havuzunda ve ibadet tablosunda Aile Reisine olan yakınlığınızın görünmesi gereklidir (Örn: Aile Reisinin Oğlu, Kızı, Eşi gibi).",
                     fontSize = 12.sp,
                     color = textSecondaryColor,
                     textAlign = TextAlign.Center,
@@ -151,7 +153,7 @@ fun MandatoryNicknameDialog(
 
                 // Hızlı Rol Şablonları
                 Text(
-                    text = "Hızlı Rol Seçin ya da Aşağıya Yazın:",
+                    text = "Aile Reisine Olan Yakınlığınızı Seçin (ya da Yazın):",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color = textPrimaryColor,
@@ -160,64 +162,36 @@ fun MandatoryNicknameDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    roleSuggestions.take(4).forEach { (role, ic) ->
-                        val isSelected = nicknameInput.trim().equals(role, ignoreCase = true)
-                        Surface(
-                            onClick = {
-                                nicknameInput = role
-                                if (ic != "💍") selectedIcon = ic
-                                errorMessage = null
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            color = if (isSelected) EmeraldPrimary else chipBgColor,
-                            border = BorderStroke(1.dp, if (isSelected) EmeraldPrimary else chipBorderColor),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(
-                                text = role,
-                                fontSize = 11.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) Color.White else textPrimaryColor,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(vertical = 7.dp)
-                            )
+                roleSuggestions.chunked(3).forEach { rowList ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        rowList.forEach { (role, ic) ->
+                            val isSelected = nicknameInput.trim().equals(role, ignoreCase = true)
+                            Surface(
+                                onClick = {
+                                    nicknameInput = role
+                                    selectedIcon = ic
+                                    errorMessage = null
+                                },
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (isSelected) EmeraldPrimary else chipBgColor,
+                                border = BorderStroke(1.dp, if (isSelected) EmeraldPrimary else chipBorderColor),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = "$ic $role",
+                                    fontSize = 11.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) Color.White else textPrimaryColor,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(vertical = 7.dp)
+                                )
+                            }
                         }
                     }
-                }
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    roleSuggestions.drop(4).forEach { (role, ic) ->
-                        val isSelected = nicknameInput.trim().equals(role, ignoreCase = true)
-                        Surface(
-                            onClick = {
-                                nicknameInput = role
-                                selectedIcon = ic
-                                errorMessage = null
-                            },
-                            shape = RoundedCornerShape(8.dp),
-                            color = if (isSelected) EmeraldPrimary else chipBgColor,
-                            border = BorderStroke(1.dp, if (isSelected) EmeraldPrimary else chipBorderColor),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(
-                                text = role,
-                                fontSize = 11.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) Color.White else textPrimaryColor,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(vertical = 7.dp)
-                            )
-                        }
-                    }
+                    Spacer(modifier = Modifier.height(6.dp))
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))
@@ -302,14 +276,20 @@ fun MandatoryNicknameDialog(
                 // Onayla ve Kaydet Butonu
                 Button(
                     onClick = {
-                        val clean = nicknameInput.trim()
-                        if (clean.length < 2) {
+                        val raw = nicknameInput.trim()
+                        if (raw.length < 2) {
                             errorMessage = "Lütfen en az 2 harfli bir takma ad yazınız."
                             return@Button
                         }
-                        if (clean.contains("@")) {
+                        if (raw.contains("@")) {
                             errorMessage = "E-posta adresi değil, lütfen kendinize özel bir isim/takma ad yazınız."
                             return@Button
+                        }
+                        val clean = com.example.util.FamilyRoleHelper.normalizeRoleTitle(raw)
+                        val finalIcon = if (com.example.util.FamilyRoleHelper.isIconConflictingWithRole(selectedIcon, clean)) {
+                            com.example.util.FamilyRoleHelper.getDefaultIconForRole(clean)
+                        } else {
+                            selectedIcon
                         }
 
                         // Save nickname to preferences and ViewModel
@@ -319,12 +299,12 @@ fun MandatoryNicknameDialog(
                             .putBoolean("confirmed_nickname_v3_$currentEmailKey", true)
                             .putString("user_nickname_$currentEmailKey", clean)
                             .putString("p1_name", clean)
-                            .putString("p1_icon", selectedIcon)
+                            .putString("p1_icon", finalIcon)
                             .apply()
 
                         viewModel.updateMyProfileName(clean)
                         viewModel.loginUser(clean, userEmail)
-                        onConfirmed(clean, selectedIcon)
+                        onConfirmed(clean, finalIcon)
                     },
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),

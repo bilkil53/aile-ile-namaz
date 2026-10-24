@@ -66,10 +66,20 @@ object NotificationHelper {
         minutesRemaining: Long,
         customDay: Int? = null
     ) {
-        val quote = DailyContentProvider.getPrayerApproachingQuote(prayerName, customDay)
-        val title = "🕌 $prayerName Vaktine 10 Dakika Kaldı"
+        val cal = java.util.Calendar.getInstance()
+        val isFriday = cal.get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.FRIDAY
+        val isNoonPrayer = prayerName.contains("öğle", ignoreCase = true) || prayerName.contains("ogle", ignoreCase = true)
+        val isCuma = prayerName.contains("cuma", ignoreCase = true) || (isFriday && isNoonPrayer)
+        val displayName = if (isCuma) "Cuma Namazı" else prayerName
+        val title = if (isCuma) "🕌 Hayırlı Cumalar! Cuma Namazına 10 Dakika Kaldı" else "🕌 $displayName Vaktine 10 Dakika Kaldı"
+        val quote = DailyContentProvider.getPrayerApproachingQuote(if (isCuma) "cuma" else prayerName, customDay)
         val message = "${quote.title}: \"${quote.text}\""
-        val detailedText = "$message\n\n— ${quote.source}\n\nAbdestinizi alıp vakit namazına hazırlanmayı unutmayın. 🤲"
+        val reminder = if (isCuma) {
+            "Hayırlı Cumalar! Abdestinizi tazeleyip Cuma namazı ve hutbeye yetişmek için camiye hazırlanmayı unutmayın. 🤲"
+        } else {
+            "Abdestinizi alıp vakit namazına hazırlanmayı unutmayın. 🤲"
+        }
+        val detailedText = "$message\n\n— ${quote.source}\n\n$reminder"
 
         val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
         val pendingIntent = if (intent != null) {
@@ -140,7 +150,21 @@ object NotificationHelper {
     }
 
     fun showPartnerAlertNotification(context: Context, partnerName: String, actionText: String) {
-        val title = if (partnerName.isNotBlank()) "👨‍👩‍👧‍👦 Aile Ferdi: $partnerName" else "👨‍👩‍👧‍👦 Aile İbadet Bildirimi"
+        val normName = FamilyRoleHelper.normalizeRoleTitle(partnerName)
+        val address = FamilyRoleHelper.formatAddressForReis(normName)
+        val title = if (partnerName.isNotBlank()) "👨‍👩‍👧‍👦 $address" else "👨‍👩‍👧‍👦 Aile İbadet Bildirimi"
+
+        val formattedActionText = if (
+            actionText.contains("katıldı") ||
+            actionText.contains("ayrıldı") ||
+            actionText.startsWith(address, ignoreCase = true) ||
+            actionText.startsWith(normName, ignoreCase = true) ||
+            actionText.startsWith(partnerName, ignoreCase = true)
+        ) {
+            actionText
+        } else {
+            "$address $actionText"
+        }
 
         val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
         val pendingIntent = if (intent != null) {
@@ -155,8 +179,8 @@ object NotificationHelper {
         val builder = NotificationCompat.Builder(context, CHANNEL_PARTNER_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
-            .setContentText(actionText)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(actionText))
+            .setContentText(formattedActionText)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(formattedActionText))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
 

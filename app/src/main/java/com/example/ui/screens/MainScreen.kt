@@ -69,85 +69,84 @@ fun MainScreen(
         selectedTab = AppTab.TRACKER
     }
 
-    if (showSettingsScreen) {
-        Scaffold(
-            modifier = modifier
-                .fillMaxSize()
-                .background(WarmCreamBackground),
-            containerColor = WarmCreamBackground,
-            contentWindowInsets = WindowInsets.systemBars,
-            topBar = {
-                Surface(
-                    color = EmeraldPrimary,
-                    shadowElevation = 3.dp
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .statusBarsPadding()
-                            .padding(horizontal = 14.dp, vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (showSettingsScreen) {
+            Scaffold(
+                modifier = modifier
+                    .fillMaxSize()
+                    .background(WarmCreamBackground),
+                containerColor = WarmCreamBackground,
+                contentWindowInsets = WindowInsets.systemBars,
+                topBar = {
+                    Surface(
+                        color = EmeraldPrimary,
+                        shadowElevation = 3.dp
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .statusBarsPadding()
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Surface(
+                                    onClick = { showSettingsScreen = false },
+                                    shape = CircleShape,
+                                    color = Color.White.copy(alpha = 0.2f),
+                                    modifier = Modifier.size(36.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(
+                                            imageVector = Icons.Filled.ArrowBack,
+                                            contentDescription = "Geri",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "Ayarlar",
+                                        fontSize = 17.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
+                                    Text(
+                                        text = "Uygulama Bilgileri",
+                                        fontSize = 11.sp,
+                                        color = Color.White.copy(alpha = 0.85f)
+                                    )
+                                }
+                            }
+
                             Surface(
-                                onClick = { showSettingsScreen = false },
                                 shape = CircleShape,
                                 color = Color.White.copy(alpha = 0.2f),
                                 modifier = Modifier.size(36.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
-                                        imageVector = Icons.Filled.ArrowBack,
-                                        contentDescription = "Geri",
+                                        imageVector = Icons.Filled.Settings,
+                                        contentDescription = null,
                                         tint = Color.White,
                                         modifier = Modifier.size(20.dp)
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "Ayarlar",
-                                    fontSize = 17.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                                Text(
-                                    text = "Uygulama Bilgileri",
-                                    fontSize = 11.sp,
-                                    color = Color.White.copy(alpha = 0.85f)
-                                )
-                            }
-                        }
-
-                        Surface(
-                            shape = CircleShape,
-                            color = Color.White.copy(alpha = 0.2f),
-                            modifier = Modifier.size(36.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Filled.Settings,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
                         }
                     }
                 }
+            ) { paddingValues ->
+                SettingsScreen(
+                    viewModel = viewModel,
+                    modifier = Modifier.padding(paddingValues)
+                )
             }
-        ) { paddingValues ->
-            SettingsScreen(
-                viewModel = viewModel,
-                modifier = Modifier.padding(paddingValues)
-            )
-        }
-        return
-    }
-
-    Scaffold(
+        } else {
+            Scaffold(
         modifier = modifier
             .fillMaxSize()
             .background(WarmCreamBackground),
@@ -314,57 +313,59 @@ fun MainScreen(
                     AppTab.REPORT -> ReportScreen(viewModel = viewModel)
                 }
             }
-
-            // In-App GitHub APK Update Dialog
-            val availableUpdate by viewModel.availableUpdate.collectAsState()
-            val downloadProgress by viewModel.downloadProgress.collectAsState()
-            val updateDownloadError by viewModel.updateDownloadError.collectAsState()
-
-            if (availableUpdate != null && availableUpdate?.hasUpdate == true) {
-                com.example.ui.components.AppUpdateDialog(
-                    updateInfo = availableUpdate!!,
-                    downloadProgress = downloadProgress,
-                    errorMessage = updateDownloadError,
-                    onStartDownload = { viewModel.startApkUpdateDownload() },
-                    onDismiss = { viewModel.dismissUpdateDialog() }
-                )
-            }
-
-            // Açılışta Tanıtım & Hızlı Google Login Ekranı
-            if (!settings.isLoggedIn && !hasDismissedOnboarding) {
-                OnboardingLoginDialog(
-                    viewModel = viewModel,
-                    onDismiss = { hasDismissedOnboarding = true }
-                )
-            }
-
-            // Login Olduktan Sonra Zorunlu Takma Ad / İsim Belirleme Ekranı
-            val childPrefs = remember {
-                context.getSharedPreferences("family_child_prefs", Context.MODE_PRIVATE)
-            }
-            var refreshNickTrigger by remember { mutableStateOf(0) }
-            val currentEmailKey = settings.userEmail.trim().lowercase()
-            val hasConfirmedNickname = remember(settings.userName, settings.userEmail, refreshNickTrigger) {
-                if (currentEmailKey.isBlank()) {
-                    false
-                } else {
-                    val hasConfirmedForEmail = childPrefs.getBoolean("confirmed_nickname_v3_$currentEmailKey", false)
-                    val savedNick = childPrefs.getString("user_nickname_$currentEmailKey", "") ?: ""
-                    hasConfirmedForEmail && savedNick.isNotBlank() && !savedNick.contains("@") && savedNick != "Mümin"
-                }
-            }
-            val needsMandatoryNickname = (settings.isLoggedIn || settings.userEmail.isNotBlank()) && !hasConfirmedNickname
-
-            if (needsMandatoryNickname) {
-                MandatoryNicknameDialog(
-                    viewModel = viewModel,
-                    userEmail = settings.userEmail,
-                    currentName = settings.userName,
-                    onConfirmed = { confirmedName, icon ->
-                        refreshNickTrigger++
-                    }
-                )
-            }
         }
     }
+}
+
+    // In-App GitHub APK Update Dialog
+    val availableUpdate by viewModel.availableUpdate.collectAsState()
+    val downloadProgress by viewModel.downloadProgress.collectAsState()
+    val updateDownloadError by viewModel.updateDownloadError.collectAsState()
+
+    if (availableUpdate != null && availableUpdate?.hasUpdate == true) {
+        com.example.ui.components.AppUpdateDialog(
+            updateInfo = availableUpdate!!,
+            downloadProgress = downloadProgress,
+            errorMessage = updateDownloadError,
+            onStartDownload = { viewModel.startApkUpdateDownload() },
+            onDismiss = { viewModel.dismissUpdateDialog() }
+        )
+    }
+
+    // Açılışta Tanıtım & Hızlı Google Login Ekranı
+    if (!settings.isLoggedIn && !hasDismissedOnboarding) {
+        OnboardingLoginDialog(
+            viewModel = viewModel,
+            onDismiss = { hasDismissedOnboarding = true }
+        )
+    }
+
+    // Login Olduktan Sonra Zorunlu Takma Ad / İsim Belirleme Ekranı
+    val childPrefs = remember {
+        context.getSharedPreferences("family_child_prefs", Context.MODE_PRIVATE)
+    }
+    var refreshNickTrigger by remember { mutableStateOf(0) }
+    val currentEmailKey = settings.userEmail.trim().lowercase()
+    val hasConfirmedNickname = remember(settings.userName, settings.userEmail, refreshNickTrigger) {
+        if (currentEmailKey.isBlank()) {
+            false
+        } else {
+            val hasConfirmedForEmail = childPrefs.getBoolean("confirmed_nickname_v3_$currentEmailKey", false)
+            val savedNick = childPrefs.getString("user_nickname_$currentEmailKey", "") ?: ""
+            hasConfirmedForEmail && savedNick.isNotBlank() && !savedNick.contains("@") && savedNick != "Mümin"
+        }
+    }
+    val needsMandatoryNickname = (settings.isLoggedIn || settings.userEmail.isNotBlank()) && !hasConfirmedNickname
+
+    if (needsMandatoryNickname) {
+        MandatoryNicknameDialog(
+            viewModel = viewModel,
+            userEmail = settings.userEmail,
+            currentName = settings.userName,
+            onConfirmed = { confirmedName, icon ->
+                refreshNickTrigger++
+            }
+        )
+    }
+}
 }

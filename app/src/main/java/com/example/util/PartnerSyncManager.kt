@@ -36,20 +36,23 @@ data class PartnerRemoteEvent(
     val eventType: String, // "PRAYED", "MISSED", "KAZA"
     val prayerName: String,
     val actionText: String,
-    val timestamp: Long
+    val timestamp: Long,
+    val senderIcon: String = ""
 )
 
 data class IncomingMatchInfo(
     val partnerCode: String,
     val partnerName: String,
-    val partnerEmail: String
+    val partnerEmail: String,
+    val partnerIcon: String = ""
 )
 
 data class SyncResult(
     val latestStatus: PartnerPrayerUpdate?,
     val yesterdayStatus: PartnerPrayerUpdate? = null,
     val newEvents: List<PartnerRemoteEvent>,
-    val partnerUnmatched: Boolean
+    val partnerUnmatched: Boolean,
+    val incomingClaim: IncomingMatchInfo? = null
 )
 
 object PartnerSyncManager {
@@ -65,14 +68,31 @@ object PartnerSyncManager {
         .build()
 
     fun normalizeCode(code: String): String {
-        return code.trim().filter { it.isLetterOrDigit() }.uppercase()
+        val raw = code.trim().uppercase().replace(" ", "").replace("-", "")
+        if (raw.isBlank()) return ""
+        val digits = raw.filter { it.isDigit() }
+        return when {
+            raw.startsWith("REIS00") -> raw
+            raw.startsWith("REIS") && digits.isNotBlank() -> {
+                val num = if (digits.startsWith("00")) digits else if (digits.startsWith("0")) "0$digits" else "00$digits"
+                "REIS$num"
+            }
+            digits.length in 4..6 -> {
+                val num = if (digits.startsWith("00")) digits else if (digits.length == 4) "00$digits" else digits
+                "REIS$num"
+            }
+            else -> raw
+        }
     }
 
     fun formatDisplayCode(code: String): String {
         val clean = normalizeCode(code)
+        if (clean.isBlank()) return ""
         return when {
-            clean.startsWith("REIS") && clean.length > 4 -> "REIS-" + clean.substring(4)
-            clean.startsWith("00") && clean.length >= 4 -> "REIS-" + clean
+            clean.startsWith("REIS") && clean.length > 4 -> {
+                val sub = clean.substring(4)
+                if (!sub.startsWith("00") && sub.length == 4) "REIS-00$sub" else "REIS-$sub"
+            }
             clean.startsWith("EMB53") && clean.length > 5 -> "EMB-53" + clean.substring(5)
             clean.startsWith("EMB") && clean.length > 3 -> "EMB-" + clean.substring(3)
             clean.length > 4 -> clean.take(4) + "-" + clean.drop(4)
@@ -93,18 +113,94 @@ object PartnerSyncManager {
     }
 
     /**
+     * Broadcasts when a member joins the family pool.
+     */
+    suspend fun broadcastPoolMemberJoined(
+        poolCode: String,
+        myCode: String,
+        myName: String,
+        myEmail: String = "",
+        myIcon: String = ""
+    ) = withContext(Dispatchers.IO) {
+        val clean = normalizeCode(poolCode)
+        if (clean.isBlank()) return@withContext
+        val topic = getPoolTopic(poolCode)
+        val normalizedName = FamilyRoleHelper.normalizeRoleTitle(myName)
+        val resolvedIcon = if (myIcon.isNotBlank()) myIcon else FamilyRoleHelper.getDefaultIconForRole(normalizedName)
+        try {
+            val json = JSONObject().apply {
+                put("type", "POOL_EVENT")
+                put("eventType", "MEMBER_JOINED")
+                put("senderCode", formatDisplayCode(myCode))
+                put("senderName", normalizedName)
+                put("senderEmail", myEmail.trim())
+                put("senderIcon", resolvedIcon)
+                put("actionText", FamilyRoleHelper.formatJoinMessageForReis(normalizedName))
+                put("timestamp", System.currentTimeMillis())
+            }
+
+            val request = Request.Builder()
+                .url("$BASE_URL/$topic")
+                .post(json.toString().toRequestBody(JSON_MEDIA_TYPE))
+                .build()
+
+            httpClient.newCall(request).execute().close()
+            Log.i(TAG, "Pool member joined broadcasted to $topic: $normalizedName ($resolvedIcon)")
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to broadcast pool member joined: ${e.message}")
+        }
+    }
+
+    /**
+     * Broadcasts when a member leaves the family pool.
+     */
+    suspend fun broadcastPoolMemberLeft(
+        poolCode: String,
+        myCode: String,
+        myName: String
+    ) = withContext(Dispatchers.IO) {
+        val clean = normalizeCode(poolCode)
+        if (clean.isBlank()) return@withContext
+        val topic = getPoolTopic(poolCode)
+        val normalizedName = FamilyRoleHelper.normalizeRoleTitle(myName)
+        try {
+            val json = JSONObject().apply {
+                put("type", "POOL_EVENT")
+                put("eventType", "MEMBER_LEFT")
+                put("senderCode", formatDisplayCode(myCode))
+                put("senderName", normalizedName)
+                put("actionText", FamilyRoleHelper.formatLeftMessageForReis(normalizedName))
+                put("timestamp", System.currentTimeMillis())
+            }
+
+            val request = Request.Builder()
+                .url("$BASE_URL/$topic")
+                .post(json.toString().toRequestBody(JSON_MEDIA_TYPE))
+                .build()
+
+            httpClient.newCall(request).execute().close()
+            Log.i(TAG, "Pool member left broadcasted to $topic: $normalizedName")
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to broadcast pool member left: ${e.message}")
+        }
+    }
+
+    /**
      * Publishes my profile so that when someone enters my code, they can see my name and email.
      */
-    suspend fun publishMyProfile(myCode: String, name: String, email: String) = withContext(Dispatchers.IO) {
+    suspend fun publishMyProfile(myCode: String, name: String, email: String, icon: String = "") = withContext(Dispatchers.IO) {
         val cleaned = normalizeCode(myCode)
         if (cleaned.isBlank()) return@withContext
+        val normalizedName = FamilyRoleHelper.normalizeRoleTitle(name)
+        val resolvedIcon = if (icon.isNotBlank()) icon else FamilyRoleHelper.getDefaultIconForRole(normalizedName)
 
         try {
             val json = JSONObject().apply {
                 put("type", "USER_PROFILE")
                 put("inviteCode", formatDisplayCode(myCode))
-                put("displayName", name.trim())
+                put("displayName", normalizedName)
                 put("email", email.trim())
+                put("icon", resolvedIcon)
                 put("timestamp", System.currentTimeMillis())
             }
 
@@ -121,8 +217,9 @@ object PartnerSyncManager {
 
     /**
      * Looks up user profile by invite code.
+     * Returns Triple(displayName, email, icon).
      */
-    suspend fun lookupProfileByCode(targetCode: String): Pair<String, String>? = withContext(Dispatchers.IO) {
+    suspend fun lookupProfileByCode(targetCode: String): Triple<String, String, String>? = withContext(Dispatchers.IO) {
         val cleaned = normalizeCode(targetCode)
         if (cleaned.isBlank()) return@withContext null
 
@@ -136,7 +233,7 @@ object PartnerSyncManager {
                 if (!response.isSuccessful) return@withContext null
                 val body = response.body?.string() ?: return@withContext null
 
-                var lastProfile: Pair<String, String>? = null
+                var lastProfile: Triple<String, String, String>? = null
                 BufferedReader(StringReader(body)).useLines { lines ->
                     for (line in lines) {
                         try {
@@ -147,7 +244,8 @@ object PartnerSyncManager {
                                 if (msgJson.optString("type") == "USER_PROFILE") {
                                     val name = msgJson.optString("displayName", "")
                                     val email = msgJson.optString("email", "")
-                                    lastProfile = Pair(name, email)
+                                    val icon = msgJson.optString("icon", "")
+                                    lastProfile = Triple(name, email, icon)
                                 }
                             }
                         } catch (_: Exception) { }
@@ -169,18 +267,22 @@ object PartnerSyncManager {
         targetCode: String,
         myCode: String,
         myName: String,
-        myEmail: String
+        myEmail: String,
+        myIcon: String = ""
     ): Boolean = withContext(Dispatchers.IO) {
         val cleanedTarget = normalizeCode(targetCode)
         if (cleanedTarget.isBlank()) return@withContext false
+        val normalizedName = FamilyRoleHelper.normalizeRoleTitle(myName)
+        val resolvedIcon = if (myIcon.isNotBlank()) myIcon else FamilyRoleHelper.getDefaultIconForRole(normalizedName)
 
         try {
             val json = JSONObject().apply {
                 put("type", "PAIR_CLAIMED")
                 put("partnerInviteCode", formatDisplayCode(targetCode))
                 put("claimerCode", formatDisplayCode(myCode))
-                put("claimerName", myName.trim())
+                put("claimerName", normalizedName)
                 put("claimerEmail", myEmail.trim())
+                put("claimerIcon", resolvedIcon)
                 put("timestamp", System.currentTimeMillis())
             }
 
@@ -228,11 +330,19 @@ object PartnerSyncManager {
                                     val claimerCode = msgJson.optString("claimerCode", "")
                                     val claimerName = msgJson.optString("claimerName", "")
                                     val claimerEmail = msgJson.optString("claimerEmail", "")
+                                    val claimerIcon = msgJson.optString("claimerIcon", "")
                                     if (claimerCode.isNotBlank()) {
+                                        val normName = FamilyRoleHelper.normalizeRoleTitle(claimerName)
+                                        val finalIcon = if (claimerIcon.isNotBlank() && !FamilyRoleHelper.isIconConflictingWithRole(claimerIcon, normName)) {
+                                            claimerIcon
+                                        } else {
+                                            FamilyRoleHelper.getDefaultIconForRole(normName)
+                                        }
                                         lastClaim = IncomingMatchInfo(
                                             partnerCode = formatDisplayCode(claimerCode),
-                                            partnerName = claimerName,
-                                            partnerEmail = claimerEmail
+                                            partnerName = normName,
+                                            partnerEmail = claimerEmail,
+                                            partnerIcon = finalIcon
                                         )
                                     }
                                 }
@@ -258,14 +368,18 @@ object PartnerSyncManager {
         myName: String,
         eventType: String,
         prayerName: String,
-        actionText: String
+        actionText: String,
+        senderIcon: String = ""
     ) = withContext(Dispatchers.IO) {
         val topic = getCanonicalPairTopic(codeA, codeB)
+        val normalizedName = FamilyRoleHelper.normalizeRoleTitle(myName)
+        val resolvedIcon = if (senderIcon.isNotBlank()) senderIcon else FamilyRoleHelper.getDefaultIconForRole(normalizedName)
         try {
             val json = JSONObject().apply {
                 put("type", "PARTNER_EVENT")
                 put("senderCode", normalizeCode(myCode))
-                put("senderName", myName.trim())
+                put("senderName", normalizedName)
+                put("senderIcon", resolvedIcon)
                 put("eventType", eventType)
                 put("prayerName", prayerName)
                 put("actionText", actionText)
@@ -435,6 +549,16 @@ object PartnerSyncManager {
                 topicsToPoll.add(pt)
             }
         }
+        if (cleanMyCode.isNotBlank()) {
+            val invTopic = "ain_inv_$cleanMyCode"
+            if (!topicsToPoll.contains(invTopic)) {
+                topicsToPoll.add(invTopic)
+            }
+            val myPoolTopic = getPoolTopic(myCode)
+            if (!topicsToPoll.contains(myPoolTopic)) {
+                topicsToPoll.add(myPoolTopic)
+            }
+        }
         if (topicsToPoll.isEmpty()) {
             return@withContext SyncResult(null, null, emptyList(), false)
         }
@@ -444,6 +568,7 @@ object PartnerSyncManager {
             var yesterdayStatus: PartnerPrayerUpdate? = null
             val newEvents = mutableListOf<PartnerRemoteEvent>()
             var unmatchDetected = false
+            var lastClaim: IncomingMatchInfo? = null
 
             val yesterdayCal = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
             val yesterdayDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(yesterdayCal.time)
@@ -511,21 +636,76 @@ object PartnerSyncManager {
                                                             }
                                                         }
                                                     }
+                                                    "POOL_EVENT" -> {
+                                                        if (sender != cleanMyCode && timestamp > lastProcessedEventTime) {
+                                                            val rawAction = msgJson.optString("actionText", "")
+                                                            val evType = msgJson.optString("eventType", "")
+                                                            val cleanAction = rawAction
+                                                                .replace("kazaya bıraktı", "kılmadı")
+                                                                .replace("Kazaya bıraktı", "kılmadı")
+                                                            val sName = FamilyRoleHelper.normalizeRoleTitle(msgJson.optString("senderName", "Aile Ferdi"))
+                                                            val sIcon = msgJson.optString("senderIcon", "")
+                                                            val resolvedIcon = if (sIcon.isNotBlank() && !FamilyRoleHelper.isIconConflictingWithRole(sIcon, sName)) {
+                                                                sIcon
+                                                            } else {
+                                                                FamilyRoleHelper.getDefaultIconForRole(sName)
+                                                            }
+                                                            newEvents.add(
+                                                                PartnerRemoteEvent(
+                                                                    senderCode = formatDisplayCode(sender),
+                                                                    senderName = sName,
+                                                                    eventType = if (evType.isNotBlank()) evType else "POOL_EVENT",
+                                                                    prayerName = "Aile Havuzu",
+                                                                    actionText = cleanAction,
+                                                                    timestamp = timestamp,
+                                                                    senderIcon = resolvedIcon
+                                                                )
+                                                            )
+                                                        }
+                                                    }
                                                     "PARTNER_EVENT" -> {
                                                         if (sender != cleanMyCode && timestamp > lastProcessedEventTime) {
                                                             val rawAction = msgJson.optString("actionText", "")
                                                             val cleanAction = rawAction
                                                                 .replace("kazaya bıraktı", "kılmadı")
                                                                 .replace("Kazaya bıraktı", "kılmadı")
+                                                            val sName = FamilyRoleHelper.normalizeRoleTitle(msgJson.optString("senderName", ""))
+                                                            val sIcon = msgJson.optString("senderIcon", "")
+                                                            val resolvedIcon = if (sIcon.isNotBlank() && !FamilyRoleHelper.isIconConflictingWithRole(sIcon, sName)) {
+                                                                sIcon
+                                                            } else {
+                                                                FamilyRoleHelper.getDefaultIconForRole(sName)
+                                                            }
                                                             newEvents.add(
                                                                 PartnerRemoteEvent(
                                                                     senderCode = formatDisplayCode(sender),
-                                                                    senderName = msgJson.optString("senderName", ""),
+                                                                    senderName = sName,
                                                                     eventType = msgJson.optString("eventType", ""),
                                                                     prayerName = msgJson.optString("prayerName", ""),
                                                                     actionText = cleanAction,
-                                                                    timestamp = timestamp
+                                                                    timestamp = timestamp,
+                                                                    senderIcon = resolvedIcon
                                                                 )
+                                                            )
+                                                        }
+                                                    }
+                                                    "PAIR_CLAIMED" -> {
+                                                        val claimerCode = msgJson.optString("claimerCode", "")
+                                                        val claimerName = msgJson.optString("claimerName", "")
+                                                        val claimerEmail = msgJson.optString("claimerEmail", "")
+                                                        val claimerIcon = msgJson.optString("claimerIcon", "")
+                                                        if (claimerCode.isNotBlank() && normalizeCode(claimerCode) != cleanMyCode) {
+                                                            val normName = FamilyRoleHelper.normalizeRoleTitle(claimerName)
+                                                            val resolvedIcon = if (claimerIcon.isNotBlank() && !FamilyRoleHelper.isIconConflictingWithRole(claimerIcon, normName)) {
+                                                                claimerIcon
+                                                            } else {
+                                                                FamilyRoleHelper.getDefaultIconForRole(normName)
+                                                            }
+                                                            lastClaim = IncomingMatchInfo(
+                                                                partnerCode = formatDisplayCode(claimerCode),
+                                                                partnerName = normName,
+                                                                partnerEmail = claimerEmail,
+                                                                partnerIcon = resolvedIcon
                                                             )
                                                         }
                                                     }
@@ -549,7 +729,8 @@ object PartnerSyncManager {
                 latestStatus = latestStatus,
                 yesterdayStatus = yesterdayStatus,
                 newEvents = newEvents,
-                partnerUnmatched = unmatchDetected
+                partnerUnmatched = unmatchDetected,
+                incomingClaim = lastClaim
             )
         } catch (e: Exception) {
             Log.w(TAG, "Failed to sync with partner: ${e.message}")

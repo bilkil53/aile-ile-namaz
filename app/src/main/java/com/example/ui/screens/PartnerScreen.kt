@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.util.PrayerCalculator
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.MainViewModel
+import com.example.util.PartnerSyncManager
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -112,11 +113,12 @@ fun PartnerScreen(
         }
     }
 
-    // 1. Kişinin kodu üzerinden aile havuzu kodu oluştur / yükle (Asla EMB gibi eski kodlar gelmez)
-    var familyPoolCode by remember(partnerInfo.myInviteCode) {
+    var familyPoolCode by remember(partnerInfo.myInviteCode, partnerInfo.partnerInviteCode, refreshTrigger) {
         val saved = childPrefs.getString("family_pool_code", null)
-        val validCode = if (!saved.isNullOrBlank() && saved.startsWith("REIS-00")) {
-            saved
+        val validCode = if (!saved.isNullOrBlank()) {
+            PartnerSyncManager.formatDisplayCode(saved)
+        } else if (partnerInfo.partnerInviteCode.isNotBlank()) {
+            partnerInfo.partnerInviteCode
         } else if (partnerInfo.myInviteCode.startsWith("REIS-00")) {
             partnerInfo.myInviteCode
         } else {
@@ -129,38 +131,11 @@ fun PartnerScreen(
     val isPoolMemberJoined = remember(refreshTrigger) {
         childPrefs.getBoolean("is_pool_member_joined", false)
     }
-    // Başkasının havuzuna dahil olan aile ferdi mi?
-    val isJoinedMember = remember(isPoolMemberJoined, partnerInfo.isMatched, partnerInfo.partnerInviteCode, familyPoolCode, partnerInfo.myInviteCode, refreshTrigger) {
-        isPoolMemberJoined ||
-            (partnerInfo.isMatched && partnerInfo.partnerInviteCode.isNotBlank() && partnerInfo.partnerInviteCode != partnerInfo.myInviteCode) ||
-            (familyPoolCode.isNotBlank() && familyPoolCode != partnerInfo.myInviteCode && childPrefs.contains("family_pool_code"))
+    val userExplicitRole = remember(refreshTrigger) {
+        childPrefs.getString("user_role", "") ?: ""
     }
-    // Aile Reisi: Yalnızca kendi havuzuna en az bir aile ferdi dahil olduğunda (eşleşme sağlandığında) Aile Reisi unvanı verilir!
-    val isPoolLeader = remember(isJoinedMember, partnerInfo.isMatched, refreshTrigger) {
-        !isJoinedMember && (partnerInfo.isMatched || childPrefs.getBoolean("family_pool_has_members", false) || childPrefs.getBoolean("is_explicit_reis", false))
-    }
-    val isInFamilyPool = remember(settings.isLoggedIn, settings.userEmail, partnerInfo.isMatched, familyPoolCode, isPoolMemberJoined, refreshTrigger) {
-        (settings.isLoggedIn || settings.userEmail.isNotBlank()) &&
-            (childPrefs.getBoolean("family_pool_created", false) || partnerInfo.isMatched || isPoolMemberJoined || familyPoolCode.isNotBlank())
-    }
-
-    val poolLeaderDisplayName = remember(isPoolLeader, isJoinedMember, settings.userName, partnerInfo.partnerDisplayName, refreshTrigger) {
-        val raw = if (isPoolLeader) {
-            if (settings.userName.isNotBlank() && !settings.userName.contains("@") && settings.userName != "Mümin") {
-                settings.userName
-            } else {
-                childPrefs.getString("p1_name", "Aile Reisi") ?: "Aile Reisi"
-            }
-        } else if (isJoinedMember) {
-            if (partnerInfo.partnerDisplayName.isNotBlank() && !partnerInfo.partnerDisplayName.contains("@")) {
-                partnerInfo.partnerDisplayName
-            } else {
-                childPrefs.getString("p2_name", "Aile Reisi") ?: "Aile Reisi"
-            }
-        } else {
-            "Henüz Belirlenmedi"
-        }
-        if (raw.contains("@")) raw.substringBefore("@") else raw
+    val isExplicitReis = remember(refreshTrigger) {
+        childPrefs.getBoolean("is_explicit_reis", false)
     }
 
     // Kişi 1 Takma Adı (Asla e-posta adresi görünmez, takma ad garantisi)
@@ -172,6 +147,55 @@ fun PartnerScreen(
             !savedNick.isNullOrBlank() && !savedNick.contains("@") && savedNick != "Mümin" -> savedNick
             settings.userName.isNotBlank() && !settings.userName.contains("@") && settings.userName != "Mümin" -> settings.userName
             else -> "Kişi 1"
+        }
+        if (raw.contains("@")) raw.substringBefore("@") else raw
+    }
+
+    val nameLower = p1DisplayName.trim().lowercase(java.util.Locale.forLanguageTag("tr"))
+    val isNameChildLike = remember(nameLower) {
+        nameLower.contains("çocuk") || nameLower.contains("cocuk") ||
+            nameLower.contains("evlat") || nameLower.contains("kız") || nameLower.contains("kiz") ||
+            nameLower.contains("oğul") || nameLower.contains("ogul") || nameLower.contains("bebek") ||
+            nameLower.contains("torun") || nameLower.contains("fert")
+    }
+
+    // Başkasının havuzuna dahil olan veya çocuk statüsündeki aile ferdi mi?
+    val isJoinedMember = remember(isPoolMemberJoined, userExplicitRole, isExplicitReis, isNameChildLike, partnerInfo.isMatched, partnerInfo.partnerInviteCode, familyPoolCode, partnerInfo.myInviteCode, refreshTrigger) {
+        if (isNameChildLike || userExplicitRole == "FERT" || userExplicitRole == "COCUK") {
+            true
+        } else if (isExplicitReis || userExplicitRole == "REIS") {
+            false
+        } else {
+            isPoolMemberJoined ||
+                (familyPoolCode.isNotBlank() && familyPoolCode != partnerInfo.myInviteCode && childPrefs.contains("family_pool_code"))
+        }
+    }
+
+    // Aile Reisi: Asla çocuk veya dahil olan ferde verilmez! Yalnızca havuz kurucu veya açıkça Reis olan kullanıcıya verilir.
+    val isPoolLeader = remember(isJoinedMember, isNameChildLike, userExplicitRole, isExplicitReis, partnerInfo.isMatched, refreshTrigger) {
+        !isJoinedMember && !isNameChildLike && userExplicitRole != "FERT" && userExplicitRole != "COCUK" &&
+            (isExplicitReis || userExplicitRole == "REIS" || (!isPoolMemberJoined && (partnerInfo.isMatched || childPrefs.getBoolean("family_pool_has_members", false))))
+    }
+
+    val isInFamilyPool = remember(settings.isLoggedIn, settings.userEmail, partnerInfo.isMatched, familyPoolCode, isPoolMemberJoined, isJoinedMember, refreshTrigger) {
+        (settings.isLoggedIn || settings.userEmail.isNotBlank()) &&
+            (childPrefs.getBoolean("family_pool_created", false) || partnerInfo.isMatched || isPoolMemberJoined || isJoinedMember || familyPoolCode.isNotBlank())
+    }
+
+    val poolLeaderDisplayName = remember(isPoolLeader, isJoinedMember, settings.userName, partnerInfo.partnerDisplayName, refreshTrigger) {
+        val raw = if (isPoolLeader) {
+            if (settings.userName.isNotBlank() && !settings.userName.contains("@") && settings.userName != "Mümin") {
+                settings.userName
+            } else {
+                childPrefs.getString("p1_name", "Aile Reisi") ?: "Aile Reisi"
+            }
+        } else {
+            if (partnerInfo.partnerDisplayName.isNotBlank() && !partnerInfo.partnerDisplayName.contains("@") && partnerInfo.partnerDisplayName != "Mümin") {
+                partnerInfo.partnerDisplayName
+            } else {
+                val p2 = childPrefs.getString("p2_name", "Aile Reisi") ?: "Aile Reisi"
+                if (p2.isNotBlank() && p2 != "Kişi 2") p2 else "Aile Reisi"
+            }
         }
         if (raw.contains("@")) raw.substringBefore("@") else raw
     }
@@ -194,9 +218,28 @@ fun PartnerScreen(
             partnerInfo.partnerDisplayName.ifBlank { childPrefs.getString("p2_name", "Kişi 2") ?: "Kişi 2" }
         }
         val clean = if (raw.contains("@")) raw.substringBefore("@") else raw
-        mutableStateOf(clean)
+        val normalized = com.example.util.FamilyRoleHelper.normalizeRoleTitle(clean)
+        mutableStateOf(normalized)
     }
-    var person2Icon by remember(refreshTrigger) { mutableStateOf(childPrefs.getString("p2_icon", "🧕") ?: "🧕") }
+    var person2Icon by remember(partnerInfo.partnerDisplayName, person2Name, refreshTrigger) {
+        val saved = childPrefs.getString("p2_icon", null)
+        val defaultRoleIcon = com.example.util.FamilyRoleHelper.getDefaultIconForRole(person2Name)
+        val icon = if (!saved.isNullOrBlank() && !com.example.util.FamilyRoleHelper.isIconConflictingWithRole(saved, person2Name)) {
+            saved
+        } else {
+            defaultRoleIcon
+        }
+        mutableStateOf(icon)
+    }
+
+    LaunchedEffect(person2Name) {
+        val saved = childPrefs.getString("p2_icon", null)
+        val roleIcon = com.example.util.FamilyRoleHelper.getDefaultIconForRole(person2Name)
+        if (saved.isNullOrBlank() || com.example.util.FamilyRoleHelper.isIconConflictingWithRole(saved, person2Name)) {
+            person2Icon = roleIcon
+            childPrefs.edit().putString("p2_icon", roleIcon).apply()
+        }
+    }
 
     // Ek Bireyler (Yalnızca kullanıcı eklediyse görünür; varsayılan olarak kesinlikle boştur)
     var extraMemberIds by remember(refreshTrigger) {
@@ -239,7 +282,12 @@ fun PartnerScreen(
     }
 
     fun getMemberIcon(id: Int): String {
-        return childPrefs.getString("p${id}_icon", if (id % 2 == 1) "👦" else "👧") ?: (if (id % 2 == 1) "👦" else "👧")
+        val name = getMemberName(id)
+        val saved = childPrefs.getString("p${id}_icon", null)
+        if (!saved.isNullOrBlank() && !com.example.util.FamilyRoleHelper.isIconConflictingWithRole(saved, name)) {
+            return saved
+        }
+        return com.example.util.FamilyRoleHelper.getDefaultIconForRole(name)
     }
 
     fun getMemberPrayers(memberId: Int, isToday: Boolean): List<String> {
@@ -884,21 +932,37 @@ fun PartnerScreen(
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.End
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
+                                    // 1. Ayrılmaya tıklandığında: Otomatik tekrar bağla ve güvenliği koru
                                     Text(
-                                        text = "Havuzdan Ayrıl / Kodu Değiştir",
+                                        text = "1. Havuzdan Ayrıl",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFFEF08A),
+                                        modifier = Modifier.clickable {
+                                            val poolToKeep = familyPoolCode.ifBlank { partnerInfo.partnerInviteCode }
+                                            if (poolToKeep.isNotBlank()) {
+                                                viewModel.matchPartnerWithCode(poolToKeep)
+                                            }
+                                            childPrefs.edit()
+                                                .putBoolean("is_pool_member_joined", true)
+                                                .putBoolean("user_explicitly_disconnected", false)
+                                                .apply()
+                                            refreshTrigger++
+                                            viewModel.showStatusMessage("Havuz bağlantınız korundu ve otomatik tekrar bağlandı 🔄. Kalıcı çıkmak için yanındaki '2. Bağlantıyı Sıfırla' seçeneğini kullanın.")
+                                        }
+                                    )
+
+                                    // 2. Bağlantıyı sıfırlaya tıklandığında: Kalıcı ayrılmaya izin ver, otomatik olarak tekrar bağlama!
+                                    Text(
+                                        text = "2. Bağlantıyı Sıfırla (Kalıcı Ayrıl)",
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color(0xFFFCA5A5),
                                         modifier = Modifier.clickable {
-                                            childPrefs.edit()
-                                                .putBoolean("is_pool_member_joined", false)
-                                                .remove("family_pool_code")
-                                                .apply()
-                                            viewModel.unmatchPartner()
-                                            refreshTrigger++
-                                            viewModel.showStatusMessage("Aile havuzundan ayrıldınız.")
+                                            showResetHandshakeDialog = true
                                         }
                                     )
                                 }
@@ -946,21 +1010,30 @@ fun PartnerScreen(
                                         )
                                         Button(
                                             onClick = {
-                                                if (!settings.isLoggedIn && settings.userEmail.isBlank()) {
-                                                    viewModel.showStatusMessage("⚠️ Aile havuzuna katılmak için lütfen önce Google ile giriş yapınız.")
+                                                val raw = joinPoolCodeInput.trim()
+                                                if (raw.isBlank()) {
+                                                    viewModel.showStatusMessage("Lütfen bir aile havuz kodu giriniz.")
                                                     return@Button
                                                 }
-                                                val code = joinPoolCodeInput.trim().uppercase()
-                                                if (code.isNotBlank()) {
-                                                    familyPoolCode = code
-                                                    childPrefs.edit()
-                                                        .putString("family_pool_code", code)
-                                                        .putBoolean("is_pool_member_joined", true)
-                                                        .apply()
-                                                    viewModel.matchPartnerWithCode(code)
-                                                    refreshTrigger++
-                                                    viewModel.showStatusMessage("$code kodlu Aile Havuzuna katılımınız sağlandı! 🟢")
+                                                val canonical = com.example.util.PartnerSyncManager.formatDisplayCode(raw)
+                                                val normInput = com.example.util.PartnerSyncManager.normalizeCode(raw)
+                                                val normMine = com.example.util.PartnerSyncManager.normalizeCode(partnerInfo.myInviteCode)
+                                                if (normInput == normMine) {
+                                                    viewModel.showStatusMessage("⚠️ Bu sizin kendi aile kodunuzdur. Başka bir aile ferdinizin kodunu girmelisiniz.")
+                                                    return@Button
                                                 }
+
+                                                familyPoolCode = canonical
+                                                childPrefs.edit()
+                                                    .putString("family_pool_code", canonical)
+                                                    .putBoolean("is_pool_member_joined", true)
+                                                    .putBoolean("is_explicit_reis", false)
+                                                    .putBoolean("user_explicitly_disconnected", false)
+                                                    .putString("user_role", "FERT")
+                                                    .apply()
+                                                viewModel.matchPartnerWithCode(canonical)
+                                                refreshTrigger++
+                                                viewModel.showStatusMessage("$canonical kodlu Aile Havuzuna katılım sağlandı! 🟢")
                                             },
                                             colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
                                             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
@@ -1074,7 +1147,7 @@ fun PartnerScreen(
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(
-                                            text = if (isPoolLeader) "(Siz • 👑 Aile Reisi)" else "(Siz • 👥 Aile Ferdi)",
+                                            text = if (isPoolLeader) "(Siz • 👑 Aile Reisi)" else if (isNameChildLike) "(Siz • 👦 Aile Ferdi / Çocuk)" else "(Siz • 👥 Aile Ferdi)",
                                             fontSize = 10.sp,
                                             color = if (isPoolLeader) Color(0xFFFEF3C7) else Color(0xFF86EFAC),
                                             fontWeight = FontWeight.SemiBold
@@ -2096,39 +2169,42 @@ fun PartnerScreen(
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        listOf("Eş", "Çocuk", "Bebek", "Anne", "Baba").forEach { role ->
-                            val isSel = (editPersonNameInput == role)
-                            Surface(
-                                onClick = {
-                                    editPersonNameInput = role
-                                    if (isPoolLeader) {
-                                        when (role) {
-                                            "Eş" -> editPersonIconInput = if (editingPersonIndex % 2 == 0) "🧕" else "🧔"
-                                            "Çocuk" -> editPersonIconInput = if (editingPersonIndex % 2 == 0) "👧" else "👦"
-                                            "Bebek" -> editPersonIconInput = "👶"
-                                            "Anne" -> editPersonIconInput = "🧕"
-                                            "Baba" -> editPersonIconInput = "🧔"
-                                        }
-                                    }
-                                },
-                                shape = RoundedCornerShape(6.dp),
-                                color = if (isSel) EmeraldPrimary else EmeraldContainer.copy(alpha = 0.5f),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    text = role,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isSel) Color.White else TextPrimary,
-                                    modifier = Modifier.padding(vertical = 5.dp),
-                                    textAlign = TextAlign.Center
-                                )
+                    val quickRoles = listOf(
+                        "Oğlu" to "👦",
+                        "Kızı" to "👧",
+                        "Eşi" to "🧕",
+                        "Annesi" to "🧕",
+                        "Babası" to "🧔",
+                        "Kardeşi" to "🧒"
+                    )
+                    quickRoles.chunked(3).forEach { rowRoles ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            rowRoles.forEach { (role, ic) ->
+                                val isSel = (editPersonNameInput == role)
+                                Surface(
+                                    onClick = {
+                                        editPersonNameInput = role
+                                        editPersonIconInput = ic
+                                    },
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (isSel) EmeraldPrimary else EmeraldContainer.copy(alpha = 0.5f),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = "$ic $role",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSel) Color.White else TextPrimary,
+                                        modifier = Modifier.padding(vertical = 7.dp),
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
                             }
                         }
+                        Spacer(modifier = Modifier.height(4.dp))
                     }
 
                     Spacer(modifier = Modifier.height(6.dp))
@@ -2174,7 +2250,15 @@ fun PartnerScreen(
 
                     OutlinedTextField(
                         value = editPersonNameInput,
-                        onValueChange = { editPersonNameInput = it },
+                        onValueChange = { inputVal ->
+                            editPersonNameInput = inputVal
+                            val lower = inputVal.lowercase(java.util.Locale.forLanguageTag("tr"))
+                            if (lower.contains("oğul") || lower.contains("ogul") || lower.contains("oğlum") || lower.contains("oglum")) {
+                                editPersonIconInput = "👦"
+                            } else if (lower.contains("kız") || lower.contains("kiz") || lower.contains("kızım") || lower.contains("kizim")) {
+                                editPersonIconInput = "👧"
+                            }
+                        },
                         label = { Text("İsim / Takma Ad (Kişi $editingPersonIndex)") },
                         placeholder = { Text("İsmi buraya yazınız...") },
                         singleLine = true,
@@ -2247,11 +2331,23 @@ fun PartnerScreen(
                         val name = raw
                         when (editingPersonIndex) {
                             1 -> {
-                                if (isPoolLeader) {
-                                    person1Icon = editPersonIconInput
-                                    childPrefs.edit().putString("p1_icon", editPersonIconInput).apply()
+                                val lower = name.lowercase(java.util.Locale.forLanguageTag("tr"))
+                                val isChild = lower.contains("çocuk") || lower.contains("cocuk") ||
+                                    lower.contains("evlat") || lower.contains("kız") || lower.contains("kiz") ||
+                                    lower.contains("oğul") || lower.contains("ogul") || lower.contains("bebek") ||
+                                    lower.contains("torun") || lower.contains("fert")
+                                if (isChild) {
+                                    childPrefs.edit()
+                                        .putString("user_role", "FERT")
+                                        .putBoolean("is_pool_member_joined", true)
+                                        .putBoolean("is_explicit_reis", false)
+                                        .apply()
                                 }
-                                childPrefs.edit().putString("p1_name", name).apply()
+                                person1Icon = editPersonIconInput
+                                childPrefs.edit()
+                                    .putString("p1_icon", editPersonIconInput)
+                                    .putString("p1_name", name)
+                                    .apply()
                                 viewModel.updateMyProfileName(name)
                             }
                             2 -> {
@@ -2320,49 +2416,72 @@ fun PartnerScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("Bu ailedeki rolünüz:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                     Spacer(modifier = Modifier.height(4.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        listOf("Kişi 2", "Kişi 3", "Kişi 4").forEach { r ->
-                            val isSel = (joinPoolRoleInput == r)
-                            Surface(
-                                onClick = { joinPoolRoleInput = r },
-                                shape = RoundedCornerShape(6.dp),
-                                color = if (isSel) EmeraldPrimary else EmeraldContainer,
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    text = r,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isSel) Color.White else TextPrimary,
-                                    modifier = Modifier.padding(vertical = 6.dp),
-                                    textAlign = TextAlign.Center
-                                )
+                    val joinRoles = listOf(
+                        "Oğlu" to "👦",
+                        "Kızı" to "👧",
+                        "Eşi" to "🧕",
+                        "Annesi" to "🧕",
+                        "Babası" to "🧔",
+                        "Kardeşi" to "🧒"
+                    )
+                    joinRoles.chunked(3).forEach { rowRoles ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            rowRoles.forEach { (r, ic) ->
+                                val isSel = (joinPoolRoleInput == r)
+                                Surface(
+                                    onClick = { joinPoolRoleInput = r },
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (isSel) EmeraldPrimary else EmeraldContainer,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = "$ic $r",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSel) Color.White else TextPrimary,
+                                        modifier = Modifier.padding(vertical = 7.dp),
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
                             }
                         }
+                        Spacer(modifier = Modifier.height(4.dp))
                     }
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        if (!settings.isLoggedIn && settings.userEmail.isBlank()) {
-                            viewModel.showStatusMessage("⚠️ Aile havuzuna katılmak için lütfen önce Google ile giriş yapınız.")
-                            showJoinPoolDialog = false
-                            return@Button
-                        }
-                        val code = joinPoolCodeInput.trim().uppercase()
-                        if (code.isNotBlank()) {
-                            familyPoolCode = code
-                            childPrefs.edit()
-                                .putString("family_pool_code", code)
-                                .putBoolean("is_pool_member_joined", true)
-                                .apply()
-                            viewModel.matchPartnerWithCode(code)
-                            refreshTrigger++
-                            viewModel.showStatusMessage("$code kodlu Aile Ortak Havuzuna katılımınız ONAYLANDI! 🟢")
+                        val raw = joinPoolCodeInput.trim()
+                        if (raw.isNotBlank()) {
+                            val canonical = com.example.util.PartnerSyncManager.formatDisplayCode(raw)
+                            val normInput = com.example.util.PartnerSyncManager.normalizeCode(raw)
+                            val normMine = com.example.util.PartnerSyncManager.normalizeCode(partnerInfo.myInviteCode)
+                            if (normInput == normMine) {
+                                viewModel.showStatusMessage("⚠️ Bu sizin kendi aile kodunuzdur. Başka bir aile ferdinizin kodunu girmelisiniz.")
+                            } else {
+                                familyPoolCode = canonical
+                                val chosenRole = if (joinPoolRoleInput.isNotBlank()) joinPoolRoleInput else "Oğlu"
+                                val normRole = com.example.util.FamilyRoleHelper.normalizeRoleTitle(chosenRole)
+                                val roleIcon = com.example.util.FamilyRoleHelper.getDefaultIconForRole(normRole)
+                                childPrefs.edit()
+                                    .putString("family_pool_code", canonical)
+                                    .putBoolean("is_pool_member_joined", true)
+                                    .putBoolean("is_explicit_reis", false)
+                                    .putBoolean("user_explicitly_disconnected", false)
+                                    .putString("user_role", "FERT")
+                                    .putString("p1_name", normRole)
+                                    .putString("p1_icon", roleIcon)
+                                    .apply()
+                                person1Icon = roleIcon
+                                viewModel.updateMyProfileName(normRole)
+                                viewModel.matchPartnerWithCode(canonical)
+                                refreshTrigger++
+                                viewModel.showStatusMessage("$canonical kodlu Aile Ortak Havuzuna katılım sağlandı! 🟢")
+                            }
                         }
                         showJoinPoolDialog = false
                     },
@@ -2462,25 +2581,29 @@ fun PartnerScreen(
     if (showResetHandshakeDialog) {
         AlertDialog(
             onDismissRequest = { showResetHandshakeDialog = false },
-            title = { Text("Bağlantıyı Sıfırla & Temizle", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary) },
+            title = { Text("Bağlantıyı Sıfırla & Kalıcı Ayrıl", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary) },
             text = {
-                Text("Eğer karşı taraf uygulamayı kaldırıp yeniden kurduysa veya bağlantı güncel değilse, eski eşleşmeyi sonlandırıp sıfırdan taze kodla eşleşebilirsiniz. Onaylıyor musunuz?", fontSize = 13.sp, color = TextSecondary)
+                Text("Havuz bağlantınız tamamen sıfırlanacak ve arka planda otomatik olarak tekrar bağlanmayacaktır. İstediğiniz zaman taze bir kod girerek havuza yeniden katılabilirsiniz. Onaylıyor musunuz?", fontSize = 13.sp, color = TextSecondary)
             },
             confirmButton = {
                 Button(
                     onClick = {
                         childPrefs.edit()
+                            .putBoolean("user_explicitly_disconnected", true)
                             .remove("is_pool_member_joined")
                             .remove("family_pool_code")
+                            .remove("is_explicit_reis")
+                            .putString("user_role", "FERT")
                             .apply()
+                        familyPoolCode = ""
                         viewModel.unmatchPartner()
                         refreshTrigger++
                         showResetHandshakeDialog = false
-                        viewModel.showStatusMessage("Eski bağlantı sıfırlandı. Yeni kodla tekrar bağlanabilirsiniz.")
+                        viewModel.showStatusMessage("Bağlantı sıfırlandı ve havuzdan ayrıldınız. Otomatik tekrar bağlanmayacak ⏹️")
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MissedRed)
                 ) {
-                    Text("Sıfırla ve Temizle")
+                    Text("Sıfırla ve Ayrıl")
                 }
             },
             dismissButton = {
