@@ -504,7 +504,7 @@ fun SettingsScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Detaylar & Son Sürüm Notları",
+                                    text = "Detaylar & Son Sürüm Açıklaması (latest)",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White

@@ -141,21 +141,51 @@ fun AppUpdateDialog(
                 // Release Title & Notes Header
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(
-                        Icons.Filled.Description,
-                        contentDescription = null,
-                        tint = if (isDark) Color(0xFF34D399) else EmeraldPrimary,
-                        modifier = Modifier.size(17.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Güncelleme Açıklaması ve Yenilikler:",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = notesTitleColor
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Filled.Description,
+                            contentDescription = null,
+                            tint = if (isDark) Color(0xFF34D399) else EmeraldPrimary,
+                            modifier = Modifier.size(17.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Yenilikler:",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = notesTitleColor
+                        )
+                    }
+
+                    Surface(
+                        onClick = {
+                            AppUpdateManager.openInBrowser(context, "https://github.com/bilkil53/aile-ile-namaz/releases/latest")
+                        },
+                        shape = RoundedCornerShape(6.dp),
+                        color = (if (isDark) Color(0xFF34D399) else EmeraldPrimary).copy(alpha = 0.12f)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = "GitHub (latest)",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isDark) Color(0xFF34D399) else EmeraldPrimary
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Icon(
+                                Icons.Filled.OpenInNew,
+                                contentDescription = "Son Açıklama",
+                                tint = if (isDark) Color(0xFF34D399) else EmeraldPrimary,
+                                modifier = Modifier.size(12.dp)
+                            )
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -178,7 +208,7 @@ fun AppUpdateDialog(
                     border = BorderStroke(1.dp, notesBorderColor),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(max = 220.dp)
+                        .heightIn(max = 200.dp)
                 ) {
                     Column(
                         modifier = Modifier
@@ -220,7 +250,35 @@ fun AppUpdateDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                // Direct Clickable Link to GitHub latest release page
+                Surface(
+                    onClick = {
+                        AppUpdateManager.openInBrowser(context, "https://github.com/bilkil53/aile-ile-namaz/releases/latest")
+                    },
+                    color = Color.Transparent,
+                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "Son yüklenen resmi açıklama için dokunun (GitHub latest)",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = if (isDark) Color(0xFF34D399) else EmeraldPrimary
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            Icons.Filled.OpenInNew,
+                            contentDescription = null,
+                            tint = if (isDark) Color(0xFF34D399) else EmeraldPrimary,
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
 
                 // Download Progress or Error State
                 if (isDownloading) {
