@@ -317,27 +317,5 @@ fun MainScreen(
         context.getSharedPreferences("family_child_prefs", Context.MODE_PRIVATE)
     }
     var refreshNickTrigger by remember { mutableStateOf(0) }
-    val currentEmailKey = settings.userEmail.trim().lowercase()
-    val hasConfirmedNickname = remember(settings.userName, settings.userEmail, refreshNickTrigger) {
-        if (currentEmailKey.isBlank()) {
-            false
-        } else {
-            val hasConfirmedForEmail = childPrefs.getBoolean("confirmed_nickname_v3_$currentEmailKey", false)
-            val savedNick = childPrefs.getString("user_nickname_$currentEmailKey", "") ?: ""
-            hasConfirmedForEmail && savedNick.isNotBlank() && !savedNick.contains("@") && savedNick != "Mümin"
-        }
     }
-    val needsMandatoryNickname = (settings.isLoggedIn || settings.userEmail.isNotBlank()) && !hasConfirmedNickname
-
-    if (needsMandatoryNickname) {
-        MandatoryNicknameDialog(
-            viewModel = viewModel,
-            userEmail = settings.userEmail,
-            currentName = settings.userName,
-            onConfirmed = { confirmedName, icon ->
-                refreshNickTrigger++
-            }
-        )
-    }
-}
 }

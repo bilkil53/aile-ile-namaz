@@ -45,14 +45,13 @@ object AppUpdateManager {
 
     private const val GITHUB_LATEST_WEB_URL = "https://github.com/bilkil53/aile-ile-namaz/releases/latest"
 
-    const val DEFAULT_FULL_RELEASE_NOTES = """🕌 Aile ile Namaz v1.5 - Resmi Güncel Sürüm Yenilikleri:
+    const val DEFAULT_FULL_RELEASE_NOTES = """🕌 Aile ile Namaz v1.6 - Resmi Güncel Sürüm Yenilikleri:
 
-✨ Sade ve Şık Üst Bar: Üst barda ayarlar çarkının yanındaki gereksiz "Aktif" çipi kaldırıldı; daha ferah ve temiz bir görünüm sağlandı.
-🕌 Cuma Namazı Özel Bildirimi: Cuma günleri öğle saatinde bildirim başlığı otomatik olarak "🕌 Hayırlı Cumalar! Cuma Namazına 10 Dakika Kaldı" olarak güncellendi; Cuma Sûresi, hutbe hatırlatması ve salavat-ı şerifler ile zenginleştirildi.
-🔄 Dönen Zengin Manevi Dualar & Hadisler: Namaz yaklaştığında (10 dk kala) her vakit için (Sabah, Cuma, Öğle, İkindi, Akşam, Yatsı) günlere göre otomatik değişen zengin Diyanet mealli ayet, sahih hadis ve manevi niyaz koleksiyonu getirildi. Artık günlerce aynı dua tekrarlanmaz.
-👥 Aile Reisi & Fert Hitap Doğruluğu: Havuza katılan fertler için doğru unvanlar ("Oğlu", "Kızı") ve reis bildirimleri korundu.
-👦 Cinsiyet & İkon Doğrulaması: Seçilen profil ikonu ve aile rolleri tüm cihazlar arasında kusursuz senkronize edilir.
-🚀 Doğrudan Uygulama İçi Güncelleme: GitHub üzerindeki v1.5 ve sonrası yeni sürümler anında tespit edilir, uygulama içinden tek tıkla doğrudan kurulur.
+👥 Havuza Girişte Rol Seçimi: Artık Google ile giriş yapıldığında zorunlu rol penceresi çıkmaz; doğrudan "Aile Ferdi" olarak başlarsınız. Rolünüz (Oğlu, Kızı, Eşi, vb.) sadece bir havuza dahil olurken veya yeni aile havuzu başlatırken (Baba, Anne, Reis vb.) zorunlu ve net olarak seçilir.
+👨‍👩‍👧‍👦 Tek Tabloda Bütün Aile: Aile ibadet halkasında bireyleri ayrı sekmelerde gösterme kaldırıldı; tüm aile fertleri ve namaz durumları tek bir genişletilmiş matris tablosunda doğrudan birlikte görüntülenir.
+🚪 Kolay ve Tek Tıkla Havuzdan Ayrılma: Karmaşık ve hatalı ayrılma seçenekleri kaldırıldı; hem aile fertleri hem aile reisi için tek tıkla çalışan, tüm verileri temizleyip sıfırlayan güvenli "Havuzdan Ayrıl" sistemi getirildi.
+🔄 Kesintisiz ve Güvenilir Eşleşme: Kod paylaşıldığında cihazlar arasındaki bağlantının takılmadan anında kurulması sağlandı.
+🚀 Doğrudan Uygulama İçi Güncelleme: GitHub üzerindeki en güncel v1.6 sürümü doğrudan tespit edilir ve kurulur.
 🌲 Çam Yeşili Tasarım Standardı (#0E5A4A): Tüm ekranlar ve üst barlar huzur veren çam yeşiliyle uyumlu hale getirildi.
 🤲 Ortak Aile Havuzu & Diyanet Takvimi: Canlı namaz senkronizasyonu, manyetik kıble pusulası ve mahremiyet korumalı kaza takibi."""
 
@@ -255,7 +254,7 @@ object AppUpdateManager {
         }
         t = t.trim()
         t = t.removePrefix("v.").removePrefix("V.").removePrefix("v").removePrefix("V").trim()
-        return if (t.isNotBlank()) "v$t" else "v1.5"
+        return if (t.isNotBlank()) "v$t" else "v1.6"
     }
 
     fun cleanReleaseTitle(title: String): String {

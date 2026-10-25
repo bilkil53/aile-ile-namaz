@@ -327,10 +327,8 @@ class PrayerRepository(
         }
 
         val childPrefs = context?.getSharedPreferences("family_child_prefs", android.content.Context.MODE_PRIVATE)
-        val userExplicitlyDisconnected = childPrefs?.getBoolean("user_explicitly_disconnected", false) ?: false
-
-        // 1. If NOT matched yet and not explicitly disconnected: check if someone has claimed my invite code!
-        if (!current.isMatched && !userExplicitlyDisconnected) {
+        // 1. If NOT matched yet: check if someone has claimed my invite code!
+        if (!current.isMatched) {
             // Re-publish my profile so spouse can see my name/email/icon upon entering code
             val myIcon = childPrefs?.getString("p1_icon", "🧔") ?: "🧔"
             PartnerSyncManager.publishMyProfile(current.myInviteCode, current.myDisplayName, current.myEmail, myIcon)
@@ -343,7 +341,11 @@ class PrayerRepository(
                 } else {
                     FamilyRoleHelper.getDefaultIconForRole(normPartnerName)
                 }
-                childPrefs?.edit()?.putString("p2_name", normPartnerName)?.putString("p2_icon", roleIcon)?.apply()
+                childPrefs?.edit()
+                    ?.putBoolean("user_explicitly_disconnected", false)
+                    ?.putString("p2_name", normPartnerName)
+                    ?.putString("p2_icon", roleIcon)
+                    ?.apply()
 
                 val matched = current.copy(
                     isMatched = true,
@@ -385,16 +387,20 @@ class PrayerRepository(
             poolCode = effectivePoolCode
         )
 
-        // Check if an incoming match claim was delivered via pool or inbox (only if user did not explicitly disconnect)
+        // Check if an incoming match claim was delivered via pool or inbox
         val claim = syncResult.incomingClaim
-        if (!userExplicitlyDisconnected && claim != null && claim.partnerCode.isNotBlank() && (!current.isMatched || current.partnerInviteCode != claim.partnerCode)) {
+        if (claim != null && claim.partnerCode.isNotBlank() && (!current.isMatched || current.partnerInviteCode != claim.partnerCode)) {
             val normClaimName = FamilyRoleHelper.normalizeRoleTitle(claim.partnerName.ifBlank { "Aile Ferdi" })
             val claimIcon = if (claim.partnerIcon.isNotBlank() && !FamilyRoleHelper.isIconConflictingWithRole(claim.partnerIcon, normClaimName)) {
                 claim.partnerIcon
             } else {
                 FamilyRoleHelper.getDefaultIconForRole(normClaimName)
             }
-            childPrefs?.edit()?.putString("p2_name", normClaimName)?.putString("p2_icon", claimIcon)?.apply()
+            childPrefs?.edit()
+                ?.putBoolean("user_explicitly_disconnected", false)
+                ?.putString("p2_name", normClaimName)
+                ?.putString("p2_icon", claimIcon)
+                ?.apply()
 
             val matched = current.copy(
                 isMatched = true,
@@ -657,7 +663,17 @@ class PrayerRepository(
 
     suspend fun leaveFamilyPool(poolCode: String = "") {
         val childPrefs = context?.getSharedPreferences("family_child_prefs", android.content.Context.MODE_PRIVATE)
-        childPrefs?.edit()?.putBoolean("user_explicitly_disconnected", true)?.apply()
+        childPrefs?.edit()
+            ?.putBoolean("user_explicitly_disconnected", true)
+            ?.putBoolean("family_pool_created", false)
+            ?.putBoolean("family_pool_has_members", false)
+            ?.remove("is_pool_member_joined")
+            ?.remove("family_pool_code")
+            ?.remove("is_explicit_reis")
+            ?.remove("p2_name")
+            ?.remove("p2_icon")
+            ?.putString("user_role", "FERT")
+            ?.apply()
 
         val current = prayerDao.getPartnerInfo().firstOrNull() ?: PartnerInfoEntity()
         val effectivePool = if (poolCode.isNotBlank()) poolCode else current.partnerInviteCode
@@ -699,6 +715,11 @@ class PrayerRepository(
                 partnerAsr = "NONE",
                 partnerMaghrib = "NONE",
                 partnerIsha = "NONE",
+                partnerYesterdayFajr = "NONE",
+                partnerYesterdayDhuhr = "NONE",
+                partnerYesterdayAsr = "NONE",
+                partnerYesterdayMaghrib = "NONE",
+                partnerYesterdayIsha = "NONE",
                 partnerKazaCompleted = 0,
                 partnerKazaOwed = 0
             )

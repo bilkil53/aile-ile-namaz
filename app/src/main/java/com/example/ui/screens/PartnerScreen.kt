@@ -365,6 +365,10 @@ fun PartnerScreen(
     var joinPoolRoleInput by remember { mutableStateOf("Kişi 2") }
 
     var showResetHandshakeDialog by remember { mutableStateOf(false) }
+    var showLeavePoolDialog by remember { mutableStateOf(false) }
+    var showStartPoolRoleDialog by remember { mutableStateOf(false) }
+    var leaderRoleInput by remember { mutableStateOf("Baba") }
+    var leaderIconInput by remember { mutableStateOf("🧔") }
     var showArchitectureInfoDialog by remember { mutableStateOf(false) }
 
     // Google Account Picker Launcher
@@ -898,6 +902,23 @@ fun PartnerScreen(
                                     fontSize = 10.sp,
                                     color = Color.White.copy(alpha = 0.85f)
                                 )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End
+                                ) {
+                                    OutlinedButton(
+                                        onClick = { showLeavePoolDialog = true },
+                                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFFCA5A5)),
+                                        border = BorderStroke(1.dp, Color(0xFFFCA5A5).copy(alpha = 0.6f)),
+                                        shape = RoundedCornerShape(8.dp),
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                                    ) {
+                                        Icon(Icons.Filled.DeleteSweep, contentDescription = null, tint = Color(0xFFFCA5A5), modifier = Modifier.size(14.dp))
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text("Havuzu Kapat & Sıfırla", fontSize = 11.sp, color = Color(0xFFFCA5A5), fontWeight = FontWeight.Bold)
+                                    }
+                                }
                             }
                         }
                     } else if (isJoinedMember) {
@@ -929,42 +950,22 @@ fun PartnerScreen(
                                         )
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(10.dp))
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    horizontalArrangement = Arrangement.End,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // 1. Ayrılmaya tıklandığında: Otomatik tekrar bağla ve güvenliği koru
-                                    Text(
-                                        text = "1. Havuzdan Ayrıl",
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFFFEF08A),
-                                        modifier = Modifier.clickable {
-                                            val poolToKeep = familyPoolCode.ifBlank { partnerInfo.partnerInviteCode }
-                                            if (poolToKeep.isNotBlank()) {
-                                                viewModel.matchPartnerWithCode(poolToKeep)
-                                            }
-                                            childPrefs.edit()
-                                                .putBoolean("is_pool_member_joined", true)
-                                                .putBoolean("user_explicitly_disconnected", false)
-                                                .apply()
-                                            refreshTrigger++
-                                            viewModel.showStatusMessage("Havuz bağlantınız korundu ve otomatik tekrar bağlandı 🔄. Kalıcı çıkmak için yanındaki '2. Bağlantıyı Sıfırla' seçeneğini kullanın.")
-                                        }
-                                    )
-
-                                    // 2. Bağlantıyı sıfırlaya tıklandığında: Kalıcı ayrılmaya izin ver, otomatik olarak tekrar bağlama!
-                                    Text(
-                                        text = "2. Bağlantıyı Sıfırla (Kalıcı Ayrıl)",
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFFFCA5A5),
-                                        modifier = Modifier.clickable {
-                                            showResetHandshakeDialog = true
-                                        }
-                                    )
+                                    Button(
+                                        onClick = { showLeavePoolDialog = true },
+                                        colors = ButtonDefaults.buttonColors(containerColor = MissedRed),
+                                        shape = RoundedCornerShape(8.dp),
+                                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                                    ) {
+                                        Icon(Icons.Filled.ExitToApp, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("Havuzdan Ayrıl", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                    }
                                 }
                             }
                         }
@@ -1015,25 +1016,14 @@ fun PartnerScreen(
                                                     viewModel.showStatusMessage("Lütfen bir aile havuz kodu giriniz.")
                                                     return@Button
                                                 }
-                                                val canonical = com.example.util.PartnerSyncManager.formatDisplayCode(raw)
                                                 val normInput = com.example.util.PartnerSyncManager.normalizeCode(raw)
                                                 val normMine = com.example.util.PartnerSyncManager.normalizeCode(partnerInfo.myInviteCode)
                                                 if (normInput == normMine) {
                                                     viewModel.showStatusMessage("⚠️ Bu sizin kendi aile kodunuzdur. Başka bir aile ferdinizin kodunu girmelisiniz.")
                                                     return@Button
                                                 }
-
-                                                familyPoolCode = canonical
-                                                childPrefs.edit()
-                                                    .putString("family_pool_code", canonical)
-                                                    .putBoolean("is_pool_member_joined", true)
-                                                    .putBoolean("is_explicit_reis", false)
-                                                    .putBoolean("user_explicitly_disconnected", false)
-                                                    .putString("user_role", "FERT")
-                                                    .apply()
-                                                viewModel.matchPartnerWithCode(canonical)
-                                                refreshTrigger++
-                                                viewModel.showStatusMessage("$canonical kodlu Aile Havuzuna katılım sağlandı! 🟢")
+                                                // Rol seçimini zorunlu kılmak için onay ve rol seçim ekranını aç
+                                                showJoinPoolDialog = true
                                             },
                                             colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
                                             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
@@ -1103,10 +1093,20 @@ fun PartnerScreen(
                                     }
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = "Ailenizi davet etmek için bu kodu paylaşın. Birisi bu kodla bağlandığında otomatik olarak Aile Reisi olacaksınız.",
+                                        text = "Ailenizi davet etmek için bu kodu paylaşın veya hemen havuzu başlatıp Aile Reisi unvanınızı belirleyin.",
                                         fontSize = 10.sp,
                                         color = Color.White.copy(alpha = 0.85f)
                                     )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Button(
+                                        onClick = { showStartPoolRoleDialog = true },
+                                        colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
+                                        shape = RoundedCornerShape(8.dp),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text("👑 Aile Havuzunu Başlat (Reis Rolü Seç)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                    }
                                 }
                             }
                         }
@@ -1338,94 +1338,10 @@ fun PartnerScreen(
             }
         }
 
-            // -----------------------------------------------------------------
-            // YATAY KAYDIRILABİLİR KİŞİ SEKMELERİ (TABS)
-            // -----------------------------------------------------------------
+            // =================================================================
+            // AİLE İBADET TABLOSU (ORTAK MATRİS - TÜM AİLE FERTLERİ BİRLİKTE)
+            // =================================================================
             item {
-                val tabsScroll = rememberScrollState()
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(tabsScroll),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    // Tab 0: Aile Tablosu (Genel Bakış)
-                    Surface(
-                        onClick = { selectedFamilyTab = 0 },
-                        shape = RoundedCornerShape(10.dp),
-                        color = if (selectedFamilyTab == 0) EmeraldPrimary else EmeraldContainer.copy(alpha = 0.7f),
-                        border = BorderStroke(1.dp, if (selectedFamilyTab == 0) EmeraldPrimary else SoftInfoCardBorder)
-                    ) {
-                        Text(
-                            text = "👨‍👩‍👧‍👦 Aile İbadet Halkası",
-                            fontSize = 12.sp,
-                            fontWeight = if (selectedFamilyTab == 0) FontWeight.Bold else FontWeight.Medium,
-                            color = if (selectedFamilyTab == 0) Color.White else TextPrimary,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                        )
-                    }
-
-                    // Tab -1: Kişi 1 (Kullanıcı / Kendiniz İnceleme Sekmesi)
-                    Surface(
-                        onClick = { selectedFamilyTab = -1 },
-                        shape = RoundedCornerShape(10.dp),
-                        color = if (selectedFamilyTab == -1) EmeraldPrimary else EmeraldContainer.copy(alpha = 0.7f),
-                        border = BorderStroke(1.dp, if (selectedFamilyTab == -1) EmeraldPrimary else SoftInfoCardBorder)
-                    ) {
-                        Text(
-                            text = "$person1Icon $p1DisplayName",
-                            fontSize = 12.sp,
-                            fontWeight = if (selectedFamilyTab == -1) FontWeight.Bold else FontWeight.Medium,
-                            color = if (selectedFamilyTab == -1) Color.White else TextPrimary,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                        )
-                    }
-
-                    // Tab 1: Kişi 2 (Eşleşmiş, aktif veya deneme modunda)
-                    if (hasPerson2 || isGuestMode) {
-                        Surface(
-                            onClick = { selectedFamilyTab = 1 },
-                            shape = RoundedCornerShape(10.dp),
-                            color = if (selectedFamilyTab == 1) EmeraldPrimary else EmeraldContainer.copy(alpha = 0.7f),
-                            border = BorderStroke(1.dp, if (selectedFamilyTab == 1) EmeraldPrimary else SoftInfoCardBorder)
-                        ) {
-                            Text(
-                                text = "$person2Icon $person2Name",
-                                fontSize = 12.sp,
-                                fontWeight = if (selectedFamilyTab == 1) FontWeight.Bold else FontWeight.Medium,
-                                color = if (selectedFamilyTab == 1) Color.White else TextPrimary,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                            )
-                        }
-                    }
-
-                    // Ek Bireyler Sekmeleri (Kişi 3, Kişi 4, Kişi 5...)
-                    extraMemberIds.forEach { id ->
-                        val mName = getMemberName(id)
-                        val mIcon = getMemberIcon(id)
-                        Surface(
-                            onClick = { selectedFamilyTab = id },
-                            shape = RoundedCornerShape(10.dp),
-                            color = if (selectedFamilyTab == id) EmeraldPrimary else EmeraldContainer.copy(alpha = 0.7f),
-                            border = BorderStroke(1.dp, if (selectedFamilyTab == id) EmeraldPrimary else SoftInfoCardBorder)
-                        ) {
-                            Text(
-                                text = "$mIcon $mName",
-                                fontSize = 12.sp,
-                                fontWeight = if (selectedFamilyTab == id) FontWeight.Bold else FontWeight.Medium,
-                                color = if (selectedFamilyTab == id) Color.White else TextPrimary,
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                            )
-                        }
-                    }
-                }
-            }
-
-            // =================================================================
-            // GÖRÜNÜM 0: AİLE TABLOSU (ORTAK MATRİS - DÜN & BUGÜN DESTEKLİ)
-            // =================================================================
-            if (selectedFamilyTab == 0) {
-                item {
                     val p1Statuses = if (isGuestMode) {
                         simP1Prayers
                     } else if (isViewingTodayInFamily) {
@@ -1598,7 +1514,19 @@ fun PartnerScreen(
                                         modifier = Modifier.width(82.dp),
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
-                                        Box(modifier = Modifier.height(30.dp), contentAlignment = Alignment.Center) {
+                                        Box(
+                                            modifier = Modifier
+                                                .height(30.dp)
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .clickable {
+                                                    editingPersonIndex = 1
+                                                    editPersonNameInput = p1DisplayName
+                                                    editPersonIconInput = person1Icon
+                                                    editPersonActiveInput = true
+                                                    showEditPersonDialog = true
+                                                },
+                                            contentAlignment = Alignment.Center
+                                        ) {
                                             Text(
                                                 text = "$person1Icon $p1DisplayName",
                                                 fontSize = 11.sp,
@@ -1655,7 +1583,19 @@ fun PartnerScreen(
                                             modifier = Modifier.width(82.dp),
                                             horizontalAlignment = Alignment.CenterHorizontally
                                         ) {
-                                            Box(modifier = Modifier.height(30.dp), contentAlignment = Alignment.Center) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .height(30.dp)
+                                                    .clip(RoundedCornerShape(6.dp))
+                                                    .clickable {
+                                                        editingPersonIndex = 2
+                                                        editPersonNameInput = person2Name
+                                                        editPersonIconInput = person2Icon
+                                                        editPersonActiveInput = hasPerson2
+                                                        showEditPersonDialog = true
+                                                    },
+                                                contentAlignment = Alignment.Center
+                                            ) {
                                                 Text(
                                                     text = "$person2Icon $person2Name",
                                                     fontSize = 11.sp,
@@ -1714,7 +1654,19 @@ fun PartnerScreen(
                                             modifier = Modifier.width(82.dp),
                                             horizontalAlignment = Alignment.CenterHorizontally
                                         ) {
-                                            Box(modifier = Modifier.height(30.dp), contentAlignment = Alignment.Center) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .height(30.dp)
+                                                    .clip(RoundedCornerShape(6.dp))
+                                                    .clickable {
+                                                        editingPersonIndex = extraId
+                                                        editPersonNameInput = mName
+                                                        editPersonIconInput = mIcon
+                                                        editPersonActiveInput = true
+                                                        showEditPersonDialog = true
+                                                    },
+                                                contentAlignment = Alignment.Center
+                                            ) {
                                                 Text(
                                                     text = "$mIcon $mName",
                                                     fontSize = 11.sp,
@@ -1775,171 +1727,6 @@ fun PartnerScreen(
                         }
                     }
                 }
-            }
-
-            // =================================================================
-            // GÖRÜNÜM -1: KİŞİ 1 (KENDİNİZ / KULLANICI DETAYI & İNCELEME)
-            // =================================================================
-            if (selectedFamilyTab == -1) {
-                item {
-                    val p1CurrentPrayers = if (isGuestMode) simP1Prayers else if (isViewingTodayInFamily) p1TodayPrayers else p1YesterdayPrayers
-
-                    IndividualPersonCard(
-                        personName = "$p1DisplayName (Siz)",
-                        personIcon = person1Icon,
-                        isToday = isViewingTodayInFamily,
-                        prayers = p1CurrentPrayers,
-                        yesterdayPrayers = p1YesterdayPrayers,
-                        onEdit = {
-                            editingPersonIndex = 1
-                            editPersonNameInput = p1DisplayName
-                            editPersonIconInput = person1Icon
-                            editPersonActiveInput = true
-                            showEditPersonDialog = true
-                        },
-                        onToggle = { idx ->
-                            if (isGuestMode) {
-                                val current = simP1Prayers.getOrElse(idx) { "NONE" }
-                                val next = when (current) {
-                                    "NONE" -> "PRAYED"; "PRAYED" -> "MISSED"; "MISSED" -> "EXCUSED"; else -> "NONE"
-                                }
-                                simP1Prayers = simP1Prayers.toMutableList().also { it[idx] = next }
-                                viewModel.showStatusMessage("Kişi 1: ${getPrayerNameStr(idx)} durumu $next yapıldı 🔄")
-                            } else if (isViewingTodayInFamily) {
-                                if (isPrayerLockedForToday(idx)) {
-                                    viewModel.showStatusMessage("Bu vakit henüz girmedi (${getPrayerTimeEntryStr(idx)}) ⏳")
-                                } else {
-                                    val prayerType = when (idx) {
-                                        0 -> "FAJR"; 1 -> "DHUHR"; 2 -> "ASR"; 3 -> "MAGHRIB"; else -> "ISHA"
-                                    }
-                                    val current = p1CurrentPrayers.getOrElse(idx) { "NONE" }
-                                    val next = when (current) {
-                                        "NONE" -> "PRAYED"; "PRAYED" -> "MISSED"; "MISSED" -> "EXCUSED"; else -> "NONE"
-                                    }
-                                    viewModel.setPrayerStatus(prayerType, next)
-                                }
-                            } else {
-                                val prayerType = when (idx) {
-                                    0 -> "FAJR"; 1 -> "DHUHR"; 2 -> "ASR"; 3 -> "MAGHRIB"; else -> "ISHA"
-                                }
-                                val current = p1YesterdayPrayers.getOrElse(idx) { "NONE" }
-                                val next = when (current) {
-                                    "NONE" -> "PRAYED"; "PRAYED" -> "MISSED"; "MISSED" -> "EXCUSED"; else -> "NONE"
-                                }
-                                viewModel.setPrayerStatusForDate(yesterdayDateStr, prayerType, next)
-                                viewModel.showStatusMessage("Dünkü ${getPrayerNameStr(idx)} durumu $next yapıldı 🔄")
-                            }
-                        },
-                        onSendDua = {
-                            duaTargetName = "$p1DisplayName (Siz)"
-                            showSendDuaDialog = true
-                        }
-                    )
-                }
-            }
-
-            // =================================================================
-            // GÖRÜNÜM 1: KİŞİ 2 DETAYI
-            // =================================================================
-            if (selectedFamilyTab == 1 && (hasPerson2 || isGuestMode)) {
-                item {
-                    val p2CurrentPrayers = if (isGuestMode) simP2Prayers else if (isViewingTodayInFamily) p2TodayPrayers else p2YesterdayPrayers
-
-                    IndividualPersonCard(
-                        personName = person2Name,
-                        personIcon = person2Icon,
-                        isToday = isViewingTodayInFamily,
-                        prayers = p2CurrentPrayers,
-                        yesterdayPrayers = p2YesterdayPrayers,
-                        onEdit = {
-                            editingPersonIndex = 2
-                            editPersonNameInput = person2Name
-                            editPersonIconInput = person2Icon
-                            editPersonActiveInput = hasPerson2
-                            showEditPersonDialog = true
-                        },
-                        onToggle = { idx ->
-                            if (isGuestMode) {
-                                val current = simP2Prayers.getOrElse(idx) { "NONE" }
-                                val next = when (current) {
-                                    "NONE" -> "PRAYED"; "PRAYED" -> "MISSED"; "MISSED" -> "EXCUSED"; else -> "NONE"
-                                }
-                                simP2Prayers = simP2Prayers.toMutableList().also { it[idx] = next }
-                                viewModel.showStatusMessage("Kişi 2: ${getPrayerNameStr(idx)} durumu $next yapıldı 🔄")
-                            } else if (isViewingTodayInFamily) {
-                                if (isPrayerLockedForToday(idx)) {
-                                    viewModel.showStatusMessage("Bu vakit henüz girmedi (${getPrayerTimeEntryStr(idx)}) ⏳")
-                                } else {
-                                    val current = p2TodayPrayers.getOrElse(idx) { "NONE" }
-                                    val next = when (current) {
-                                        "NONE" -> "PRAYED"; "PRAYED" -> "MISSED"; "MISSED" -> "EXCUSED"; else -> "NONE"
-                                    }
-                                    val pKey = when (idx) { 0 -> "fajr"; 1 -> "dhuhr"; 2 -> "asr"; 3 -> "maghrib"; else -> "isha" }
-                                    setP2Prayer(pKey, next, true)
-                                    viewModel.showStatusMessage("$person2Name: ${getPrayerNameStr(idx)} durumu $next yapıldı 🔄")
-                                }
-                            } else {
-                                val current = p2YesterdayPrayers.getOrElse(idx) { "NONE" }
-                                val next = when (current) {
-                                    "NONE" -> "PRAYED"; "PRAYED" -> "MISSED"; "MISSED" -> "EXCUSED"; else -> "NONE"
-                                }
-                                val pKey = when (idx) { 0 -> "fajr"; 1 -> "dhuhr"; 2 -> "asr"; 3 -> "maghrib"; else -> "isha" }
-                                setP2Prayer(pKey, next, false)
-                                viewModel.showStatusMessage("$person2Name dünkü ${getPrayerNameStr(idx)} durumu $next yapıldı 🔄")
-                            }
-                        },
-                        onSendDua = {
-                            duaTargetName = person2Name
-                            showSendDuaDialog = true
-                        }
-                    )
-                }
-            }
-
-            // =================================================================
-            // DİNAMİK BİREY DETAY GÖRÜNÜMÜ: KİŞİ 3, 4, 5, 6... (Sınırsız)
-            // =================================================================
-            if (extraMemberIds.contains(selectedFamilyTab)) {
-                val currentMemberId = selectedFamilyTab
-                val mName = getMemberName(currentMemberId)
-                val mIcon = getMemberIcon(currentMemberId)
-                val todayP = getMemberPrayers(currentMemberId, true)
-                val yesterdayP = getMemberPrayers(currentMemberId, false)
-                val currentP = if (isViewingTodayInFamily) todayP else yesterdayP
-
-                item {
-                    IndividualPersonCard(
-                        personName = mName,
-                        personIcon = mIcon,
-                        isToday = isViewingTodayInFamily,
-                        prayers = currentP,
-                        yesterdayPrayers = yesterdayP,
-                        onEdit = {
-                            editingPersonIndex = currentMemberId
-                            editPersonNameInput = mName
-                            editPersonIconInput = mIcon
-                            editPersonActiveInput = true
-                            showEditPersonDialog = true
-                        },
-                        onToggle = { idx ->
-                            if (isViewingTodayInFamily && isPrayerLockedForToday(idx)) {
-                                viewModel.showStatusMessage("Bu vakit henüz girmedi (${getPrayerTimeEntryStr(idx)}) ⏳")
-                            } else {
-                                val current = currentP.getOrElse(idx) { "NONE" }
-                                val next = when (current) {
-                                    "NONE" -> "PRAYED"; "PRAYED" -> "MISSED"; "MISSED" -> "EXCUSED"; else -> "NONE"
-                                }
-                                setMemberPrayer(currentMemberId, idx, next, isViewingTodayInFamily)
-                                viewModel.showStatusMessage("$mName: ${getPrayerNameStr(idx)} durumu $next yapıldı 🔄")
-                            }
-                        },
-                        onSendDua = {
-                            duaTargetName = mName
-                            showSendDuaDialog = true
-                        }
-                    )
-                }
-            }
         }
     }
 
@@ -2577,37 +2364,151 @@ fun PartnerScreen(
         )
     }
 
-    // ESKİ EŞLEŞMEYİ SIFIRLA VE TEMİZLE DİALOGU (User request 4)
-    if (showResetHandshakeDialog) {
+    // HAVUZDAN AYRILMA / SIFIRLAMA DİALOGU (Tek Tıkla Kolay ve Kalıcı Ayrılma)
+    if (showLeavePoolDialog || showResetHandshakeDialog) {
         AlertDialog(
-            onDismissRequest = { showResetHandshakeDialog = false },
-            title = { Text("Bağlantıyı Sıfırla & Kalıcı Ayrıl", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary) },
+            onDismissRequest = {
+                showLeavePoolDialog = false
+                showResetHandshakeDialog = false
+            },
+            title = {
+                Text(
+                    text = if (isPoolLeader) "Aile Havuzunu Kapat & Sıfırla" else "Aile Havuzundan Ayrıl",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+            },
             text = {
-                Text("Havuz bağlantınız tamamen sıfırlanacak ve arka planda otomatik olarak tekrar bağlanmayacaktır. İstediğiniz zaman taze bir kod girerek havuza yeniden katılabilirsiniz. Onaylıyor musunuz?", fontSize = 13.sp, color = TextSecondary)
+                Text(
+                    text = if (isPoolLeader)
+                        "Aile havuzunu kapatıp sıfırlamak istediğinize emin misiniz? Tüm bağlı üyelerin bağlantısı kesilecek ve havuzunuz sonlandırılacaktır."
+                    else
+                        "Aile havuzundan ayrılmak istediğinize emin misiniz? Havuz bağlantınız sonlandırılacak ve ortak tablodan çıkış yapılacaktır.",
+                    fontSize = 13.sp,
+                    color = TextSecondary
+                )
             },
             confirmButton = {
                 Button(
                     onClick = {
                         childPrefs.edit()
                             .putBoolean("user_explicitly_disconnected", true)
+                            .putBoolean("family_pool_created", false)
+                            .putBoolean("family_pool_has_members", false)
                             .remove("is_pool_member_joined")
                             .remove("family_pool_code")
                             .remove("is_explicit_reis")
+                            .remove("p2_name")
+                            .remove("p2_icon")
+                            .remove("has_p2")
+                            .remove("has_p2_customized")
                             .putString("user_role", "FERT")
                             .apply()
                         familyPoolCode = ""
-                        viewModel.unmatchPartner()
+                        hasPerson2 = false
+                        viewModel.leaveFamilyPool()
                         refreshTrigger++
+                        showLeavePoolDialog = false
                         showResetHandshakeDialog = false
-                        viewModel.showStatusMessage("Bağlantı sıfırlandı ve havuzdan ayrıldınız. Otomatik tekrar bağlanmayacak ⏹️")
+                        viewModel.showStatusMessage(
+                            if (isPoolLeader) "Aile havuzu kapatıldı ve sıfırlandı. ⏹️"
+                            else "Aile havuzundan başarıyla ayrıldınız. 🚪"
+                        )
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MissedRed)
                 ) {
-                    Text("Sıfırla ve Ayrıl")
+                    Text("Evet, Ayrıl", color = Color.White, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showResetHandshakeDialog = false }) {
+                TextButton(onClick = {
+                    showLeavePoolDialog = false
+                    showResetHandshakeDialog = false
+                }) {
+                    Text("Vazgeç", color = TextSecondary)
+                }
+            }
+        )
+    }
+
+    // AİLE HAVUZU BAŞLATMA DİALOGU (AİLE REİSİ ROL SEÇİMİ)
+    if (showStartPoolRoleDialog) {
+        val leaderRoles = listOf(
+            "Baba" to "🧔",
+            "Anne" to "🧕",
+            "Dede" to "🧓",
+            "Aile Reisi" to "👑"
+        )
+        AlertDialog(
+            onDismissRequest = { showStartPoolRoleDialog = false },
+            title = { Text("Aile Havuzu Başlat (Aile Reisi)", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary) },
+            text = {
+                Column {
+                    Text("Aile havuzunu oluşturan Aile Reisi olarak bu ailedeki unvanınızı seçiniz:", fontSize = 12.sp, color = TextSecondary)
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        leaderRoles.forEach { (role, icon) ->
+                            val isSel = (leaderRoleInput == role)
+                            Surface(
+                                onClick = {
+                                    leaderRoleInput = role
+                                    leaderIconInput = icon
+                                },
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (isSel) EmeraldPrimary else EmeraldContainer,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(text = icon, fontSize = 20.sp)
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = role,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSel) Color.White else TextPrimary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val normRole = com.example.util.FamilyRoleHelper.normalizeRoleTitle(leaderRoleInput)
+                        val icon = leaderIconInput
+                        person1Icon = icon
+                        childPrefs.edit()
+                            .putBoolean("is_explicit_reis", true)
+                            .putBoolean("family_pool_created", true)
+                            .putBoolean("family_pool_has_members", true)
+                            .putBoolean("is_pool_member_joined", false)
+                            .putBoolean("user_explicitly_disconnected", false)
+                            .putString("user_role", "REIS")
+                            .putString("p1_name", normRole)
+                            .putString("p1_icon", icon)
+                            .putString("family_pool_code", partnerInfo.myInviteCode)
+                            .apply()
+                        viewModel.updateMyProfileName(normRole)
+                        refreshTrigger++
+                        showStartPoolRoleDialog = false
+                        viewModel.showStatusMessage("Aile havuzunuz $normRole olarak başlatıldı! 👑 Kodunuz: ${partnerInfo.myInviteCode}")
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary)
+                ) {
+                    Text("Havuzu Başlat")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showStartPoolRoleDialog = false }) {
                     Text("Vazgeç", color = TextSecondary)
                 }
             }

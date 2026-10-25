@@ -16,8 +16,8 @@ android {
     applicationId = "com.app.aileilenamaz"
     minSdk = 24
     targetSdk = 36
-    versionCode = 11
-    versionName = "v1.5"
+    versionCode = 12
+    versionName = "v1.6"
     buildConfigField("long", "BUILD_TIMESTAMP", "${System.currentTimeMillis()}L")
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
