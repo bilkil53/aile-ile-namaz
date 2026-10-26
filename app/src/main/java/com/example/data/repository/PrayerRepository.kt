@@ -918,7 +918,8 @@ class PrayerRepository(
             ?.remove("has_p2_customized")
             ?.remove("p1_name")
             ?.remove("p1_icon")
-            ?.putString("user_role", "FERT")
+            ?.remove("user_role")
+            ?.remove("user_explicit_role")
             ?.apply()
 
         val currentPartner = prayerDao.getPartnerInfo().firstOrNull() ?: PartnerInfoEntity()

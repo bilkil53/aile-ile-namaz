@@ -65,8 +65,29 @@ fun PartnerScreen(
 
     var refreshTrigger by remember { mutableStateOf(0) }
 
+    val isLoggedIn = remember(settings.isLoggedIn, settings.userEmail) {
+        settings.isLoggedIn && settings.userEmail.isNotBlank()
+    }
+
     val childPrefs = remember {
         val prefs = context.getSharedPreferences("family_child_prefs", Context.MODE_PRIVATE)
+        // Giriş yapılmamışsa hafızadaki tüm artık havuz verilerini (BaBa, Eşi, roller vb.) derhal temizle
+        if (!settings.isLoggedIn || settings.userEmail.isBlank()) {
+            prefs.edit()
+                .remove("p1_name")
+                .remove("p1_icon")
+                .remove("p2_name")
+                .remove("p2_icon")
+                .remove("user_role")
+                .remove("user_explicit_role")
+                .remove("family_pool_code")
+                .remove("is_pool_member_joined")
+                .remove("is_explicit_reis")
+                .remove("family_pool_created")
+                .remove("family_pool_has_members")
+                .remove("has_p2_customized")
+                .apply()
+        }
         // Kullanıcının açıkça eklemediği hiçbir hayalet/örnek kişi (Çocuk, Kişi 2, vb.) havuza ve tabloya gelmesin
         if (!prefs.contains("family_cleanup_no_dummies_v16")) {
             prefs.edit().apply {
@@ -92,7 +113,6 @@ fun PartnerScreen(
                 remove("p2_yesterday_asr")
                 remove("p2_yesterday_maghrib")
                 remove("p2_yesterday_isha")
-                putString("custom_extra_member_ids", "NONE")
                 putString("custom_extra_member_ids", "NONE")
                 putBoolean("family_cleanup_no_dummies_v16", true)
                 apply()
@@ -138,35 +158,39 @@ fun PartnerScreen(
         childPrefs.getBoolean("is_explicit_reis", false)
     }
 
-    // Kişi 1 Takma Adı (Asla e-posta adresi görünmez, takma ad garantisi)
-    val p1DisplayName = remember(settings.userName, settings.userEmail, refreshTrigger) {
-        val emailKey = settings.userEmail.trim().lowercase()
-        val savedNick = childPrefs.getString("user_nickname_$emailKey", null)
-            ?: childPrefs.getString("p1_name", null)
-        val raw = when {
-            !settings.isLoggedIn || settings.userEmail.isBlank() -> "Kişi 1"
-            !savedNick.isNullOrBlank() && !savedNick.contains("@") && savedNick != "Mümin" -> savedNick
-            settings.userName.isNotBlank() && !settings.userName.contains("@") && settings.userName != "Mümin" -> settings.userName
-            else -> "Kişi 1"
+    // Kişi 1 Takma Adı (Giriş yapılmadığında daima temiz 'Kişi 1' döner)
+    val p1DisplayName = remember(isLoggedIn, settings.userName, settings.userEmail, refreshTrigger) {
+        if (!isLoggedIn) {
+            "Kişi 1"
+        } else {
+            val emailKey = settings.userEmail.trim().lowercase()
+            val savedNick = childPrefs.getString("user_nickname_$emailKey", null)
+                ?: childPrefs.getString("p1_name", null)
+            val raw = when {
+                !savedNick.isNullOrBlank() && !savedNick.contains("@") && savedNick != "Mümin" -> savedNick
+                settings.userName.isNotBlank() && !settings.userName.contains("@") && settings.userName != "Mümin" -> settings.userName
+                else -> "Kişi 1"
+            }
+            if (raw.contains("@")) raw.substringBefore("@") else raw
         }
-        if (raw.contains("@")) raw.substringBefore("@") else raw
     }
 
-    val isLoggedIn = remember(settings.isLoggedIn, settings.userEmail) {
-        settings.isLoggedIn && settings.userEmail.isNotBlank()
-    }
-
-    // Kullanıcı çıkış yapmışsa veya login değilse hafızadaki artık havuz bilgilerini tamamen temizle
+    // Kullanıcı çıkış yapmışsa veya login değilse hafızadaki artık havuz ve profil bilgilerini tamamen temizle
     LaunchedEffect(isLoggedIn) {
         if (!isLoggedIn) {
             childPrefs.edit()
-                .putBoolean("is_pool_member_joined", false)
-                .putString("family_pool_code", "")
-                .putBoolean("is_explicit_reis", false)
-                .putBoolean("family_pool_created", false)
-                .putBoolean("family_pool_has_members", false)
-                .putBoolean("has_p2_customized", false)
+                .remove("p1_name")
+                .remove("p1_icon")
+                .remove("p2_name")
+                .remove("p2_icon")
+                .remove("user_role")
                 .remove("user_explicit_role")
+                .remove("family_pool_code")
+                .remove("is_pool_member_joined")
+                .remove("is_explicit_reis")
+                .remove("family_pool_created")
+                .remove("family_pool_has_members")
+                .remove("has_p2_customized")
                 .apply()
             refreshTrigger++
         }
@@ -224,7 +248,7 @@ fun PartnerScreen(
     }
 
     // Kişi 1 (Siz / Kendiniz)
-    var person1Icon by remember(refreshTrigger) { mutableStateOf(childPrefs.getString("p1_icon", "🧔") ?: "🧔") }
+    var person1Icon by remember(isLoggedIn, refreshTrigger) { mutableStateOf(if (isLoggedIn) (childPrefs.getString("p1_icon", "🧔") ?: "🧔") else "👤") }
 
     // Kişi 2 (Yalnızca giriş yapılmışsa ve eşleşme/katılım varsa aktiftir; varsayılan kapalı)
     var hasPerson2 by remember(isLoggedIn, partnerInfo.isMatched, isJoinedMember, refreshTrigger) {
@@ -789,85 +813,87 @@ fun PartnerScreen(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // 3. MEVCUT AİLE BAĞLANTI DURUMU
-                    Surface(
-                        color = Color.White.copy(alpha = 0.15f),
-                        shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.25f)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(10.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        if (partnerInfo.isMatched) Icons.Filled.CheckCircle else Icons.Filled.WarningAmber,
-                                        contentDescription = null,
-                                        tint = if (partnerInfo.isMatched) Color(0xFF86EFAC) else Color(0xFFFDE68A),
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = if (partnerInfo.isMatched) "Çift Taraflı Bağlantı Aktif 🟢" 
-                                               else "Bağlantı Bekleniyor ⏳",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White
-                                    )
-                                }
+                    // 3. MEVCUT AİLE BAĞLANTI DURUMU (Yalnızca giriş yapılmışsa görünür)
+                    if (isLoggedIn) {
+                        Surface(
+                            color = Color.White.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.25f)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            if (partnerInfo.isMatched) Icons.Filled.CheckCircle else Icons.Filled.WarningAmber,
+                                            contentDescription = null,
+                                            tint = if (partnerInfo.isMatched) Color(0xFF86EFAC) else Color(0xFFFDE68A),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = if (partnerInfo.isMatched) "Çift Taraflı Bağlantı Aktif 🟢" 
+                                                   else "Bağlantı Bekleniyor ⏳",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
+                                        )
+                                    }
 
-                                // CANLI TEYİT BUTONU
-                                if (isRefreshing) {
-                                    CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = Color.White)
-                                } else {
-                                    Surface(
-                                        onClick = {
-                                            viewModel.refreshPartnerData()
-                                            viewModel.showStatusMessage("Havuz bağlantı durumu sorgulanıyor... Canlı teyit sağlandı! 🟢")
-                                        },
-                                        shape = RoundedCornerShape(6.dp),
-                                        color = Color.White.copy(alpha = 0.25f),
-                                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.4f))
-                                    ) {
-                                        Row(
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
-                                            verticalAlignment = Alignment.CenterVertically
+                                    // CANLI TEYİT BUTONU
+                                    if (isRefreshing) {
+                                        CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp, color = Color.White)
+                                    } else {
+                                        Surface(
+                                            onClick = {
+                                                viewModel.refreshPartnerData()
+                                                viewModel.showStatusMessage("Havuz bağlantı durumu sorgulanıyor... Canlı teyit sağlandı! 🟢")
+                                            },
+                                            shape = RoundedCornerShape(6.dp),
+                                            color = Color.White.copy(alpha = 0.25f),
+                                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.4f))
                                         ) {
-                                            Text("Bağlantıyı Teyit Et 🔄", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text("Bağlantıyı Teyit Et 🔄", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                            }
                                         }
                                     }
                                 }
-                            }
 
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = if (partnerInfo.isMatched) {
-                                    "$person2Name ile çift taraflı bağlantı sağlandı. Kılınan namazlar anlık senkronize ediliyor."
-                                } else {
-                                    "2. Kişi henüz havuz kodunu onaylamadı. Bağlantının sağlanması için aşağıdaki davet kodunuzu aile ferdinizle paylaşın."
-                                },
-                                fontSize = 10.sp,
-                                color = Color.White.copy(alpha = 0.85f),
-                                lineHeight = 14.sp
-                            )
-
-                            if (partnerInfo.isMatched) {
-                                Spacer(modifier = Modifier.height(6.dp))
+                                Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "Bağlantıyı Yeniden Kur / Sıfırla (Temizle)",
+                                    text = if (partnerInfo.isMatched) {
+                                        "$person2Name ile çift taraflı bağlantı sağlandı. Kılınan namazlar anlık senkronize ediliyor."
+                                    } else {
+                                        "2. Kişi henüz havuz kodunu onaylamadı. Bağlantının sağlanması için aşağıdaki davet kodunuzu aile ferdinizle paylaşın."
+                                    },
                                     fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFFFCA5A5),
-                                    modifier = Modifier.clickable { showResetHandshakeDialog = true }
+                                    color = Color.White.copy(alpha = 0.85f),
+                                    lineHeight = 14.sp
                                 )
+
+                                if (partnerInfo.isMatched) {
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = "Bağlantıyı Yeniden Kur / Sıfırla (Temizle)",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFFCA5A5),
+                                        modifier = Modifier.clickable { showResetHandshakeDialog = true }
+                                    )
+                                }
                             }
                         }
-                    }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
 
                     // 4. AİLE HAVUZ KODU VEYA KATILIM ALANI
                     if (isPoolLeader) {
@@ -1163,20 +1189,21 @@ fun PartnerScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    if (isLoggedIn) {
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                    // 5. EŞLEŞEN KİŞİLER & CİHAZ DURUMLARI LİSTESİ
-                    Text(
-                        text = "Havuzdaki Bireyler ve Durumları:",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
+                        // 5. EŞLEŞEN KİŞİLER & CİHAZ DURUMLARI LİSTESİ
+                        Text(
+                            text = "Havuzdaki Bireyler ve Durumları:",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
 
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        // Kişi 1 (Siz)
-                        Surface(
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            // Kişi 1 (Siz)
+                            Surface(
                             color = Color.White.copy(alpha = 0.15f),
                             shape = RoundedCornerShape(10.dp),
                             border = BorderStroke(1.dp, Color.White.copy(alpha = 0.25f)),
@@ -1390,6 +1417,7 @@ fun PartnerScreen(
                 }
             }
         }
+    }
 
             // =================================================================
             // AİLE İBADET TABLOSU (ORTAK MATRİS - TÜM AİLE FERTLERİ BİRLİKTE)
@@ -1444,7 +1472,7 @@ fun PartnerScreen(
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Column {
                                         Text(
-                                            text = if (isLoggedIn && p1DisplayName.isNotBlank() && p1DisplayName != "Kişi 1") "$p1DisplayName Ailesi" else "Aile İbadet Halkası",
+                                            text = "Aile İbadet Halkası",
                                             fontSize = 15.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color.White

@@ -8,7 +8,7 @@
   <a href="https://github.com/bilkil53/aile-ile-namaz/releases/latest/download/Aile_Ile_Namaz.apk">
     <img src="https://img.shields.io/badge/İndir-Aile%20ile%20Namaz%20(APK)-0E5A4A?style=for-the-badge&logo=android&logoColor=white" alt="APK İndir" />
   </a>
-  <img src="https://img.shields.io/badge/Sürüm-v1.7-0E5A4A?style=for-the-badge" alt="Sürüm" />
+  <img src="https://img.shields.io/badge/Sürüm-v1.8-0E5A4A?style=for-the-badge" alt="Sürüm" />
   <img src="https://img.shields.io/badge/Tema-Çam%20Yeşili%20%230E5A4A-0E5A4A?style=for-the-badge" alt="Tema" />
   <img src="https://img.shields.io/badge/Platform-Android%207.0%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android" />
   <img src="https://img.shields.io/badge/Vakitler-T.C.%20Diyanet-green?style=for-the-badge" alt="Diyanet" />
@@ -19,11 +19,11 @@
 
 ---
 
-## 📱 İndirme ve Resmi Kurulum (v1.7)
+## 📱 İndirme ve Resmi Kurulum (v1.8)
 
-Uygulamanın en güncel **v1.7** resmi sürümünü doğrudan cihazınıza kurabilirsiniz:
+Uygulamanın en güncel **v1.8** resmi sürümünü doğrudan cihazınıza kurabilirsiniz:
 
-👉 **[📥 Aile ile Namaz v1.7 APK İndir](https://github.com/bilkil53/aile-ile-namaz/releases/latest/download/Aile_Ile_Namaz.apk)**
+👉 **[📥 Aile ile Namaz v1.8 APK İndir](https://github.com/bilkil53/aile-ile-namaz/releases/latest/download/Aile_Ile_Namaz.apk)**
 
 * **Yeni APK Dosya Yolu (Proje İçi):** `app/build/outputs/apk/release/app-release.apk`
 * **Resmi GitHub Deposu:** [https://github.com/bilkil53/aile-ile-namaz](https://github.com/bilkil53/aile-ile-namaz)
@@ -78,18 +78,19 @@ Uygulamanın en güncel **v1.7** resmi sürümünü doğrudan cihazınıza kurab
 
 ## 📋 Sürüm Değişiklik Günlüğü (Changelog)
 
-### 🕌 v1.7 - Resmi Güncel Sürüm
+### 🕌 v1.8 - Resmi Güncel Sürüm
+* **🔒 Giriş Yapılmadığında Aile Havuzu ve Başlık Düzeltmesi:** Giriş yapılmadığında tabloda ve havuz kartında cache'de kalan ("BaBa Ailesi", "Eşi Ailesi" vb.) isimler tamamen kaldırıldı; tablo başlığı "Aile İbadet Halkası" olarak sabitlendi. Giriş yapılmadığında rol veya kişi düzenleme butonları gizlendi.
 * **📍 81 İl Hassas Koordinat ve Şehir Seçici:** Türkiye'nin tüm 81 ili tam coğrafi enlem/boylam koordinatlarıyla sisteme dahil edildi. Takip ekranına anlık arama yapılabilen "81 İl Seçici" diyalogu eklendi.
 * **🛰️ Güvenli Konum ve Akıllı Fallback:** GPS sinyali zayıf olduğunda veya konum izni verilmediğinde kullanıcının seçtiği ilin sıfırlanması veya İstanbul'a dönmesi engellendi; seçili konum hafızada sabit tutulur.
 * **⏰ Dinamik ve Dakik Vakit Bildirimleri:** Namaz vaktine kalan süre AlarmManager ve Bildirim tetikleyicisinde (`PrayerAlarmReceiver`) anlık gerçek zamana göre milisaniye hassasiyetinde hesaplanır; 10 dk öncesi hatırlatması tam vaktinde ve doğru kalan dakikayla gösterilir.
-* **🧹 Çıkış Yapıldığında Aile Havuzu Kalıntılarının Temizlenmesi:** Kullanıcı oturumu kapattığında veya giriş yapmadığında, yerel hafızada kalan havuz kodu, eş bilgisi ve havuz lideri durumu otomatik olarak sıfırlanır; "Giriş Yapılmadı • Yerel Mod" kartı gösterilir.
+* **🧹 Çıkış Yapıldığında Aile Havuzu Kalıntılarının Temizlenmesi:** Kullanıcı oturumu kapattığında veya giriş yapmadığında, yerel hafızada kalan havuz kodu, eş bilgisi, takma ad ve havuz lideri durumu otomatik olarak sıfırlanır; "Giriş Yapılmadı • Yerel Mod" kartı gösterilir.
 * **📦 Diyanet Vakit Önbellekleme:** Diyanet resmi vakitleri arka plan bildirim servisleri için SharedPreferences içerisine kaydedilerek internet kesintilerinde dahi alarmların hatasız çalması sağlandı.
 
 ---
 
 ## 🏷️ GitHub Sürüm ve Release Bilgileri
 
-* **Etiket (Tag):** `v1.7`
+* **Etiket (Tag):** `v1.8`
 * **APK Dosyası:** `app/build/outputs/apk/release/app-release.apk` (19 MB)
 * **Hedef Repo:** `https://github.com/bilkil53/aile-ile-namaz`
 
