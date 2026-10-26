@@ -45,14 +45,14 @@ object AppUpdateManager {
 
     private const val GITHUB_LATEST_WEB_URL = "https://github.com/bilkil53/aile-ile-namaz/releases/latest"
 
-    const val DEFAULT_FULL_RELEASE_NOTES = """🕌 Aile ile Namaz v1.8 - Resmi Güncel Sürüm Yenilikleri:
+    const val DEFAULT_FULL_RELEASE_NOTES = """🕌 Aile ile Namaz v1.9 - Resmi Güncel Sürüm Yenilikleri:
 
-🔒 Giriş Yapılmadığında Aile Havuzu ve Başlık Düzeltmesi: Giriş yapılmadığında tabloda ve havuz kartında cache'de kalan ("BaBa Ailesi", "Eşi Ailesi" vb.) isimler kaldırıldı; tablo başlığı "Aile İbadet Halkası" olarak sabitlendi. Giriş yapılmadığında rol veya kişi düzenleme butonları gizlendi.
-⏰ Tam Vaktinde ve Doğru Konumlu Diyanet Bildirimleri: Namaz öncesi hatırlatmalar artık bulunduğunuz ilin resmi Diyanet namaz vakitlerine ve gerçek duvar saatine göre tam zamanında hesaplanır; yanlış saatte veya erken gelen bildirim sorunu kökten giderildi.
-📍 81 İl Diyanet Seçimi & Güvenilir GPS: Türkiye'nin tüm 81 ili için Diyanet vakitleri ve tek tıkla il seçme penceresi eklendi; GPS sinyali zayıf olsa dahi seçili iliniz asla varsayılan şehre sıfırlanmaz.
-👨‍👩‍👧‍👦 Ortak Aile İbadet Tablosu: Giriş yapıldığında tüm fertler tek tabloda eksiksiz görünür; giriş yapılmadığında yalnızca yerel ibadet durumunuz temiz bir şekilde sunulur.
-🔔 Dinamik Bildirim Başlıkları: Bildirimler kaç dakika kaldığını gerçek zamanlı ve doğru olarak bildirir (örn: Vaktine 10 Dakika Kaldı).
-🚀 Doğrudan Uygulama İçi Güncelleme: v1.8 sürümü doğrudan tespit edilir ve kurulur."""
+👤 Havuzda Fert Yokken Rol ve "Baba" Temizliği: Havuzda fiilen başka bir aile ferdi bulunmadığı sürece kullanıcının profilinde testlerden kalan "Baba", "Aile Reisi" vb. unvan ve roller gösterilmez; kullanıcı bireysel modda kendi adı veya "Siz" olarak gösterilir.
+👑 Gerçek Aile Reisi Aktivasyonu: Yalnızca başka bir aile ferdi havuza fiilen katıldığında aile reisi rolü aktif olur.
+🔒 Giriş Yapılmadığında Aile Havuzu ve Başlık Düzeltmesi: Giriş yapılmadığında tabloda ve havuz kartında cache'de kalan ("BaBa Ailesi", "Eşi Ailesi" vb.) isimler kaldırıldı; tablo başlığı "Aile İbadet Halkası" olarak sabitlendi.
+⏰ Tam Vaktinde ve Doğru Konumlu Diyanet Bildirimleri: Namaz öncesi hatırlatmalar artık bulunduğunuz ilin resmi Diyanet namaz vakitlerine ve gerçek duvar saatine göre tam zamanında hesaplanır.
+📍 81 İl Diyanet Seçimi & Güvenilir GPS: Türkiye'nin tüm 81 ili için Diyanet vakitleri ve tek tıkla il seçme penceresi eklendi.
+🚀 Doğrudan Uygulama İçi Güncelleme: v1.9 sürümü doğrudan tespit edilir ve kurulur."""
 
     suspend fun checkForUpdates(context: Context, notifyIfFound: Boolean = true): AppUpdateInfo? = withContext(Dispatchers.IO) {
         // 1. Birinci Aşama: GitHub REST API ile sorgula (Tam detaylar ve sürüm notları)

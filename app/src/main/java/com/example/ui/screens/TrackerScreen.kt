@@ -208,7 +208,11 @@ fun TrackerScreen(
                         color = EmeraldPrimary,
                         letterSpacing = 0.8.sp
                     )
-                    val greetingTitle = if (settings.isLoggedIn && settings.userName.isNotBlank() && !settings.userName.contains("@")) {
+                    val isRoleName = { s: String ->
+                        val l = s.trim().lowercase(java.util.Locale.forLanguageTag("tr"))
+                        l == "baba" || l == "babası" || l == "aile reisi" || l == "reis" || l == "eşi"
+                    }
+                    val greetingTitle = if (settings.isLoggedIn && settings.userName.isNotBlank() && !settings.userName.contains("@") && !isRoleName(settings.userName)) {
                         "Selamün aleyküm,\n${settings.userName}"
                     } else {
                         "Selamün aleyküm"
