@@ -1,0 +1,6 @@
+{
+  "name": "Aile ile Namaz",
+  "description": "Aile ile Namaz - Çok Kişilik Aile Havuzu ve İbadet Halkası, 10 Dk Öncesi Zorunlu Diyanet Hadis & Dua Bildirimleri, Kaza Takibi ve Resmi Diyanet Vakitleri",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
