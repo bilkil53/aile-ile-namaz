@@ -8,7 +8,7 @@
   <a href="https://github.com/bilkil53/aile-ile-namaz/releases/latest/download/Aile_Ile_Namaz.apk">
     <img src="https://img.shields.io/badge/İndir-Aile%20ile%20Namaz%20(APK)-0E5A4A?style=for-the-badge&logo=android&logoColor=white" alt="APK İndir" />
   </a>
-  <img src="https://img.shields.io/badge/Sürüm-v1.9-0E5A4A?style=for-the-badge" alt="Sürüm" />
+  <img src="https://img.shields.io/badge/Sürüm-v1.10-0E5A4A?style=for-the-badge" alt="Sürüm" />
   <img src="https://img.shields.io/badge/Tema-Çam%20Yeşili%20%230E5A4A-0E5A4A?style=for-the-badge" alt="Tema" />
   <img src="https://img.shields.io/badge/Platform-Android%207.0%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android" />
   <img src="https://img.shields.io/badge/Vakitler-T.C.%20Diyanet-green?style=for-the-badge" alt="Diyanet" />
@@ -19,11 +19,11 @@
 
 ---
 
-## 📱 İndirme ve Resmi Kurulum (v1.9)
+## 📱 İndirme ve Resmi Kurulum (v1.10)
 
-Uygulamanın en güncel **v1.9** resmi sürümünü doğrudan cihazınıza kurabilirsiniz:
+Uygulamanın en güncel **v1.10** resmi sürümünü doğrudan cihazınıza kurabilirsiniz:
 
-👉 **[📥 Aile ile Namaz v1.9 APK İndir](https://github.com/bilkil53/aile-ile-namaz/releases/latest/download/Aile_Ile_Namaz.apk)**
+👉 **[📥 Aile ile Namaz v1.10 APK İndir](https://github.com/bilkil53/aile-ile-namaz/releases/latest/download/Aile_Ile_Namaz.apk)**
 
 * **Yeni APK Dosya Yolu (Proje İçi):** `app/build/outputs/apk/release/app-release.apk`
 * **Resmi GitHub Deposu:** [https://github.com/bilkil53/aile-ile-namaz](https://github.com/bilkil53/aile-ile-namaz)
