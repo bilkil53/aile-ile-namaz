@@ -817,17 +817,17 @@ class PrayerRepository(
         )
 
         // Otomatik Bulut Kurtarma: Yeni telefonda veya yeniden kurulumda Google oturumu açılınca
-        // kullanıcının kayıtlı kaza, günlük kıldı/kılmadı ve aile bilgilerini buluttan otomatik geri yükle
+        // kullanıcının kayıtlı kaza, günlük kıldı/kılmadı ve aile bilgilerini buluttan güvenle geri yükle
         try {
             val cloudBackup = PartnerSyncManager.restoreUserDataFromCloud(email.trim())
             if (cloudBackup != null) {
-                // 1. Kaza namazları yedeği
+                // 1. Kaza namazları: Kullanıcının yerel olarak girdiği sayılar ASLA sıfırlanmaz veya silinmez
                 val kazalarStr = cloudBackup.optString("kazalarJson", "[]")
                 val kazasArr = org.json.JSONArray(kazalarStr)
-                val list = mutableListOf<KazaPrayerEntity>()
+                val cloudKazaList = mutableListOf<KazaPrayerEntity>()
                 for (i in 0 until kazasArr.length()) {
                     val item = kazasArr.getJSONObject(i)
-                    list.add(
+                    cloudKazaList.add(
                         KazaPrayerEntity(
                             prayerType = item.getString("prayerType"),
                             owedCount = item.optInt("owedCount", 0),
@@ -835,17 +835,45 @@ class PrayerRepository(
                         )
                     )
                 }
-                if (list.isNotEmpty()) {
-                    prayerDao.insertAllKazaPrayers(list)
+
+                val localKazas = prayerDao.getAllKazaPrayersDirect().associateBy { it.prayerType.uppercase() }
+                val mergedKazas = mutableListOf<KazaPrayerEntity>()
+                val prayerTypes = listOf("FAJR", "DHUHR", "ASR", "MAGHRIB", "ISHA", "WITR")
+                for (type in prayerTypes) {
+                    val local = localKazas[type]
+                    val cloud = cloudKazaList.firstOrNull { it.prayerType.equals(type, ignoreCase = true) }
+                    val localOwed = local?.owedCount ?: 0
+                    val cloudOwed = cloud?.owedCount ?: 0
+                    val localCompleted = local?.completedCount ?: 0
+                    val cloudCompleted = cloud?.completedCount ?: 0
+
+                    // Kullanıcının kendi tarafında girdiği kaza borcu ve kılınan kaza sayısı ASLA sıfırlanmaz
+                    val finalOwed = when {
+                        localOwed > 0 && cloudOwed == 0 -> localOwed
+                        localOwed == 0 && cloudOwed > 0 -> cloudOwed
+                        localOwed > 0 && cloudOwed > 0 -> maxOf(localOwed, cloudOwed)
+                        else -> 0
+                    }
+                    val finalCompleted = maxOf(localCompleted, cloudCompleted)
+                    mergedKazas.add(
+                        KazaPrayerEntity(
+                            prayerType = type,
+                            owedCount = finalOwed,
+                            completedCount = finalCompleted
+                        )
+                    )
+                }
+                if (mergedKazas.isNotEmpty()) {
+                    prayerDao.insertAllKazaPrayers(mergedKazas)
                 }
 
-                // 2. Günlük kıldı / kılmadı geçmişi yedeği
+                // 2. Günlük kıldı / kılmadı geçmişi: Kullanıcının kendi tarafında işaretlediği kıldı/kılmadı ASLA silinmez
                 val dailyStr = cloudBackup.optString("dailyPrayersJson", "[]")
                 val dailyArr = org.json.JSONArray(dailyStr)
-                val dailyList = mutableListOf<DailyPrayerEntity>()
+                val cloudDailyList = mutableListOf<DailyPrayerEntity>()
                 for (i in 0 until dailyArr.length()) {
                     val item = dailyArr.getJSONObject(i)
-                    dailyList.add(
+                    cloudDailyList.add(
                         DailyPrayerEntity(
                             date = item.getString("date"),
                             fajrStatus = item.optString("fajrStatus", "NONE"),
@@ -856,8 +884,29 @@ class PrayerRepository(
                         )
                     )
                 }
-                if (dailyList.isNotEmpty()) {
-                    prayerDao.insertAllDailyPrayers(dailyList)
+
+                val localDailyMap = prayerDao.getAllDailyPrayersDirect().associateBy { it.date }.toMutableMap()
+                fun mergeStatus(localStat: String?, cloudStat: String?): String {
+                    val l = localStat ?: "NONE"
+                    val c = cloudStat ?: "NONE"
+                    return if (l != "NONE") l else c
+                }
+                for (cItem in cloudDailyList) {
+                    val lItem = localDailyMap[cItem.date]
+                    if (lItem == null) {
+                        localDailyMap[cItem.date] = cItem
+                    } else {
+                        localDailyMap[cItem.date] = lItem.copy(
+                            fajrStatus = mergeStatus(lItem.fajrStatus, cItem.fajrStatus),
+                            dhuhrStatus = mergeStatus(lItem.dhuhrStatus, cItem.dhuhrStatus),
+                            asrStatus = mergeStatus(lItem.asrStatus, cItem.asrStatus),
+                            maghribStatus = mergeStatus(lItem.maghribStatus, cItem.maghribStatus),
+                            ishaStatus = mergeStatus(lItem.ishaStatus, cItem.ishaStatus)
+                        )
+                    }
+                }
+                if (localDailyMap.isNotEmpty()) {
+                    prayerDao.insertAllDailyPrayers(localDailyMap.values.toList())
                 }
 
                 // 3. Eşleşme ve aile bilgileri yedeği
@@ -873,8 +922,11 @@ class PrayerRepository(
                         )
                     )
                 }
+
+                // Buluttan geri yüklenen ve yerel ile birleştirilen en güncel verileri hemen buluta tekrar kaydet
+                triggerAutoCloudBackup()
             } else {
-                // Eğer bulutta henüz yedek yoksa mevcut verileri ilk kez buluta yedekle
+                // Eğer bulutta henüz yedek yoksa mevcut yerel verileri ilk kez buluta yedekle
                 triggerAutoCloudBackup()
             }
         } catch (_: Exception) { }
