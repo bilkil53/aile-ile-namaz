@@ -821,7 +821,7 @@ class PrayerRepository(
         try {
             val cloudBackup = PartnerSyncManager.restoreUserDataFromCloud(email.trim())
             if (cloudBackup != null) {
-                // 1. Kaza namazları: Kullanıcının yerel olarak girdiği sayılar ASLA sıfırlanmaz veya silinmez
+                // 1. Kaza namazları: Kullanıcının kendi hesabındaki kayıtlı kaza sayıları buluttan yüklenir
                 val kazalarStr = cloudBackup.optString("kazalarJson", "[]")
                 val kazasArr = org.json.JSONArray(kazalarStr)
                 val cloudKazaList = mutableListOf<KazaPrayerEntity>()
@@ -835,39 +835,11 @@ class PrayerRepository(
                         )
                     )
                 }
-
-                val localKazas = prayerDao.getAllKazaPrayersDirect().associateBy { it.prayerType.uppercase() }
-                val mergedKazas = mutableListOf<KazaPrayerEntity>()
-                val prayerTypes = listOf("FAJR", "DHUHR", "ASR", "MAGHRIB", "ISHA", "WITR")
-                for (type in prayerTypes) {
-                    val local = localKazas[type]
-                    val cloud = cloudKazaList.firstOrNull { it.prayerType.equals(type, ignoreCase = true) }
-                    val localOwed = local?.owedCount ?: 0
-                    val cloudOwed = cloud?.owedCount ?: 0
-                    val localCompleted = local?.completedCount ?: 0
-                    val cloudCompleted = cloud?.completedCount ?: 0
-
-                    // Kullanıcının kendi tarafında girdiği kaza borcu ve kılınan kaza sayısı ASLA sıfırlanmaz
-                    val finalOwed = when {
-                        localOwed > 0 && cloudOwed == 0 -> localOwed
-                        localOwed == 0 && cloudOwed > 0 -> cloudOwed
-                        localOwed > 0 && cloudOwed > 0 -> maxOf(localOwed, cloudOwed)
-                        else -> 0
-                    }
-                    val finalCompleted = maxOf(localCompleted, cloudCompleted)
-                    mergedKazas.add(
-                        KazaPrayerEntity(
-                            prayerType = type,
-                            owedCount = finalOwed,
-                            completedCount = finalCompleted
-                        )
-                    )
-                }
-                if (mergedKazas.isNotEmpty()) {
-                    prayerDao.insertAllKazaPrayers(mergedKazas)
+                if (cloudKazaList.isNotEmpty()) {
+                    prayerDao.insertAllKazaPrayers(cloudKazaList)
                 }
 
-                // 2. Günlük kıldı / kılmadı geçmişi: Kullanıcının kendi tarafında işaretlediği kıldı/kılmadı ASLA silinmez
+                // 2. Günlük kıldı / kılmadı geçmişi: Kullanıcının kendi hesabındaki günlük kayıtları buluttan yüklenir
                 val dailyStr = cloudBackup.optString("dailyPrayersJson", "[]")
                 val dailyArr = org.json.JSONArray(dailyStr)
                 val cloudDailyList = mutableListOf<DailyPrayerEntity>()
@@ -884,29 +856,8 @@ class PrayerRepository(
                         )
                     )
                 }
-
-                val localDailyMap = prayerDao.getAllDailyPrayersDirect().associateBy { it.date }.toMutableMap()
-                fun mergeStatus(localStat: String?, cloudStat: String?): String {
-                    val l = localStat ?: "NONE"
-                    val c = cloudStat ?: "NONE"
-                    return if (l != "NONE") l else c
-                }
-                for (cItem in cloudDailyList) {
-                    val lItem = localDailyMap[cItem.date]
-                    if (lItem == null) {
-                        localDailyMap[cItem.date] = cItem
-                    } else {
-                        localDailyMap[cItem.date] = lItem.copy(
-                            fajrStatus = mergeStatus(lItem.fajrStatus, cItem.fajrStatus),
-                            dhuhrStatus = mergeStatus(lItem.dhuhrStatus, cItem.dhuhrStatus),
-                            asrStatus = mergeStatus(lItem.asrStatus, cItem.asrStatus),
-                            maghribStatus = mergeStatus(lItem.maghribStatus, cItem.maghribStatus),
-                            ishaStatus = mergeStatus(lItem.ishaStatus, cItem.ishaStatus)
-                        )
-                    }
-                }
-                if (localDailyMap.isNotEmpty()) {
-                    prayerDao.insertAllDailyPrayers(localDailyMap.values.toList())
+                if (cloudDailyList.isNotEmpty()) {
+                    prayerDao.insertAllDailyPrayers(cloudDailyList)
                 }
 
                 // 3. Eşleşme ve aile bilgileri yedeği
@@ -922,14 +873,27 @@ class PrayerRepository(
                         )
                     )
                 }
-
-                // Buluttan geri yüklenen ve yerel ile birleştirilen en güncel verileri hemen buluta tekrar kaydet
-                triggerAutoCloudBackup()
             } else {
-                // Eğer bulutta henüz yedek yoksa mevcut yerel verileri ilk kez buluta yedekle
+                // Eğer bulutta henüz yedek yoksa sıfırdan ilk yedeği oluştur
                 triggerAutoCloudBackup()
             }
         } catch (_: Exception) { }
+    }
+
+    suspend fun clearGuestDataIfNotLoggedIn() {
+        val current = prayerDao.getSettings().firstOrNull() ?: return
+        if (!current.isLoggedIn || current.userEmail.isBlank()) {
+            prayerDao.clearAllDailyPrayers()
+            val emptyKazalar = listOf(
+                KazaPrayerEntity("FAJR", owedCount = 0, completedCount = 0),
+                KazaPrayerEntity("DHUHR", owedCount = 0, completedCount = 0),
+                KazaPrayerEntity("ASR", owedCount = 0, completedCount = 0),
+                KazaPrayerEntity("MAGHRIB", owedCount = 0, completedCount = 0),
+                KazaPrayerEntity("ISHA", owedCount = 0, completedCount = 0),
+                KazaPrayerEntity("WITR", owedCount = 0, completedCount = 0)
+            )
+            prayerDao.insertAllKazaPrayers(emptyKazalar)
+        }
     }
 
     suspend fun updateMyProfileName(newName: String) {
@@ -973,6 +937,18 @@ class PrayerRepository(
             ?.remove("user_role")
             ?.remove("user_explicit_role")
             ?.apply()
+
+        // Çıkış yapıldığında verileri sıfırla
+        prayerDao.clearAllDailyPrayers()
+        val emptyKazalar = listOf(
+            KazaPrayerEntity("FAJR", owedCount = 0, completedCount = 0),
+            KazaPrayerEntity("DHUHR", owedCount = 0, completedCount = 0),
+            KazaPrayerEntity("ASR", owedCount = 0, completedCount = 0),
+            KazaPrayerEntity("MAGHRIB", owedCount = 0, completedCount = 0),
+            KazaPrayerEntity("ISHA", owedCount = 0, completedCount = 0),
+            KazaPrayerEntity("WITR", owedCount = 0, completedCount = 0)
+        )
+        prayerDao.insertAllKazaPrayers(emptyKazalar)
 
         val currentPartner = prayerDao.getPartnerInfo().firstOrNull() ?: PartnerInfoEntity()
         prayerDao.savePartnerInfo(

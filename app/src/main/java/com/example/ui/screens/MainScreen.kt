@@ -304,11 +304,16 @@ fun MainScreen(
         )
     }
 
-    // Açılışta Tanıtım & Hızlı Google Login Ekranı
-    if (!settings.isLoggedIn && !hasDismissedOnboarding) {
+    val showLoginRequired by viewModel.showLoginRequiredDialog.collectAsState()
+
+    // Açılışta Tanıtım & Hızlı Google Login Ekranı veya veri girişi yaparken zorunlu login
+    if ((!settings.isLoggedIn && !hasDismissedOnboarding) || showLoginRequired) {
         OnboardingLoginDialog(
             viewModel = viewModel,
-            onDismiss = { hasDismissedOnboarding = true }
+            onDismiss = {
+                hasDismissedOnboarding = true
+                viewModel.dismissLoginRequiredDialog()
+            }
         )
     }
 

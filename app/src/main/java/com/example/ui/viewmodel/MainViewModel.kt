@@ -123,6 +123,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         viewModelScope.launch(Dispatchers.IO) {
             repository.ensureUniqueInviteCode()
+            repository.clearGuestDataIfNotLoggedIn()
         }
 
         settings = repository.getSettings()
@@ -324,7 +325,28 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private val _showLoginRequiredDialog = MutableStateFlow(false)
+    val showLoginRequiredDialog: StateFlow<Boolean> = _showLoginRequiredDialog.asStateFlow()
+
+    fun dismissLoginRequiredDialog() {
+        _showLoginRequiredDialog.value = false
+    }
+
+    fun promptLoginRequired(customMsg: String? = null) {
+        _showLoginRequiredDialog.value = true
+        showStatusMessage(customMsg ?: "İbadet kayıtlarınızın saklanabilmesi için lütfen Google ile giriş yapın 🔒")
+    }
+
+    fun requireLoginPrompt(): Boolean {
+        if (!settings.value.isLoggedIn || settings.value.userEmail.isBlank()) {
+            promptLoginRequired()
+            return true
+        }
+        return false
+    }
+
     fun setPrayerStatus(prayerType: String, status: String) {
+        if (requireLoginPrompt()) return
         val dateStr = _selectedDateStr.value
         viewModelScope.launch(Dispatchers.IO) {
             repository.setPrayerStatus(dateStr, prayerType, status)
@@ -349,6 +371,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setPrayerStatusForDate(dateStr: String, prayerType: String, status: String) {
+        if (requireLoginPrompt()) return
         viewModelScope.launch(Dispatchers.IO) {
             repository.setPrayerStatus(dateStr, prayerType, status)
             if (status == "PRAYED") {
@@ -373,6 +396,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun adjustKazaOwed(type: String, delta: Int) {
+        if (requireLoginPrompt()) return
         viewModelScope.launch(Dispatchers.IO) {
             repository.adjustKazaOwed(type, delta)
         }
@@ -384,6 +408,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var kazaUndoJob: Job? = null
 
     fun completeOneKaza(type: String) {
+        if (requireLoginPrompt()) return
         viewModelScope.launch(Dispatchers.IO) {
             repository.completeOneKaza(type)
             lastCompletedKazaType = type
@@ -407,6 +432,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun undoLastKaza() {
+        if (requireLoginPrompt()) return
         val type = lastCompletedKazaType ?: return
         lastCompletedKazaType = null
         kazaUndoJob?.cancel()
@@ -435,6 +461,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun addBulkKaza(amount: Int) {
+        if (requireLoginPrompt()) return
         viewModelScope.launch(Dispatchers.IO) {
             repository.addBulkKaza(amount)
             _statusMessage.value = "Her vakte +$amount kaza namazı borcu eklendi."
