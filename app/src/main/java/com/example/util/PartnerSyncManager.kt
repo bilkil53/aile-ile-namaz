@@ -47,6 +47,22 @@ data class IncomingMatchInfo(
     val partnerIcon: String = ""
 )
 
+data class IncomingJoinRequest(
+    val claimerCode: String,
+    val claimerName: String,
+    val claimerEmail: String,
+    val claimerIcon: String = "",
+    val timestamp: Long = System.currentTimeMillis()
+)
+
+data class JoinApprovalInfo(
+    val leaderCode: String,
+    val leaderRole: String,
+    val leaderIcon: String = "👑",
+    val leaderEmail: String = "",
+    val timestamp: Long = System.currentTimeMillis()
+)
+
 data class SyncResult(
     val latestStatus: PartnerPrayerUpdate?,
     val yesterdayStatus: PartnerPrayerUpdate? = null,

@@ -447,6 +447,13 @@ fun PartnerScreen(
     var leaderIconInput by remember { mutableStateOf("🧔") }
     var showArchitectureInfoDialog by remember { mutableStateOf(false) }
 
+    // Karşı taraf havuza katıldığı anda Reis için otomatik unvan seçim penceresini aç
+    LaunchedEffect(partnerInfo.isMatched, partnerInfo.partnerDisplayName) {
+        if (partnerInfo.isMatched && !childPrefs.getBoolean("is_explicit_reis", false) && !childPrefs.getBoolean("is_pool_member_joined", false)) {
+            showStartPoolRoleDialog = true
+        }
+    }
+
     // Google Account Picker Launcher
     val googleAccountPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -1157,7 +1164,7 @@ fun PartnerScreen(
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 Text("👑", fontSize = 14.sp)
                                                 Spacer(modifier = Modifier.width(4.dp))
-                                                Text("Veya Kendi Aile Havuzunuzu Başlatın", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFEF3C7))
+                                                Text("Davet Kodunuzu Paylaşın", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFEF3C7))
                                             }
                                             Text(
                                                 text = partnerInfo.myInviteCode.ifBlank { "REIS-00..." },
@@ -1199,20 +1206,10 @@ fun PartnerScreen(
                                     }
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Text(
-                                        text = "Ailenizi davet etmek için bu kodu paylaşın veya hemen havuzu başlatıp Aile Reisi unvanınızı belirleyin.",
+                                        text = "Ailenizi davet etmek için bu kodu paylaşın. Karşı taraf kodunuzu girip katıldığı anda ekranınızda bir kutucuk açılarak ailenizdeki unvanınızı (Baba, Anne, Aile Reisi vb.) belirleyebileceksiniz.",
                                         fontSize = 10.sp,
-                                        color = Color.White.copy(alpha = 0.85f)
+                                        color = Color.White.copy(alpha = 0.9f)
                                     )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Button(
-                                        onClick = { showStartPoolRoleDialog = true },
-                                        colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
-                                        shape = RoundedCornerShape(8.dp),
-                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text("👑 Aile Havuzunu Başlat (Reis Rolü Seç)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                                    }
                                 }
                             }
                         }
@@ -2556,10 +2553,15 @@ fun PartnerScreen(
         )
         AlertDialog(
             onDismissRequest = { showStartPoolRoleDialog = false },
-            title = { Text("Aile Havuzu Başlat (Aile Reisi)", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary) },
+            title = { Text("🎉 Tebrikler, Aileniz Havuza Katıldı!", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary) },
             text = {
                 Column {
-                    Text("Aile havuzunu oluşturan Aile Reisi olarak bu ailedeki unvanınızı seçiniz:", fontSize = 12.sp, color = TextSecondary)
+                    val partnerDisplay = partnerInfo.partnerDisplayName.ifBlank { "Aile ferdiniz" }
+                    Text(
+                        text = "Tebrikler, $partnerDisplay aile havuzunuza katıldı! 🟢\n\nLütfen ailenizdeki unvanınızı (rolünüzü) seçiniz:",
+                        fontSize = 12.sp,
+                        color = TextSecondary
+                    )
                     Spacer(modifier = Modifier.height(10.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -2603,7 +2605,7 @@ fun PartnerScreen(
                         childPrefs.edit()
                             .putBoolean("is_explicit_reis", true)
                             .putBoolean("family_pool_created", true)
-                            .putBoolean("family_pool_has_members", false)
+                            .putBoolean("family_pool_has_members", true)
                             .putBoolean("is_pool_member_joined", false)
                             .putBoolean("user_explicitly_disconnected", false)
                             .putString("user_role", "REIS")
@@ -2612,18 +2614,19 @@ fun PartnerScreen(
                             .putString("family_pool_code", partnerInfo.myInviteCode)
                             .apply()
                         viewModel.updateMyProfileName(normRole)
+                        viewModel.refreshPartnerData()
                         refreshTrigger++
                         showStartPoolRoleDialog = false
-                        viewModel.showStatusMessage("Aile havuzunuz $normRole olarak başlatıldı! 👑 Kodunuz: ${partnerInfo.myInviteCode}")
+                        viewModel.showStatusMessage("Aile unvanınız $normRole olarak belirlendi! 👑")
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary)
                 ) {
-                    Text("Havuzu Başlat")
+                    Text("Unvanımı Onayla")
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showStartPoolRoleDialog = false }) {
-                    Text("Vazgeç", color = TextSecondary)
+                    Text("Daha Sonra", color = TextSecondary)
                 }
             }
         )
