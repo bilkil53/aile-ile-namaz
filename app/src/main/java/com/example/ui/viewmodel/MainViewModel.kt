@@ -622,6 +622,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun updatePartnerProfileName(newName: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.updatePartnerName(newName)
+        }
+    }
+
     fun logoutUser() {
         viewModelScope.launch(Dispatchers.IO) {
             repository.logoutUser()

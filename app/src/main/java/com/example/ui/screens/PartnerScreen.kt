@@ -42,6 +42,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 @Composable
 fun PartnerScreen(
@@ -49,6 +50,7 @@ fun PartnerScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val settings by viewModel.settings.collectAsState()
     val partnerInfo by viewModel.partnerInfo.collectAsState()
     val todayPrayer by viewModel.todayPrayer.collectAsState()
@@ -292,14 +294,24 @@ fun PartnerScreen(
         mutableStateOf(isLoggedIn && partnerInfo.isMatched && partnerInfo.partnerInviteCode.isNotBlank())
     }
     var person2Name by remember(partnerInfo.partnerDisplayName, isJoinedMember, poolLeaderDisplayName, refreshTrigger) {
+        val fallback = if (isJoinedMember) poolLeaderDisplayName.ifBlank { "Aile Reisi" } else "Aile Ferdi"
+        val saved = childPrefs.getString("p2_name", null)
         val raw = if (isJoinedMember) {
-            if (partnerInfo.partnerDisplayName.isNotBlank() && !partnerInfo.partnerDisplayName.contains("@")) {
+            if (partnerInfo.partnerDisplayName.isNotBlank() && !partnerInfo.partnerDisplayName.contains("@") && partnerInfo.partnerDisplayName != "Kişi 2") {
                 partnerInfo.partnerDisplayName
+            } else if (!saved.isNullOrBlank() && saved != "Kişi 2") {
+                saved
             } else {
-                childPrefs.getString("p2_name", poolLeaderDisplayName) ?: poolLeaderDisplayName
+                fallback
             }
         } else {
-            partnerInfo.partnerDisplayName.ifBlank { childPrefs.getString("p2_name", "Kişi 2") ?: "Kişi 2" }
+            if (partnerInfo.partnerDisplayName.isNotBlank() && !partnerInfo.partnerDisplayName.contains("@") && partnerInfo.partnerDisplayName != "Kişi 2") {
+                partnerInfo.partnerDisplayName
+            } else if (!saved.isNullOrBlank() && saved != "Kişi 2") {
+                saved
+            } else {
+                "Aile Ferdi"
+            }
         }
         val clean = if (raw.contains("@")) raw.substringBefore("@") else raw
         val normalized = com.example.util.FamilyRoleHelper.normalizeRoleTitle(clean)
@@ -453,6 +465,8 @@ fun PartnerScreen(
     var showStartPoolRoleDialog by remember { mutableStateOf(false) }
     var leaderRoleInput by remember { mutableStateOf("Baba") }
     var leaderIconInput by remember { mutableStateOf("🧔") }
+    var memberRoleInput by remember { mutableStateOf("Eşi") }
+    var memberIconInput by remember { mutableStateOf("🧕") }
     var showArchitectureInfoDialog by remember { mutableStateOf(false) }
 
     // Karşı taraf havuza katıldığı anda Reis için otomatik unvan seçim penceresini aç
@@ -1143,8 +1157,18 @@ fun PartnerScreen(
                                                     viewModel.showStatusMessage("⚠️ Bu sizin kendi aile kodunuzdur. Başka bir aile ferdinizin kodunu girmelisiniz.")
                                                     return@Button
                                                 }
-                                                // Rol seçimini zorunlu kılmak için onay ve rol seçim ekranını aç
-                                                showJoinPoolDialog = true
+                                                val canonical = com.example.util.PartnerSyncManager.formatDisplayCode(raw)
+                                                familyPoolCode = canonical
+                                                childPrefs.edit()
+                                                    .putString("family_pool_code", canonical)
+                                                    .putBoolean("is_pool_member_joined", true)
+                                                    .putBoolean("is_explicit_reis", false)
+                                                    .putBoolean("user_explicitly_disconnected", false)
+                                                    .putString("user_role", "FERT")
+                                                    .apply()
+                                                viewModel.matchPartnerWithCode(canonical)
+                                                refreshTrigger++
+                                                viewModel.showStatusMessage("Katılım isteğiniz iletildi! Aile Reisinin ünvanları belirlemesi bekleniyor... ⏳")
                                             },
                                             colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
                                             contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
@@ -1303,13 +1327,23 @@ fun PartnerScreen(
                                     Column(modifier = Modifier.weight(1f)) {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             Text(text = person2Name, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                                            Spacer(modifier = Modifier.width(4.dp))
-                                            Text(
-                                                text = if (isPoolLeader) "• 👥 Aile Ferdi" else "• 👑 Aile Reisi",
-                                                fontSize = 10.sp,
-                                                color = if (isPoolLeader) Color(0xFF86EFAC) else Color(0xFFFEF3C7),
-                                                fontWeight = FontWeight.SemiBold
-                                            )
+                                            if (!person2Name.contains("Aile Reisi", ignoreCase = true) && !isPoolLeader) {
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text(
+                                                    text = "• 👑 Aile Reisi",
+                                                    fontSize = 10.sp,
+                                                    color = Color(0xFFFEF3C7),
+                                                    fontWeight = FontWeight.SemiBold
+                                                )
+                                            } else if (!person2Name.contains("Aile Ferdi", ignoreCase = true) && isPoolLeader) {
+                                                Spacer(modifier = Modifier.width(4.dp))
+                                                Text(
+                                                    text = "• 👥 Aile Ferdi",
+                                                    fontSize = 10.sp,
+                                                    color = Color(0xFF86EFAC),
+                                                    fontWeight = FontWeight.SemiBold
+                                                )
+                                            }
                                         }
                                         Text(
                                             text = "Aile Havuzunda Bağlı 🟢 • Aktif",
@@ -1346,7 +1380,7 @@ fun PartnerScreen(
                                                         viewModel.unmatchPartner()
                                                     }
                                                     refreshTrigger++
-                                                    viewModel.showStatusMessage("Kişi 2 havuzdan kaldırıldı.")
+                                                    viewModel.showStatusMessage("Aile ferdi havuzdan kaldırıldı.")
                                                 },
                                                 modifier = Modifier.size(28.dp)
                                             ) {
@@ -2556,7 +2590,7 @@ fun PartnerScreen(
         )
     }
 
-    // AİLE HAVUZU BAŞLATMA DİALOGU (AİLE REİSİ ROL SEÇİMİ)
+    // AİLE HAVUZU BAŞLATMA DİALOGU (AİLE REİSİ HEM KENDİ HEM ÜYE UNVANINI BELİRLER)
     if (showStartPoolRoleDialog) {
         val leaderRoles = listOf(
             "Baba" to "🧔",
@@ -2564,18 +2598,47 @@ fun PartnerScreen(
             "Dede" to "🧓",
             "Aile Reisi" to "👑"
         )
+        val memberRoles = listOf(
+            "Eşi" to "🧕",
+            "Kızı" to "👧",
+            "Oğlu" to "👦",
+            "Annesi" to "🧕",
+            "Babası" to "🧔",
+            "Torunu" to "🧒",
+            "Aile Ferdi" to "👥"
+        )
         AlertDialog(
             onDismissRequest = { showStartPoolRoleDialog = false },
-            title = { Text("🎉 Tebrikler, Aileniz Havuza Katıldı!", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary) },
+            title = {
+                Text(
+                    text = "🎉 Aileniz Havuza Katıldı!",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+            },
             text = {
-                Column {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 420.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
                     val partnerDisplay = partnerInfo.partnerDisplayName.ifBlank { "Aile ferdiniz" }
                     Text(
-                        text = "Tebrikler, $partnerDisplay aile havuzunuza katıldı! 🟢\n\nLütfen ailenizdeki unvanınızı (rolünüzü) seçiniz:",
+                        text = "Tebrikler, $partnerDisplay aile havuzunuza katıldı! 🟢\nLütfen havuzdaki karşılıklı unvanları belirleyiniz:",
                         fontSize = 12.sp,
                         color = TextSecondary
                     )
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = "1. Sizin Ailedeki Unvanınız (Havuz Sahibi):",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -2607,14 +2670,58 @@ fun PartnerScreen(
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Text(
+                        text = "2. Katılan Kişinin Unvanı (Havuzdaki Rolü):",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    memberRoles.chunked(3).forEach { rowRoles ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            rowRoles.forEach { (role, icon) ->
+                                val isSel = (memberRoleInput == role)
+                                Surface(
+                                    onClick = {
+                                        memberRoleInput = role
+                                        memberIconInput = icon
+                                    },
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (isSel) EmeraldPrimary else EmeraldContainer,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = "$icon $role",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSel) Color.White else TextPrimary,
+                                        modifier = Modifier.padding(vertical = 8.dp),
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                            if (rowRoles.size < 3) {
+                                repeat(3 - rowRoles.size) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                    }
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        val normRole = com.example.util.FamilyRoleHelper.normalizeRoleTitle(leaderRoleInput)
-                        val icon = leaderIconInput
-                        person1Icon = icon
+                        val normLeader = com.example.util.FamilyRoleHelper.normalizeRoleTitle(leaderRoleInput)
+                        val normMember = com.example.util.FamilyRoleHelper.normalizeRoleTitle(memberRoleInput)
+                        person1Icon = leaderIconInput
+                        person2Icon = memberIconInput
                         childPrefs.edit()
                             .putBoolean("is_explicit_reis", true)
                             .putBoolean("family_pool_created", true)
@@ -2622,19 +2729,39 @@ fun PartnerScreen(
                             .putBoolean("is_pool_member_joined", false)
                             .putBoolean("user_explicitly_disconnected", false)
                             .putString("user_role", "REIS")
-                            .putString("p1_name", normRole)
-                            .putString("p1_icon", icon)
+                            .putString("p1_name", normLeader)
+                            .putString("p1_icon", leaderIconInput)
+                            .putString("p2_name", normMember)
+                            .putString("p2_icon", memberIconInput)
+                            .putBoolean("has_p2", true)
+                            .putBoolean("has_p2_customized", true)
                             .putString("family_pool_code", partnerInfo.myInviteCode)
                             .apply()
-                        viewModel.updateMyProfileName(normRole)
+                        viewModel.updateMyProfileName(normLeader)
+                        viewModel.updatePartnerProfileName(normMember)
+
+                        val partnerCode = partnerInfo.partnerInviteCode
+                        if (partnerCode.isNotBlank()) {
+                            coroutineScope.launch {
+                                com.example.util.PartnerSyncManager.broadcastRoleAssignment(
+                                    targetCode = partnerCode,
+                                    myCode = partnerInfo.myInviteCode,
+                                    leaderRole = normLeader,
+                                    leaderIcon = leaderIconInput,
+                                    memberRole = normMember,
+                                    memberIcon = memberIconInput
+                                )
+                            }
+                        }
+
                         viewModel.refreshPartnerData()
                         refreshTrigger++
                         showStartPoolRoleDialog = false
-                        viewModel.showStatusMessage("Aile unvanınız $normRole olarak belirlendi! 👑")
+                        viewModel.showStatusMessage("Ünvanlar belirlendi: Siz $normLeader, aileniz $normMember olarak eşleşti! 👑")
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary)
                 ) {
-                    Text("Unvanımı Onayla")
+                    Text("Ünvanları Onayla & Başlat")
                 }
             },
             dismissButton = {

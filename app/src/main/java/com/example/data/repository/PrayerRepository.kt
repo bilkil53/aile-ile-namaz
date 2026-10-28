@@ -327,6 +327,48 @@ class PrayerRepository(
         }
 
         val childPrefs = context?.getSharedPreferences("family_child_prefs", android.content.Context.MODE_PRIVATE)
+
+        // 0. Check if Aile Reisi assigned roles for this member!
+        val roleAssignment = PartnerSyncManager.checkForIncomingRoleAssignment(current.myInviteCode)
+        if (roleAssignment != null && (current.partnerInviteCode.isBlank() || current.partnerDisplayName != roleAssignment.leaderRole)) {
+            val leaderRole = FamilyRoleHelper.normalizeRoleTitle(roleAssignment.leaderRole)
+            val memberRole = FamilyRoleHelper.normalizeRoleTitle(roleAssignment.memberRole)
+            val leaderIcon = roleAssignment.leaderIcon
+            val memberIcon = FamilyRoleHelper.getDefaultIconForRole(memberRole)
+
+            childPrefs?.edit()
+                ?.putString("p1_name", memberRole)
+                ?.putString("p1_icon", memberIcon)
+                ?.putString("p2_name", leaderRole)
+                ?.putString("p2_icon", leaderIcon)
+                ?.putBoolean("is_pool_member_joined", true)
+                ?.putBoolean("is_explicit_reis", false)
+                ?.putBoolean("user_explicitly_disconnected", false)
+                ?.putString("user_role", "FERT")
+                ?.putString("family_pool_code", roleAssignment.leaderCode)
+                ?.apply()
+
+            updateMyProfileName(memberRole)
+
+            val matched = current.copy(
+                isMatched = true,
+                partnerDisplayName = leaderRole,
+                partnerInviteCode = roleAssignment.leaderCode,
+                lastSyncTime = System.currentTimeMillis()
+            )
+            prayerDao.savePartnerInfo(matched)
+
+            if (context != null) {
+                NotificationHelper.showPartnerAlertNotification(
+                    context,
+                    leaderRole,
+                    "Tebrikler! Aile Reisi ($leaderRole) sizi '$memberRole' olarak aile havuzuna ekledi. 🟢"
+                )
+            }
+            broadcastCurrentStatusToPartner(todayDate = today)
+            return matched
+        }
+
         // 1. If NOT matched yet: check if someone has claimed my invite code!
         if (!current.isMatched) {
             // Re-publish my profile so spouse can see my name/email/icon upon entering code

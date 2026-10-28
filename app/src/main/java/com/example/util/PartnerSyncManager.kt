@@ -63,6 +63,15 @@ data class JoinApprovalInfo(
     val timestamp: Long = System.currentTimeMillis()
 )
 
+data class RoleAssignmentInfo(
+    val leaderCode: String,
+    val leaderRole: String,
+    val leaderIcon: String = "👑",
+    val memberRole: String = "Aile Ferdi",
+    val memberIcon: String = "👥",
+    val timestamp: Long = System.currentTimeMillis()
+)
+
 data class SyncResult(
     val latestStatus: PartnerPrayerUpdate?,
     val yesterdayStatus: PartnerPrayerUpdate? = null,
@@ -370,6 +379,104 @@ object PartnerSyncManager {
             }
         } catch (e: Exception) {
             Log.w(TAG, "Failed to check incoming match: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * Called by Aile Reisi to assign mutual roles (both leader's role and member's role).
+     * Broadcasts to pair topic and directly to the member's personal inbox.
+     */
+    suspend fun broadcastRoleAssignment(
+        targetCode: String,
+        myCode: String,
+        leaderRole: String,
+        leaderIcon: String,
+        memberRole: String,
+        memberIcon: String
+    ) = withContext(Dispatchers.IO) {
+        val cleanedTarget = normalizeCode(targetCode)
+        val cleanedMine = normalizeCode(myCode)
+        if (cleanedTarget.isBlank() || cleanedMine.isBlank()) return@withContext
+
+        val payload = JSONObject().apply {
+            put("type", "ROLE_ASSIGNMENT")
+            put("leaderCode", formatDisplayCode(myCode))
+            put("memberCode", formatDisplayCode(targetCode))
+            put("leaderRole", leaderRole)
+            put("leaderIcon", leaderIcon)
+            put("memberRole", memberRole)
+            put("memberIcon", memberIcon)
+            put("timestamp", System.currentTimeMillis())
+        }.toString()
+
+        try {
+            val pairTopic = getCanonicalPairTopic(cleanedMine, cleanedTarget)
+            val req1 = Request.Builder()
+                .url("$BASE_URL/$pairTopic")
+                .post(payload.toRequestBody(JSON_MEDIA_TYPE))
+                .build()
+            httpClient.newCall(req1).execute().close()
+        } catch (_: Exception) { }
+
+        try {
+            val req2 = Request.Builder()
+                .url("$BASE_URL/ain_inv_$cleanedTarget")
+                .post(payload.toRequestBody(JSON_MEDIA_TYPE))
+                .build()
+            httpClient.newCall(req2).execute().close()
+        } catch (_: Exception) { }
+    }
+
+    suspend fun checkForIncomingRoleAssignment(myCode: String): RoleAssignmentInfo? = withContext(Dispatchers.IO) {
+        val cleaned = normalizeCode(myCode)
+        if (cleaned.isBlank()) return@withContext null
+
+        try {
+            val request = Request.Builder()
+                .url("$BASE_URL/ain_inv_$cleaned/json?poll=1")
+                .get()
+                .build()
+
+            httpClient.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) return@withContext null
+                val body = response.body?.string() ?: return@withContext null
+
+                var lastAssignment: RoleAssignmentInfo? = null
+                val now = System.currentTimeMillis()
+                BufferedReader(StringReader(body)).useLines { lines ->
+                    for (line in lines) {
+                        try {
+                            val obj = JSONObject(line)
+                            if (obj.optString("event") == "message") {
+                                val msgStr = obj.optString("message", "")
+                                val msgJson = JSONObject(msgStr)
+                                if (msgJson.optString("type") == "ROLE_ASSIGNMENT") {
+                                    val leaderCode = msgJson.optString("leaderCode", "")
+                                    val leaderRole = msgJson.optString("leaderRole", "Aile Reisi")
+                                    val leaderIcon = msgJson.optString("leaderIcon", "👑")
+                                    val memberRole = msgJson.optString("memberRole", "Aile Ferdi")
+                                    val memberIcon = msgJson.optString("memberIcon", "👥")
+                                    val ts = msgJson.optLong("timestamp", now)
+                                    if (leaderCode.isNotBlank() && (now - ts) < 30 * 60 * 1000L) {
+                                        lastAssignment = RoleAssignmentInfo(
+                                            leaderCode = formatDisplayCode(leaderCode),
+                                            leaderRole = leaderRole,
+                                            leaderIcon = leaderIcon,
+                                            memberRole = memberRole,
+                                            memberIcon = memberIcon,
+                                            timestamp = ts
+                                        )
+                                    }
+                                }
+                            }
+                        } catch (_: Exception) { }
+                    }
+                }
+                lastAssignment
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Failed to check role assignment: ${e.message}")
             null
         }
     }
