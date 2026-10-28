@@ -27,6 +27,41 @@ object FamilyRoleHelper {
         }
     }
 
+    fun isRoleName(s: String): Boolean {
+        val l = s.trim().lowercase(TR_LOCALE)
+        return l == "baba" || l == "babası" || l == "aile reisi" || l == "reis" || l == "eşi" ||
+               l == "kişi 1" || l.startsWith("kişi") || l == "oğlu" || l == "kızı" || l == "annesi" ||
+               l == "dede" || l == "nine" || l == "kardeşi" || l == "torunu"
+    }
+
+    /**
+     * Resolves the single, consistent display name for the user across the entire application
+     * (Bugün, Kaza, Aile Havuzu, Rapor).
+     * If there are no other members in the family pool, no role is assigned; user sees their
+     * personal nickname or email prefix (e.g. e.bilkil5391), and NEVER "Kişi 1".
+     */
+    fun resolveUserDisplayName(
+        userName: String,
+        userEmail: String,
+        hasPoolMembers: Boolean = false,
+        savedNick: String? = null
+    ): String {
+        // 1. Saved nickname if not a role (or if pool has members)
+        if (!savedNick.isNullOrBlank() && !savedNick.contains("@") && savedNick != "Mümin" && (hasPoolMembers || !isRoleName(savedNick))) {
+            return savedNick.trim()
+        }
+        // 2. Settings user name if not a role (or if pool has members)
+        if (userName.isNotBlank() && !userName.contains("@") && userName != "Mümin" && (hasPoolMembers || !isRoleName(userName))) {
+            return userName.trim()
+        }
+        // 3. Email username (e.g. e.bilkil5391)
+        if (userEmail.isNotBlank()) {
+            val prefix = userEmail.substringBefore("@").trim()
+            if (prefix.isNotBlank()) return prefix
+        }
+        return "Siz"
+    }
+
     /**
      * Converts a role or name into 2nd-person possessive address for the Aile Reisi:
      * - "Oğlu" / "Oğlum" -> "Oğlun"

@@ -896,6 +896,27 @@ class PrayerRepository(
         }
     }
 
+    suspend fun sanitizeUserRolesIfEmptyPool() {
+        val current = prayerDao.getSettings().firstOrNull() ?: return
+        val partner = prayerDao.getPartnerInfo().firstOrNull() ?: return
+        val childPrefs = context?.getSharedPreferences("family_child_prefs", android.content.Context.MODE_PRIVATE)
+        val isJoined = childPrefs?.getBoolean("is_pool_member_joined", false) ?: false
+        val hasPoolMembers = partner.isMatched || isJoined
+
+        if (!hasPoolMembers) {
+            val emailPrefix = if (current.userEmail.isNotBlank()) current.userEmail.substringBefore("@") else ""
+            val sName = current.userName.trim().lowercase(Locale.forLanguageTag("tr"))
+            if (sName.startsWith("kişi") || sName == "baba" || sName == "aile reisi" || sName == "reis" || sName == "eşi" || sName == "mümin") {
+                prayerDao.saveSettings(current.copy(userName = emailPrefix))
+            }
+            val p1 = childPrefs?.getString("p1_name", "") ?: ""
+            val p1Lower = p1.trim().lowercase(Locale.forLanguageTag("tr"))
+            if (p1Lower.startsWith("kişi") || p1Lower == "baba" || p1Lower == "aile reisi" || p1Lower == "reis" || p1Lower == "eşi") {
+                childPrefs?.edit()?.remove("p1_name")?.remove("p1_icon")?.remove("user_role")?.remove("user_explicit_role")?.apply()
+            }
+        }
+    }
+
     suspend fun updateMyProfileName(newName: String) {
         val current = prayerDao.getSettings().firstOrNull() ?: AppSettingsEntity()
         val updated = current.copy(

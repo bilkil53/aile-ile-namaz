@@ -14,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -288,39 +289,60 @@ fun AppUpdateDialog(
                     Column(modifier = Modifier.fillMaxWidth()) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "Güncelleme indiriliyor...",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = textPrimaryColor
-                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(14.dp),
+                                    strokeWidth = 2.dp,
+                                    color = if (isDark) Color(0xFF34D399) else EmeraldPrimary
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Güncelleniyor...",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = textPrimaryColor
+                                )
+                            }
                             Text(
                                 text = "%$percent",
-                                fontSize = 12.sp,
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = if (isDark) Color(0xFF34D399) else EmeraldPrimary
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         LinearProgressIndicator(
                             progress = { progress },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(8.dp),
+                                .height(8.dp)
+                                .clip(RoundedCornerShape(4.dp)),
                             color = if (isDark) Color(0xFF34D399) else EmeraldPrimary,
                             trackColor = EmeraldPrimary.copy(alpha = if (isDark) 0.3f else 0.2f),
                         )
 
                         Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "İndirme tamamlandığında doğrudan kurulum ekranı açılacaktır.",
-                            fontSize = 10.sp,
-                            color = textSecondaryColor
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Paket indiriliyor, lütfen bekleyin",
+                                fontSize = 11.sp,
+                                color = textSecondaryColor
+                            )
+                            Text(
+                                text = "%$percent Tamamlandı",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (isDark) Color(0xFF34D399) else EmeraldPrimary
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.height(10.dp))
                 } else if (errorMessage != null) {
@@ -366,17 +388,41 @@ fun AppUpdateDialog(
                             Text("Şimdi Güncelle", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
                         }
                     } else {
-                        // While downloading: show browser fallback option
-                        OutlinedButton(
-                            onClick = {
-                                AppUpdateManager.openInBrowser(context, updateInfo.apkDownloadUrl)
-                            },
-                            shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(Icons.Filled.OpenInBrowser, contentDescription = null, modifier = Modifier.size(15.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("Tarayıcıda İndir", fontSize = 12.sp)
+                        val progress = downloadProgress ?: 0f
+                        val percent = (progress * 100).toInt()
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Button(
+                                onClick = {},
+                                enabled = false,
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    disabledContainerColor = EmeraldPrimary.copy(alpha = 0.85f),
+                                    disabledContentColor = Color.White
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(44.dp)
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp,
+                                    color = Color.White
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Güncelleniyor... %$percent", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            OutlinedButton(
+                                onClick = {
+                                    AppUpdateManager.openInBrowser(context, updateInfo.apkDownloadUrl)
+                                },
+                                shape = RoundedCornerShape(10.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(Icons.Filled.OpenInBrowser, contentDescription = null, modifier = Modifier.size(15.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Tarayıcıda İndir", fontSize = 12.sp)
+                            }
                         }
                     }
                 }

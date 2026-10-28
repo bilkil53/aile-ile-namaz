@@ -124,6 +124,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch(Dispatchers.IO) {
             repository.ensureUniqueInviteCode()
             repository.clearGuestDataIfNotLoggedIn()
+            repository.sanitizeUserRolesIfEmptyPool()
         }
 
         settings = repository.getSettings()

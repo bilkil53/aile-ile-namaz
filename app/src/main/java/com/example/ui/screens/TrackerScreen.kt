@@ -54,9 +54,6 @@ fun TrackerScreen(
     val isViewingToday by viewModel.isViewingToday.collectAsState()
     val displayDateTitle by viewModel.displayDateTitle.collectAsState()
 
-    var showCityDialog by remember { mutableStateOf(false) }
-    var citySearchQuery by remember { mutableStateOf("") }
-
     val hasLocationPermission = remember(context, isUpdatingLocation) {
         androidx.core.content.ContextCompat.checkSelfPermission(
             context,
@@ -208,12 +205,14 @@ fun TrackerScreen(
                         color = EmeraldPrimary,
                         letterSpacing = 0.8.sp
                     )
-                    val isRoleName = { s: String ->
-                        val l = s.trim().lowercase(java.util.Locale.forLanguageTag("tr"))
-                        l == "baba" || l == "babası" || l == "aile reisi" || l == "reis" || l == "eşi"
-                    }
-                    val greetingTitle = if (settings.isLoggedIn && settings.userName.isNotBlank() && !settings.userName.contains("@") && !isRoleName(settings.userName)) {
-                        "Selamün aleyküm,\n${settings.userName}"
+                    val resolvedName = com.example.util.FamilyRoleHelper.resolveUserDisplayName(
+                        userName = settings.userName,
+                        userEmail = settings.userEmail,
+                        hasPoolMembers = partnerInfo.isMatched,
+                        savedNick = null
+                    )
+                    val greetingTitle = if (settings.isLoggedIn) {
+                        "Selamün aleyküm,\n$resolvedName"
                     } else {
                         "Selamün aleyküm"
                     }
@@ -229,7 +228,7 @@ fun TrackerScreen(
                         modifier = Modifier
                             .padding(top = 2.dp)
                             .clip(RoundedCornerShape(6.dp))
-                            .clickable { showCityDialog = true }
+                            .clickable { viewModel.updateLocationGps() }
                     ) {
                         Icon(
                             Icons.Outlined.CalendarToday,
@@ -239,50 +238,27 @@ fun TrackerScreen(
                         )
                         Spacer(modifier = Modifier.width(5.dp))
                         Text(
-                            text = "${viewModel.getDisplayDateTitle()} · ${if (isUpdatingLocation) "GPS aranıyor..." else "${settings.cityName} (Diyanet) ▾"}",
+                            text = "${viewModel.getDisplayDateTitle()} · ${if (isUpdatingLocation) "GPS güncelleniyor..." else "${settings.cityName} (Diyanet GPS)"}",
                             fontSize = 12.sp,
                             color = TextSecondary
                         )
                     }
                 }
 
-                // Location action buttons: City Select & GPS
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                // Direct GPS Update Button
+                Surface(
+                    onClick = { viewModel.updateLocationGps() },
+                    shape = CircleShape,
+                    color = EmeraldContainer,
+                    modifier = Modifier.size(42.dp)
                 ) {
-                    // City Select Dialog Button
-                    Surface(
-                        onClick = { showCityDialog = true },
-                        shape = CircleShape,
-                        color = EmeraldContainer,
-                        modifier = Modifier.size(42.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Filled.LocationCity,
-                                contentDescription = "Şehir Seç",
-                                tint = EmeraldPrimary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-
-                    // Direct GPS Update Button
-                    Surface(
-                        onClick = { viewModel.updateLocationGps() },
-                        shape = CircleShape,
-                        color = EmeraldContainer,
-                        modifier = Modifier.size(42.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                Icons.Filled.MyLocation,
-                                contentDescription = "GPS ile Güncelle",
-                                tint = EmeraldPrimary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Filled.MyLocation,
+                            contentDescription = "GPS ile Güncelle",
+                            tint = EmeraldPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
             }
@@ -521,129 +497,7 @@ fun TrackerScreen(
         }
     }
 
-    if (showCityDialog) {
-        val filteredCities = remember(citySearchQuery) {
-            if (citySearchQuery.isBlank()) {
-                com.example.data.util.PrayerCalculator.TURKEY_CITIES
-            } else {
-                val q = citySearchQuery.trim().lowercase(java.util.Locale.forLanguageTag("tr"))
-                com.example.data.util.PrayerCalculator.TURKEY_CITIES.filter {
-                    it.name.lowercase(java.util.Locale.forLanguageTag("tr")).contains(q)
-                }
-            }
-        }
 
-        AlertDialog(
-            onDismissRequest = {
-                showCityDialog = false
-                citySearchQuery = ""
-            },
-            title = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = "Şehir Seç (Diyanet Vakitleri)",
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-                }
-            },
-            text = {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        text = "Bulunduğunuz ili seçerek Diyanet namaz vakitlerini ve 10 dk öncesi hatırlatma bildirimlerini anında senkronize edebilirsiniz.",
-                        fontSize = 12.sp,
-                        color = TextSecondary,
-                        modifier = Modifier.padding(bottom = 10.dp)
-                    )
-
-                    OutlinedTextField(
-                        value = citySearchQuery,
-                        onValueChange = { citySearchQuery = it },
-                        placeholder = { Text("Şehir ara (Örn: Rize, Ankara)...", fontSize = 13.sp) },
-                        leadingIcon = {
-                            Icon(Icons.Filled.Search, contentDescription = null, tint = EmeraldPrimary, modifier = Modifier.size(18.dp))
-                        },
-                        trailingIcon = {
-                            if (citySearchQuery.isNotEmpty()) {
-                                IconButton(onClick = { citySearchQuery = "" }) {
-                                    Icon(Icons.Filled.Close, contentDescription = "Temizle", modifier = Modifier.size(16.dp))
-                                }
-                            }
-                        },
-                        singleLine = true,
-                        shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)
-                    )
-
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 300.dp)
-                    ) {
-                        items(filteredCities) { city ->
-                            val isSelected = city.name.equals(settings.cityName, ignoreCase = true)
-                            Surface(
-                                onClick = {
-                                    viewModel.selectCity(city)
-                                    showCityDialog = false
-                                    citySearchQuery = ""
-                                },
-                                shape = RoundedCornerShape(8.dp),
-                                color = if (isSelected) EmeraldContainer else Color.Transparent,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 2.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(text = "📍", fontSize = 16.sp)
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = city.name,
-                                            fontSize = 14.sp,
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                            color = if (isSelected) EmeraldPrimary else TextPrimary
-                                        )
-                                    }
-                                    if (isSelected) {
-                                        Text(
-                                            text = "Seçili ✓",
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = EmeraldPrimary
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {},
-            dismissButton = {
-                TextButton(onClick = {
-                    showCityDialog = false
-                    citySearchQuery = ""
-                }) {
-                    Text("Kapat", color = EmeraldPrimary, fontWeight = FontWeight.Bold)
-                }
-            },
-            shape = RoundedCornerShape(20.dp)
-        )
-    }
 }
 
 private fun getNextStatus(current: String): String {

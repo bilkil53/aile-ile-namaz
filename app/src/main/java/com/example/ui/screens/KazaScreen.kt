@@ -65,10 +65,24 @@ fun KazaScreen(
         }
         prefs
     }
-    val p1Icon = remember { childPrefs.getString("p1_icon", "🧔") ?: "🧔" }
+    val p1Icon = remember(partnerInfo.isMatched) {
+        if (partnerInfo.isMatched) (childPrefs.getString("p1_icon", "🧔") ?: "🧔") else "👤"
+    }
+    val emailKey = remember(settings.userEmail) { settings.userEmail.trim().lowercase() }
+    val savedNick = remember(emailKey) {
+        childPrefs.getString("user_nickname_$emailKey", null) ?: childPrefs.getString("p1_name", null)
+    }
+    val myDisplayName = remember(settings.userName, settings.userEmail, partnerInfo.isMatched, savedNick) {
+        com.example.util.FamilyRoleHelper.resolveUserDisplayName(
+            userName = settings.userName,
+            userEmail = settings.userEmail,
+            hasPoolMembers = partnerInfo.isMatched,
+            savedNick = savedNick
+        )
+    }
     val hasP2 = remember(partnerInfo.isMatched) { partnerInfo.isMatched || childPrefs.getBoolean("has_p2", false) }
     val p2Name = remember(partnerInfo.partnerDisplayName) {
-        val def = partnerInfo.partnerDisplayName.ifBlank { "Kişi 2" }
+        val def = partnerInfo.partnerDisplayName.ifBlank { "Aile Ferdi" }
         childPrefs.getString("p2_name", def) ?: def
     }
     val p2Icon = remember { childPrefs.getString("p2_icon", "🧕") ?: "🧕" }
@@ -212,7 +226,7 @@ fun KazaScreen(
                         // 1. Kişi (Siz)
                         FamilyMemberKazaRow(
                             icon = p1Icon,
-                            name = if (settings.userName.isNotBlank() && !settings.userName.contains("@")) settings.userName else "Kişi 1 (Siz)",
+                            name = "$myDisplayName (Siz)",
                             owed = totalOwed,
                             completed = totalCompleted,
                             isMe = true

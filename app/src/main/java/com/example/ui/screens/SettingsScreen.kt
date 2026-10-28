@@ -237,10 +237,11 @@ fun SettingsScreen(
                                         val percent = ((downloadProgress ?: 0f) * 100).toInt()
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Text("APK İndiriliyor...", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF92400E))
-                                            Text("%$percent", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFFB45309))
+                                            Text("Güncelleniyor...", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF92400E))
+                                            Text("%$percent", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFFB45309))
                                         }
                                         Spacer(modifier = Modifier.height(4.dp))
                                         LinearProgressIndicator(

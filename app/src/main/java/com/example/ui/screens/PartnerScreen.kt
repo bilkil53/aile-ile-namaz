@@ -177,32 +177,18 @@ fun PartnerScreen(
     // Kişi 1 Takma Adı (Giriş yapılmadığında daima 'Kişi 1', havuza henüz başka fert dahil değilken test rolü ('Baba' vb.) gösterilmez)
     val p1DisplayName = remember(isLoggedIn, settings.userName, settings.userEmail, partnerInfo.isMatched, isPoolMemberJoined, refreshTrigger) {
         if (!isLoggedIn) {
-            "Kişi 1"
+            "Siz"
         } else {
             val emailKey = settings.userEmail.trim().lowercase()
             val savedNick = childPrefs.getString("user_nickname_$emailKey", null)
                 ?: childPrefs.getString("p1_name", null)
             val hasPoolMembers = partnerInfo.isMatched || isPoolMemberJoined
-
-            val isRoleName = { s: String ->
-                val l = s.trim().lowercase(java.util.Locale.forLanguageTag("tr"))
-                l == "baba" || l == "babası" || l == "aile reisi" || l == "reis" || l == "eşi" || l == "kişi 1"
-            }
-
-            val raw = when {
-                !hasPoolMembers && !savedNick.isNullOrBlank() && isRoleName(savedNick) -> {
-                    if (settings.userName.isNotBlank() && !isRoleName(settings.userName) && !settings.userName.contains("@") && settings.userName != "Mümin") {
-                        settings.userName
-                    } else if (settings.userEmail.isNotBlank()) {
-                        settings.userEmail.substringBefore("@")
-                    } else "Siz"
-                }
-                !savedNick.isNullOrBlank() && !savedNick.contains("@") && savedNick != "Mümin" && (hasPoolMembers || !isRoleName(savedNick)) -> savedNick
-                settings.userName.isNotBlank() && !settings.userName.contains("@") && settings.userName != "Mümin" && (hasPoolMembers || !isRoleName(settings.userName)) -> settings.userName
-                settings.userEmail.isNotBlank() -> settings.userEmail.substringBefore("@")
-                else -> "Siz"
-            }
-            if (raw.contains("@")) raw.substringBefore("@") else raw
+            com.example.util.FamilyRoleHelper.resolveUserDisplayName(
+                userName = settings.userName,
+                userEmail = settings.userEmail,
+                hasPoolMembers = hasPoolMembers,
+                savedNick = savedNick
+            )
         }
     }
 
