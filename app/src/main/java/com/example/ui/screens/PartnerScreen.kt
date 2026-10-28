@@ -89,16 +89,23 @@ fun PartnerScreen(
                 .apply()
         }
 
-        // Havuzda fiilen başka bir fert yoksa, geçmiş testlerden kalan "Baba", "Aile Reisi" vb. rol ve reislik bilgilerini temizle
-        if (!partnerInfo.isMatched && !prefs.getBoolean("is_pool_member_joined", false)) {
+        // Havuzda fiilen başka bir fert yoksa, geçmiş testlerden kalan "Baba", "Aile Reisi", "Eşi" vb. rol ve reislik bilgilerini temizle
+        val isRealMatched = partnerInfo.isMatched && partnerInfo.partnerInviteCode.isNotBlank()
+        if (!isRealMatched) {
             val p1 = prefs.getString("p1_name", "") ?: ""
             val p1Lower = p1.trim().lowercase(java.util.Locale.forLanguageTag("tr"))
-            if (p1Lower == "baba" || p1Lower == "babası" || p1Lower == "aile reisi" || p1Lower == "reis" || p1Lower == "eşi") {
+            if (p1Lower == "baba" || p1Lower == "babası" || p1Lower == "aile reisi" || p1Lower == "reis" || p1Lower == "eşi" || p1Lower.startsWith("kişi")) {
                 prefs.edit().remove("p1_name").remove("p1_icon").apply()
             }
             prefs.edit()
                 .remove("user_role")
                 .remove("user_explicit_role")
+                .remove("p2_name")
+                .remove("p2_icon")
+                .remove("has_p2")
+                .remove("has_p2_customized")
+                .remove("is_pool_member_joined")
+                .remove("family_pool_code")
                 .putBoolean("is_explicit_reis", false)
                 .putBoolean("family_pool_created", false)
                 .putBoolean("family_pool_has_members", false)
@@ -175,14 +182,14 @@ fun PartnerScreen(
     }
 
     // Kişi 1 Takma Adı (Giriş yapılmadığında daima 'Kişi 1', havuza henüz başka fert dahil değilken test rolü ('Baba' vb.) gösterilmez)
-    val p1DisplayName = remember(isLoggedIn, settings.userName, settings.userEmail, partnerInfo.isMatched, isPoolMemberJoined, refreshTrigger) {
+    val p1DisplayName = remember(isLoggedIn, settings.userName, settings.userEmail, partnerInfo.isMatched, partnerInfo.partnerInviteCode, refreshTrigger) {
         if (!isLoggedIn) {
             "Siz"
         } else {
             val emailKey = settings.userEmail.trim().lowercase()
             val savedNick = childPrefs.getString("user_nickname_$emailKey", null)
                 ?: childPrefs.getString("p1_name", null)
-            val hasPoolMembers = partnerInfo.isMatched || isPoolMemberJoined
+            val hasPoolMembers = partnerInfo.isMatched && partnerInfo.partnerInviteCode.isNotBlank()
             com.example.util.FamilyRoleHelper.resolveUserDisplayName(
                 userName = settings.userName,
                 userEmail = settings.userEmail,
@@ -192,12 +199,12 @@ fun PartnerScreen(
         }
     }
 
-    // Havuzda başka fert yokken geçmiş test rolü olan "Baba" vb. settings ve hafızadan temizlenir
-    LaunchedEffect(partnerInfo.isMatched, isPoolMemberJoined, settings.userName) {
-        val hasMembers = partnerInfo.isMatched || isPoolMemberJoined
+    // Havuzda başka fert yokken geçmiş test rolü olan "Baba", "Eşi" vb. settings ve hafızadan temizlenir
+    LaunchedEffect(partnerInfo.isMatched, partnerInfo.partnerInviteCode, settings.userName) {
+        val hasMembers = partnerInfo.isMatched && partnerInfo.partnerInviteCode.isNotBlank()
         if (!hasMembers) {
             val sName = settings.userName.trim().lowercase(java.util.Locale.forLanguageTag("tr"))
-            if (sName == "baba" || sName == "babası" || sName == "aile reisi" || sName == "reis" || sName == "eşi") {
+            if (sName == "baba" || sName == "babası" || sName == "aile reisi" || sName == "reis" || sName == "eşi" || sName.startsWith("kişi")) {
                 val realName = if (settings.userEmail.isNotBlank()) settings.userEmail.substringBefore("@") else ""
                 viewModel.updateMyProfileName(realName)
                 refreshTrigger++
@@ -275,13 +282,14 @@ fun PartnerScreen(
     }
 
     // Kişi 1 (Siz / Kendiniz - Havuzda kimse yokken nötr 👤 ikonu)
-    var person1Icon by remember(isLoggedIn, partnerInfo.isMatched, isJoinedMember, refreshTrigger) {
-        mutableStateOf(if (isLoggedIn && (partnerInfo.isMatched || isJoinedMember)) (childPrefs.getString("p1_icon", "🧔") ?: "🧔") else "👤")
+    var person1Icon by remember(isLoggedIn, partnerInfo.isMatched, partnerInfo.partnerInviteCode, refreshTrigger) {
+        val hasReal = isLoggedIn && partnerInfo.isMatched && partnerInfo.partnerInviteCode.isNotBlank()
+        mutableStateOf(if (hasReal) (childPrefs.getString("p1_icon", "🧔") ?: "🧔") else "👤")
     }
 
-    // Kişi 2 (Yalnızca giriş yapılmışsa ve eşleşme/katılım varsa aktiftir; varsayılan kapalı)
-    var hasPerson2 by remember(isLoggedIn, partnerInfo.isMatched, isJoinedMember, refreshTrigger) {
-        mutableStateOf(isLoggedIn && (partnerInfo.isMatched || isJoinedMember || childPrefs.getBoolean("has_p2_customized", false)))
+    // Kişi 2 (Yalnızca giriş yapılmışsa ve gerçek eşleşme varsa aktiftir; varsayılan kesinlikle kapalı)
+    var hasPerson2 by remember(isLoggedIn, partnerInfo.isMatched, partnerInfo.partnerInviteCode, refreshTrigger) {
+        mutableStateOf(isLoggedIn && partnerInfo.isMatched && partnerInfo.partnerInviteCode.isNotBlank())
     }
     var person2Name by remember(partnerInfo.partnerDisplayName, isJoinedMember, poolLeaderDisplayName, refreshTrigger) {
         val raw = if (isJoinedMember) {
@@ -1278,8 +1286,8 @@ fun PartnerScreen(
                             }
                         }
 
-                        // Kişi 2 (Sadece giriş yapılmışsa ve eşleşme/katılım varsa görünür)
-                        if (isLoggedIn && (partnerInfo.isMatched || hasPerson2 || isJoinedMember)) {
+                        // Kişi 2 (Sadece giriş yapılmışsa ve gerçek eşleşme varsa görünür)
+                        if (isLoggedIn && partnerInfo.isMatched && partnerInfo.partnerInviteCode.isNotBlank()) {
                             Surface(
                                 color = Color.White.copy(alpha = 0.15f),
                                 shape = RoundedCornerShape(10.dp),
@@ -1297,14 +1305,14 @@ fun PartnerScreen(
                                             Text(text = person2Name, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
                                             Spacer(modifier = Modifier.width(4.dp))
                                             Text(
-                                                text = if (isPoolLeader) "• 👥 Aile Ferdi" else if (isJoinedMember) "• 👑 Aile Reisi" else "• Kişi 2",
+                                                text = if (isPoolLeader) "• 👥 Aile Ferdi" else "• 👑 Aile Reisi",
                                                 fontSize = 10.sp,
                                                 color = if (isPoolLeader) Color(0xFF86EFAC) else Color(0xFFFEF3C7),
                                                 fontWeight = FontWeight.SemiBold
                                             )
                                         }
                                         Text(
-                                            text = if (partnerInfo.isMatched || isJoinedMember) "Aile Havuzunda Bağlı 🟢 • Aktif" else "Davet Bekleniyor ⏳ • Kod Gönderildi",
+                                            text = "Aile Havuzunda Bağlı 🟢 • Aktif",
                                             fontSize = 10.sp,
                                             color = if (partnerInfo.isMatched || isJoinedMember) Color(0xFF86EFAC) else Color(0xFFFDE68A),
                                             fontWeight = FontWeight.SemiBold
@@ -2510,14 +2518,19 @@ fun PartnerScreen(
                             .remove("is_pool_member_joined")
                             .remove("family_pool_code")
                             .remove("is_explicit_reis")
+                            .remove("p1_name")
+                            .remove("p1_icon")
                             .remove("p2_name")
                             .remove("p2_icon")
                             .remove("has_p2")
                             .remove("has_p2_customized")
-                            .putString("user_role", "FERT")
+                            .remove("user_role")
+                            .remove("user_explicit_role")
                             .apply()
                         familyPoolCode = ""
                         hasPerson2 = false
+                        val realNick = if (settings.userEmail.isNotBlank()) settings.userEmail.substringBefore("@") else ""
+                        viewModel.updateMyProfileName(realNick)
                         viewModel.leaveFamilyPool()
                         refreshTrigger++
                         showLeavePoolDialog = false

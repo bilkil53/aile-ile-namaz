@@ -670,10 +670,24 @@ class PrayerRepository(
             ?.remove("is_pool_member_joined")
             ?.remove("family_pool_code")
             ?.remove("is_explicit_reis")
+            ?.remove("p1_name")
+            ?.remove("p1_icon")
             ?.remove("p2_name")
             ?.remove("p2_icon")
-            ?.putString("user_role", "FERT")
+            ?.remove("has_p2")
+            ?.remove("has_p2_customized")
+            ?.remove("user_role")
+            ?.remove("user_explicit_role")
             ?.apply()
+
+        val settings = prayerDao.getSettings().firstOrNull()
+        if (settings != null) {
+            val emailPrefix = if (settings.userEmail.isNotBlank()) settings.userEmail.substringBefore("@") else ""
+            val sName = settings.userName.trim().lowercase(Locale.forLanguageTag("tr"))
+            if (sName == "baba" || sName == "babası" || sName == "aile reisi" || sName == "reis" || sName == "eşi" || sName.startsWith("kişi")) {
+                prayerDao.saveSettings(settings.copy(userName = emailPrefix))
+            }
+        }
 
         val current = prayerDao.getPartnerInfo().firstOrNull() ?: PartnerInfoEntity()
         val effectivePool = if (poolCode.isNotBlank()) poolCode else current.partnerInviteCode
@@ -900,19 +914,41 @@ class PrayerRepository(
         val current = prayerDao.getSettings().firstOrNull() ?: return
         val partner = prayerDao.getPartnerInfo().firstOrNull() ?: return
         val childPrefs = context?.getSharedPreferences("family_child_prefs", android.content.Context.MODE_PRIVATE)
-        val isJoined = childPrefs?.getBoolean("is_pool_member_joined", false) ?: false
-        val hasPoolMembers = partner.isMatched || isJoined
 
-        if (!hasPoolMembers) {
+        // Fiilen eşleşmiş ve kodu olan bir partner yoksa havuz boştur!
+        val hasRealMatchedPartner = partner.isMatched && partner.partnerInviteCode.isNotBlank()
+
+        if (!hasRealMatchedPartner) {
             val emailPrefix = if (current.userEmail.isNotBlank()) current.userEmail.substringBefore("@") else ""
             val sName = current.userName.trim().lowercase(Locale.forLanguageTag("tr"))
-            if (sName.startsWith("kişi") || sName == "baba" || sName == "aile reisi" || sName == "reis" || sName == "eşi" || sName == "mümin") {
+            if (sName.startsWith("kişi") || sName == "baba" || sName == "babası" || sName == "aile reisi" || sName == "reis" || sName == "eşi" || sName == "mümin") {
                 prayerDao.saveSettings(current.copy(userName = emailPrefix))
             }
-            val p1 = childPrefs?.getString("p1_name", "") ?: ""
-            val p1Lower = p1.trim().lowercase(Locale.forLanguageTag("tr"))
-            if (p1Lower.startsWith("kişi") || p1Lower == "baba" || p1Lower == "aile reisi" || p1Lower == "reis" || p1Lower == "eşi") {
-                childPrefs?.edit()?.remove("p1_name")?.remove("p1_icon")?.remove("user_role")?.remove("user_explicit_role")?.apply()
+            childPrefs?.edit()
+                ?.remove("p1_name")
+                ?.remove("p1_icon")
+                ?.remove("p2_name")
+                ?.remove("p2_icon")
+                ?.remove("has_p2")
+                ?.remove("has_p2_customized")
+                ?.remove("is_pool_member_joined")
+                ?.remove("family_pool_code")
+                ?.remove("user_role")
+                ?.remove("user_explicit_role")
+                ?.putBoolean("is_explicit_reis", false)
+                ?.putBoolean("family_pool_created", false)
+                ?.putBoolean("family_pool_has_members", false)
+                ?.apply()
+
+            if (partner.isMatched && partner.partnerInviteCode.isBlank()) {
+                prayerDao.savePartnerInfo(
+                    partner.copy(
+                        isMatched = false,
+                        partnerDisplayName = "",
+                        partnerEmail = "",
+                        partnerInviteCode = ""
+                    )
+                )
             }
         }
     }
