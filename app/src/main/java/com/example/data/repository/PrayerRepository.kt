@@ -342,6 +342,8 @@ class PrayerRepository(
                 ?.putString("p2_name", leaderRole)
                 ?.putString("p2_icon", leaderIcon)
                 ?.putBoolean("is_pool_member_joined", true)
+                ?.remove("pending_pool_code")
+                ?.remove("pending_join_request_time")
                 ?.putBoolean("is_explicit_reis", false)
                 ?.putBoolean("user_explicitly_disconnected", false)
                 ?.putString("user_role", "FERT")
@@ -703,12 +705,80 @@ class PrayerRepository(
         return true
     }
 
+    suspend fun requestJoinFamilyPool(code: String): Boolean {
+        var current = prayerDao.getPartnerInfo().firstOrNull() ?: PartnerInfoEntity()
+        if (current.myInviteCode.isBlank() || !current.myInviteCode.startsWith("REIS-00")) {
+            current = ensureUniqueInviteCode()
+        }
+        val targetCode = PartnerSyncManager.normalizeCode(code)
+        if (targetCode.isBlank() || targetCode.length < 5) return false
+
+        val displayTargetCode = PartnerSyncManager.formatDisplayCode(code)
+        val childPrefs = context?.getSharedPreferences("family_child_prefs", android.content.Context.MODE_PRIVATE)
+
+        // Store pending request details (not joined yet until Reis approves!)
+        childPrefs?.edit()
+            ?.putString("pending_pool_code", displayTargetCode)
+            ?.putLong("pending_join_request_time", System.currentTimeMillis())
+            ?.putBoolean("user_explicitly_disconnected", false)
+            ?.remove("is_pool_member_joined")
+            ?.remove("p1_name")
+            ?.remove("p1_icon")
+            ?.remove("p2_name")
+            ?.remove("p2_icon")
+            ?.apply()
+
+        val myIcon = childPrefs?.getString("p1_icon", "👤") ?: "👤"
+        val myDisplayName = current.myDisplayName.ifBlank {
+            if (current.myEmail.isNotBlank()) current.myEmail.substringBefore("@") else "Aile Ferdi"
+        }
+
+        // Send claim to Reis's inbox so Reis sees the request with timestamp
+        PartnerSyncManager.sendPairClaim(
+            targetCode = displayTargetCode,
+            myCode = current.myInviteCode,
+            myName = myDisplayName,
+            myEmail = current.myEmail,
+            myIcon = myIcon
+        )
+
+        // Broadcast pending request to pair topic
+        PartnerSyncManager.broadcastPartnerEvent(
+            codeA = current.myInviteCode,
+            codeB = displayTargetCode,
+            myCode = current.myInviteCode,
+            myName = myDisplayName,
+            eventType = "MEMBER_JOIN_REQUESTED",
+            prayerName = "Aile Havuzu",
+            actionText = "$myDisplayName aile havuzunuza katılmak istiyor (Onay bekleniyor)",
+            senderIcon = myIcon
+        )
+
+        return true
+    }
+
+    suspend fun cancelJoinRequest() {
+        val childPrefs = context?.getSharedPreferences("family_child_prefs", android.content.Context.MODE_PRIVATE)
+        childPrefs?.edit()
+            ?.remove("pending_pool_code")
+            ?.remove("pending_join_request_time")
+            ?.remove("family_pool_code")
+            ?.remove("is_pool_member_joined")
+            ?.remove("p1_name")
+            ?.remove("p1_icon")
+            ?.remove("p2_name")
+            ?.remove("p2_icon")
+            ?.apply()
+    }
+
     suspend fun leaveFamilyPool(poolCode: String = "") {
         val childPrefs = context?.getSharedPreferences("family_child_prefs", android.content.Context.MODE_PRIVATE)
         childPrefs?.edit()
             ?.putBoolean("user_explicitly_disconnected", true)
             ?.putBoolean("family_pool_created", false)
             ?.putBoolean("family_pool_has_members", false)
+            ?.remove("pending_pool_code")
+            ?.remove("pending_join_request_time")
             ?.remove("is_pool_member_joined")
             ?.remove("family_pool_code")
             ?.remove("is_explicit_reis")

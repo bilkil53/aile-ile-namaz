@@ -352,6 +352,11 @@ object PartnerSyncManager {
                                 val msgStr = obj.optString("message", "")
                                 val msgJson = JSONObject(msgStr)
                                 if (msgJson.optString("type") == "PAIR_CLAIMED") {
+                                    val claimTime = msgJson.optLong("timestamp", 0L)
+                                    if (claimTime > 0L && System.currentTimeMillis() - claimTime > 5 * 60 * 1000L) {
+                                        // 5 dakikayı geçmiş eski talep, zaman aşımına uğramıştır
+                                        continue
+                                    }
                                     val claimerCode = msgJson.optString("claimerCode", "")
                                     val claimerName = msgJson.optString("claimerName", "")
                                     val claimerEmail = msgJson.optString("claimerEmail", "")

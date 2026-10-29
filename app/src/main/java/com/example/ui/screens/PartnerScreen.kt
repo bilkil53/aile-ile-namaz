@@ -469,7 +469,44 @@ fun PartnerScreen(
     var memberIconInput by remember { mutableStateOf("🧕") }
     var showArchitectureInfoDialog by remember { mutableStateOf(false) }
 
-    // Karşı taraf havuza katıldığı anda Reis için otomatik unvan seçim penceresini aç
+    var pendingPoolCode by remember(refreshTrigger) {
+        mutableStateOf(childPrefs.getString("pending_pool_code", null) ?: "")
+    }
+    var pendingJoinTime by remember(refreshTrigger) {
+        mutableStateOf(childPrefs.getLong("pending_join_request_time", 0L))
+    }
+    var pendingCountdownText by remember { mutableStateOf("05:00") }
+
+    // 5 Dakika zaman aşımı sayacı ve otomatik sıfırlama
+    LaunchedEffect(pendingJoinTime, pendingPoolCode) {
+        if (pendingPoolCode.isNotBlank() && pendingJoinTime > 0L) {
+            while (true) {
+                val now = System.currentTimeMillis()
+                val elapsed = now - pendingJoinTime
+                val remainingMs = (5 * 60 * 1000L) - elapsed
+                if (remainingMs <= 0) {
+                    childPrefs.edit()
+                        .remove("pending_pool_code")
+                        .remove("pending_join_request_time")
+                        .remove("family_pool_code")
+                        .apply()
+                    pendingPoolCode = ""
+                    pendingJoinTime = 0L
+                    viewModel.cancelJoinRequest()
+                    refreshTrigger++
+                    viewModel.showStatusMessage("⏱️ Katılım talebinizin süresi doldu (5 dakika içinde onaylanmadı). Lütfen kodu tekrar giriniz veya Aile Reisinize danışınız.")
+                    break
+                } else {
+                    val sec = (remainingMs / 1000) % 60
+                    val min = (remainingMs / (1000 * 60))
+                    pendingCountdownText = String.format(Locale.getDefault(), "%02d:%02d", min, sec)
+                }
+                kotlinx.coroutines.delay(1000L)
+            }
+        }
+    }
+
+    // Karşı taraf havuza katılmak istediği anda Reis için otomatik unvan seçim penceresini aç
     LaunchedEffect(partnerInfo.isMatched, partnerInfo.partnerDisplayName) {
         if (partnerInfo.isMatched && !childPrefs.getBoolean("is_explicit_reis", false) && !childPrefs.getBoolean("is_pool_member_joined", false)) {
             showStartPoolRoleDialog = true
@@ -1110,70 +1147,149 @@ fun PartnerScreen(
                             modifier = Modifier.fillMaxWidth(),
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            // 1. KART: KOD GİREREK AİLE HAVUZUNA KATIL (GÖZ ÖNÜNDE VE ERİŞİLEBİLİR)
-                            Surface(
-                                color = Color.White.copy(alpha = 0.16f),
-                                shape = RoundedCornerShape(12.dp),
-                                border = BorderStroke(1.dp, Color(0xFF86EFAC).copy(alpha = 0.7f)),
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text("📥", fontSize = 16.sp)
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text("Aile Havuzuna Katıl (Kod Gir)", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFEF3C7))
-                                    }
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text("Aile Reisinizin (babanız/eşiniz) size ilettiği REIS-00 kodunu girerek havuza bağlanın:", fontSize = 11.sp, color = Color.White.copy(alpha = 0.9f))
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        OutlinedTextField(
-                                            value = joinPoolCodeInput,
-                                            onValueChange = { joinPoolCodeInput = it.uppercase() },
-                                            placeholder = { Text("Örn: REIS-001234", color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp) },
-                                            singleLine = true,
-                                            colors = OutlinedTextFieldDefaults.colors(
-                                                focusedTextColor = Color.White,
-                                                unfocusedTextColor = Color.White,
-                                                focusedBorderColor = Color(0xFF86EFAC),
-                                                unfocusedBorderColor = Color.White.copy(alpha = 0.5f)
-                                            ),
-                                            modifier = Modifier.weight(1f)
-                                        )
-                                        Button(
-                                            onClick = {
-                                                val raw = joinPoolCodeInput.trim()
-                                                if (raw.isBlank()) {
-                                                    viewModel.showStatusMessage("Lütfen bir aile havuz kodu giriniz.")
-                                                    return@Button
-                                                }
-                                                val normInput = com.example.util.PartnerSyncManager.normalizeCode(raw)
-                                                val normMine = com.example.util.PartnerSyncManager.normalizeCode(partnerInfo.myInviteCode)
-                                                if (normInput == normMine) {
-                                                    viewModel.showStatusMessage("⚠️ Bu sizin kendi aile kodunuzdur. Başka bir aile ferdinizin kodunu girmelisiniz.")
-                                                    return@Button
-                                                }
-                                                val canonical = com.example.util.PartnerSyncManager.formatDisplayCode(raw)
-                                                familyPoolCode = canonical
-                                                childPrefs.edit()
-                                                    .putString("family_pool_code", canonical)
-                                                    .putBoolean("is_pool_member_joined", true)
-                                                    .putBoolean("is_explicit_reis", false)
-                                                    .putBoolean("user_explicitly_disconnected", false)
-                                                    .putString("user_role", "FERT")
-                                                    .apply()
-                                                viewModel.matchPartnerWithCode(canonical)
-                                                refreshTrigger++
-                                                viewModel.showStatusMessage("Katılım isteğiniz iletildi! Aile Reisinin ünvanları belirlemesi bekleniyor... ⏳")
-                                            },
-                                            colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
-                                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                            // 1. KART: BEKLEME DURUMU VEYA KOD GİREREK AİLE HAVUZUNA KATIL
+                            if (pendingPoolCode.isNotBlank()) {
+                                Surface(
+                                    color = Color(0xFFFEF3C7).copy(alpha = 0.18f),
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = BorderStroke(1.dp, Color(0xFFFDE68A)),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(modifier = Modifier.padding(14.dp)) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text("⏳", fontSize = 18.sp)
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = "Aile Havuzu Katılım Talebi İletildi",
+                                                fontSize = 13.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFFFEF3C7)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Surface(
+                                            color = Color.Black.copy(alpha = 0.25f),
+                                            shape = RoundedCornerShape(6.dp)
                                         ) {
-                                            Text("Havuza Katıl", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                            Text(
+                                                text = "Hedef Havuz Kodu: $pendingPoolCode",
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.White,
+                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Text(
+                                            text = "Katılım talebiniz Aile Reisine iletildi. Aile Reisi onayladıktan sonra havuza dahil olacaksınız. Reis 5 dakika içinde onaylayıp rolünüzü belirlediğinde ortak havuzunuz aktifleşecektir.",
+                                            fontSize = 11.sp,
+                                            color = Color.White.copy(alpha = 0.95f),
+                                            lineHeight = 15.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "⏱️ Kalan Süre: $pendingCountdownText",
+                                                fontSize = 12.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFFFDE68A)
+                                            )
+                                            OutlinedButton(
+                                                onClick = {
+                                                    viewModel.cancelJoinRequest()
+                                                    childPrefs.edit()
+                                                        .remove("pending_pool_code")
+                                                        .remove("pending_join_request_time")
+                                                        .remove("family_pool_code")
+                                                        .apply()
+                                                    pendingPoolCode = ""
+                                                    pendingJoinTime = 0L
+                                                    refreshTrigger++
+                                                    viewModel.showStatusMessage("Katılım talebi iptal edildi. Başka bir koda katılabilirsiniz.")
+                                                },
+                                                border = BorderStroke(1.dp, Color(0xFFFCA5A5)),
+                                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFFFCDD2)),
+                                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                                modifier = Modifier.height(34.dp)
+                                            ) {
+                                                Text("Talebi İptal Et", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                Surface(
+                                    color = Color.White.copy(alpha = 0.16f),
+                                    shape = RoundedCornerShape(12.dp),
+                                    border = BorderStroke(1.dp, Color(0xFF86EFAC).copy(alpha = 0.7f)),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text("📥", fontSize = 16.sp)
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text("Aile Havuzuna Katıl (Kod Gir)", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFEF3C7))
+                                        }
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text("Aile Reisinizin (babanız/eşiniz) size ilettiği REIS-00 kodunu girerek havuza bağlanın:", fontSize = 11.sp, color = Color.White.copy(alpha = 0.9f))
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            OutlinedTextField(
+                                                value = joinPoolCodeInput,
+                                                onValueChange = { joinPoolCodeInput = it.uppercase() },
+                                                placeholder = { Text("Örn: REIS-001234", color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp) },
+                                                singleLine = true,
+                                                colors = OutlinedTextFieldDefaults.colors(
+                                                    focusedTextColor = Color.White,
+                                                    unfocusedTextColor = Color.White,
+                                                    focusedBorderColor = Color(0xFF86EFAC),
+                                                    unfocusedBorderColor = Color.White.copy(alpha = 0.5f)
+                                                ),
+                                                modifier = Modifier.weight(1f)
+                                            )
+                                            Button(
+                                                onClick = {
+                                                    val raw = joinPoolCodeInput.trim()
+                                                    if (raw.isBlank()) {
+                                                        viewModel.showStatusMessage("Lütfen bir aile havuz kodu giriniz.")
+                                                        return@Button
+                                                    }
+                                                    val normInput = com.example.util.PartnerSyncManager.normalizeCode(raw)
+                                                    val normMine = com.example.util.PartnerSyncManager.normalizeCode(partnerInfo.myInviteCode)
+                                                    if (normInput == normMine) {
+                                                        viewModel.showStatusMessage("⚠️ Bu sizin kendi aile kodunuzdur. Başka bir aile ferdinizin kodunu girmelisiniz.")
+                                                        return@Button
+                                                    }
+                                                    val canonical = com.example.util.PartnerSyncManager.formatDisplayCode(raw)
+                                                    val reqTime = System.currentTimeMillis()
+                                                    pendingPoolCode = canonical
+                                                    pendingJoinTime = reqTime
+                                                    childPrefs.edit()
+                                                        .putString("pending_pool_code", canonical)
+                                                        .putLong("pending_join_request_time", reqTime)
+                                                        .remove("is_pool_member_joined")
+                                                        .remove("p1_name")
+                                                        .remove("p1_icon")
+                                                        .remove("p2_name")
+                                                        .remove("p2_icon")
+                                                        .apply()
+                                                    viewModel.requestJoinFamilyPool(canonical)
+                                                    refreshTrigger++
+                                                    viewModel.showStatusMessage("Katılım talebiniz iletildi! Aile Reisinin onayı bekleniyor... ⏳")
+                                                },
+                                                colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
+                                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp)
+                                            ) {
+                                                Text("Havuza Katıl", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                            }
                                         }
                                     }
                                 }

@@ -628,6 +628,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun requestJoinFamilyPool(code: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val success = repository.requestJoinFamilyPool(code)
+            if (success) {
+                _statusMessage.value = "Katılım talebiniz Aile Reisine iletildi. Onay bekleniyor... ⏳"
+            } else {
+                _statusMessage.value = "Geçersiz aile kodu."
+            }
+        }
+    }
+
+    fun cancelJoinRequest() {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.cancelJoinRequest()
+            _statusMessage.value = "Katılım talebi iptal edildi."
+        }
+    }
+
     fun logoutUser() {
         viewModelScope.launch(Dispatchers.IO) {
             repository.logoutUser()
