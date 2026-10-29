@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.util.PrayerCalculator
 import com.example.ui.theme.*
 import com.example.ui.viewmodel.MainViewModel
+import com.example.util.FamilyRoleHelper
 import com.example.util.PartnerSyncManager
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -58,6 +59,7 @@ fun PartnerScreen(
     val prayerTimes by viewModel.prayerTimes.collectAsState()
     val statusMessage by viewModel.statusMessage.collectAsState()
     val isRefreshing by viewModel.isRefreshingPartner.collectAsState()
+    val pendingJoinRequests by viewModel.pendingJoinRequests.collectAsState()
 
     val todayDateStr = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()) }
     val yesterdayDateStr = remember {
@@ -463,6 +465,9 @@ fun PartnerScreen(
     var showResetHandshakeDialog by remember { mutableStateOf(false) }
     var showLeavePoolDialog by remember { mutableStateOf(false) }
     var showStartPoolRoleDialog by remember { mutableStateOf(false) }
+    var activeApprovingRequest by remember { mutableStateOf<com.example.util.IncomingJoinRequest?>(null) }
+    var showApproveRequestDialog by remember { mutableStateOf(false) }
+
     var leaderRoleInput by remember { mutableStateOf("Baba") }
     var leaderIconInput by remember { mutableStateOf("🧔") }
     var memberRoleInput by remember { mutableStateOf("Eşi") }
@@ -477,13 +482,13 @@ fun PartnerScreen(
     }
     var pendingCountdownText by remember { mutableStateOf("05:00") }
 
-    // 5 Dakika zaman aşımı sayacı ve otomatik sıfırlama
+    // Onay bekleyen katılım sayacı (30 dakika geçerlilik süresi)
     LaunchedEffect(pendingJoinTime, pendingPoolCode) {
         if (pendingPoolCode.isNotBlank() && pendingJoinTime > 0L) {
             while (true) {
                 val now = System.currentTimeMillis()
                 val elapsed = now - pendingJoinTime
-                val remainingMs = (5 * 60 * 1000L) - elapsed
+                val remainingMs = (30 * 60 * 1000L) - elapsed
                 if (remainingMs <= 0) {
                     childPrefs.edit()
                         .remove("pending_pool_code")
@@ -494,7 +499,7 @@ fun PartnerScreen(
                     pendingJoinTime = 0L
                     viewModel.cancelJoinRequest()
                     refreshTrigger++
-                    viewModel.showStatusMessage("⏱️ Katılım talebinizin süresi doldu (5 dakika içinde onaylanmadı). Lütfen kodu tekrar giriniz veya Aile Reisinize danışınız.")
+                    viewModel.showStatusMessage("⏱️ Katılım talebinizin süresi doldu. Lütfen kodu tekrar giriniz veya Aile Reisinize danışınız.")
                     break
                 } else {
                     val sec = (remainingMs / 1000) % 60
@@ -502,6 +507,21 @@ fun PartnerScreen(
                     pendingCountdownText = String.format(Locale.getDefault(), "%02d:%02d", min, sec)
                 }
                 kotlinx.coroutines.delay(1000L)
+            }
+        }
+    }
+
+    // Katılım onaylandığı anda bekleme modundan otomatik çık
+    LaunchedEffect(isPoolMemberJoined, partnerInfo.isMatched) {
+        if (isPoolMemberJoined && partnerInfo.isMatched) {
+            if (pendingPoolCode.isNotBlank()) {
+                childPrefs.edit()
+                    .remove("pending_pool_code")
+                    .remove("pending_join_request_time")
+                    .apply()
+                pendingPoolCode = ""
+                pendingJoinTime = 0L
+                refreshTrigger++
             }
         }
     }
@@ -986,7 +1006,125 @@ fun PartnerScreen(
                                 }
                             }
                         }
+                    }
 
+                    Spacer(modifier = Modifier.height(10.dp))
+                    // GELEN HAVUZ KATILIM TALEPLERİ KARTI (Aile Reisi / Havuz Sahibi için anlık onay paneli)
+                    if (pendingJoinRequests.isNotEmpty()) {
+                        Surface(
+                            color = Color(0xFFFEF3C7),
+                            shape = RoundedCornerShape(14.dp),
+                            border = BorderStroke(2.dp, Color(0xFFF59E0B)),
+                            shadowElevation = 4.dp,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("🔔", fontSize = 20.sp)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "Havuza Katılma Talebi Geldi! (${pendingJoinRequests.size})",
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF92400E)
+                                        )
+                                        Text(
+                                            text = "Aşağıdaki aile ferdiniz havuzunuza dahil olmak istiyor:",
+                                            fontSize = 11.sp,
+                                            color = Color(0xFF78350F)
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                pendingJoinRequests.forEach { req ->
+                                    Surface(
+                                        color = Color.White,
+                                        shape = RoundedCornerShape(10.dp),
+                                        border = BorderStroke(1.dp, Color(0xFFFCD34D)),
+                                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+                                    ) {
+                                        Column(modifier = Modifier.padding(10.dp)) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Surface(
+                                                    color = Color(0xFFFEF3C7),
+                                                    shape = CircleShape,
+                                                    modifier = Modifier.size(36.dp)
+                                                ) {
+                                                    Box(contentAlignment = Alignment.Center) {
+                                                        Text(text = req.claimerIcon.ifBlank { "👤" }, fontSize = 18.sp)
+                                                    }
+                                                }
+                                                Spacer(modifier = Modifier.width(10.dp))
+                                                Column(modifier = Modifier.weight(1f)) {
+                                                    Text(
+                                                        text = req.claimerName,
+                                                        fontSize = 13.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = TextPrimary
+                                                    )
+                                                    val sub = listOfNotNull(
+                                                        req.claimerEmail.takeIf { it.isNotBlank() },
+                                                        req.claimerCode.takeIf { it.isNotBlank() }
+                                                    ).joinToString(" • ")
+                                                    if (sub.isNotBlank()) {
+                                                        Text(
+                                                            text = sub,
+                                                            fontSize = 10.sp,
+                                                            color = TextSecondary
+                                                        )
+                                                    }
+                                                }
+                                            }
+
+                                            Spacer(modifier = Modifier.height(8.dp))
+
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                            ) {
+                                                Button(
+                                                    onClick = {
+                                                        activeApprovingRequest = req
+                                                        leaderRoleInput = if (p1DisplayName.isNotBlank() && FamilyRoleHelper.isRoleName(p1DisplayName)) p1DisplayName else "Baba"
+                                                        leaderIconInput = person1Icon.ifBlank { "🧔" }
+                                                        memberRoleInput = if (req.claimerName.isNotBlank() && FamilyRoleHelper.isRoleName(req.claimerName)) req.claimerName else "Oğlu"
+                                                        memberIconInput = req.claimerIcon.ifBlank { "👦" }
+                                                        showApproveRequestDialog = true
+                                                    },
+                                                    colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary),
+                                                    shape = RoundedCornerShape(8.dp),
+                                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                                    modifier = Modifier.weight(1f)
+                                                ) {
+                                                    Icon(Icons.Filled.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(14.dp))
+                                                    Spacer(modifier = Modifier.width(4.dp))
+                                                    Text("Onayla & Rol Seç", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                                }
+
+                                                OutlinedButton(
+                                                    onClick = {
+                                                        viewModel.rejectJoinRequest(req)
+                                                        viewModel.showStatusMessage("${req.claimerName} katılım talebi reddedildi.")
+                                                    },
+                                                    shape = RoundedCornerShape(8.dp),
+                                                    border = BorderStroke(1.dp, Color(0xFFFCA5A5)),
+                                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFDC2626)),
+                                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                                                ) {
+                                                    Text("Reddet", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                         Spacer(modifier = Modifier.height(10.dp))
                     }
 
@@ -1232,10 +1370,10 @@ fun PartnerScreen(
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             Text("📥", fontSize = 16.sp)
                                             Spacer(modifier = Modifier.width(6.dp))
-                                            Text("Aile Havuzuna Katıl (Kod Gir)", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFEF3C7))
+                                            Text("Aile Havuzuna Katıl (Kod veya E-Posta Gir)", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFEF3C7))
                                         }
                                         Spacer(modifier = Modifier.height(4.dp))
-                                        Text("Aile Reisinizin (babanız/eşiniz) size ilettiği REIS-00 kodunu girerek havuza bağlanın:", fontSize = 11.sp, color = Color.White.copy(alpha = 0.9f))
+                                        Text("Aile Reisinizin size ilettiği REIS kodunu veya Gmail adresini girerek havuza bağlanın:", fontSize = 11.sp, color = Color.White.copy(alpha = 0.9f))
                                         Spacer(modifier = Modifier.height(8.dp))
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
@@ -1244,8 +1382,8 @@ fun PartnerScreen(
                                         ) {
                                             OutlinedTextField(
                                                 value = joinPoolCodeInput,
-                                                onValueChange = { joinPoolCodeInput = it.uppercase() },
-                                                placeholder = { Text("Örn: REIS-001234", color = Color.White.copy(alpha = 0.6f), fontSize = 12.sp) },
+                                                onValueChange = { joinPoolCodeInput = it },
+                                                placeholder = { Text("Örn: REIS-001234 veya mail@gmail.com", color = Color.White.copy(alpha = 0.6f), fontSize = 11.sp) },
                                                 singleLine = true,
                                                 colors = OutlinedTextFieldDefaults.colors(
                                                     focusedTextColor = Color.White,
@@ -1259,21 +1397,29 @@ fun PartnerScreen(
                                                 onClick = {
                                                     val raw = joinPoolCodeInput.trim()
                                                     if (raw.isBlank()) {
-                                                        viewModel.showStatusMessage("Lütfen bir aile havuz kodu giriniz.")
+                                                        viewModel.showStatusMessage("Lütfen bir aile havuz kodu veya Reis e-posta adresi giriniz.")
                                                         return@Button
                                                     }
-                                                    val normInput = com.example.util.PartnerSyncManager.normalizeCode(raw)
+                                                    val isEmail = raw.contains("@")
+                                                    val normInput = if (isEmail) raw.lowercase(java.util.Locale.ROOT) else com.example.util.PartnerSyncManager.normalizeCode(raw)
                                                     val normMine = com.example.util.PartnerSyncManager.normalizeCode(partnerInfo.myInviteCode)
-                                                    if (normInput == normMine) {
+                                                    val myEmailClean = settings.userEmail.trim().lowercase(java.util.Locale.ROOT)
+
+                                                    if (!isEmail && normInput == normMine) {
                                                         viewModel.showStatusMessage("⚠️ Bu sizin kendi aile kodunuzdur. Başka bir aile ferdinizin kodunu girmelisiniz.")
                                                         return@Button
                                                     }
-                                                    val canonical = com.example.util.PartnerSyncManager.formatDisplayCode(raw)
+                                                    if (isEmail && normInput == myEmailClean) {
+                                                        viewModel.showStatusMessage("⚠️ Kendi e-posta adresinizi girdiniz. Başka bir aile ferdinizin kodunu veya e-postasını girmelisiniz.")
+                                                        return@Button
+                                                    }
+
+                                                    val targetDisplay = if (isEmail) raw.lowercase(java.util.Locale.ROOT) else com.example.util.PartnerSyncManager.formatDisplayCode(raw)
                                                     val reqTime = System.currentTimeMillis()
-                                                    pendingPoolCode = canonical
+                                                    pendingPoolCode = targetDisplay
                                                     pendingJoinTime = reqTime
                                                     childPrefs.edit()
-                                                        .putString("pending_pool_code", canonical)
+                                                        .putString("pending_pool_code", targetDisplay)
                                                         .putLong("pending_join_request_time", reqTime)
                                                         .remove("is_pool_member_joined")
                                                         .remove("p1_name")
@@ -1281,7 +1427,7 @@ fun PartnerScreen(
                                                         .remove("p2_name")
                                                         .remove("p2_icon")
                                                         .apply()
-                                                    viewModel.requestJoinFamilyPool(canonical)
+                                                    viewModel.requestJoinFamilyPool(raw)
                                                     refreshTrigger++
                                                     viewModel.showStatusMessage("Katılım talebiniz iletildi! Aile Reisinin onayı bekleniyor... ⏳")
                                                 },
@@ -2699,6 +2845,210 @@ fun PartnerScreen(
                 TextButton(onClick = {
                     showLeavePoolDialog = false
                     showResetHandshakeDialog = false
+                }) {
+                    Text("Vazgeç", color = TextSecondary)
+                }
+            }
+        )
+    }
+
+    // GELEN KATILIM TALEBİNİ ONAYLAMA VE ROL BELİRLEME DİALOGU
+    if (showApproveRequestDialog && activeApprovingRequest != null) {
+        val req = activeApprovingRequest!!
+        val leaderRoles = listOf(
+            "Baba" to "🧔",
+            "Anne" to "🧕",
+            "Dede" to "🧓",
+            "Aile Reisi" to "👑"
+        )
+        val memberRoles = listOf(
+            "Eşi" to "🧕",
+            "Kızı" to "👧",
+            "Oğlu" to "👦",
+            "Annesi" to "🧕",
+            "Babası" to "🧔",
+            "Torunu" to "🧒",
+            "Kardeşi" to "🧒",
+            "Aile Ferdi" to "👥"
+        )
+        AlertDialog(
+            onDismissRequest = {
+                showApproveRequestDialog = false
+                activeApprovingRequest = null
+            },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("🤝", fontSize = 18.sp)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Katılım Talebini Onayla",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                }
+            },
+            text = {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 440.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Surface(
+                        color = Color(0xFFFEF3C7),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = req.claimerIcon.ifBlank { "👤" }, fontSize = 24.sp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = req.claimerName,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF92400E)
+                                )
+                                if (req.claimerEmail.isNotBlank()) {
+                                    Text(
+                                        text = req.claimerEmail,
+                                        fontSize = 11.sp,
+                                        color = Color(0xFF78350F)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "1. Sizin Ailedeki Rolünüz (Havuz Sahibi):",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        leaderRoles.forEach { (role, icon) ->
+                            val isSelected = (leaderRoleInput == role)
+                            Surface(
+                                onClick = {
+                                    leaderRoleInput = role
+                                    leaderIconInput = icon
+                                },
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (isSelected) EmeraldPrimary else EmeraldContainer,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(text = icon, fontSize = 18.sp)
+                                    Text(
+                                        text = role,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSelected) Color.White else TextPrimary
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Text(
+                        text = "2. Katılan Kişinin Rolü (${req.claimerName}):",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    memberRoles.chunked(4).forEach { rowRoles ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            rowRoles.forEach { (role, icon) ->
+                                val isSelected = (memberRoleInput == role)
+                                Surface(
+                                    onClick = {
+                                        memberRoleInput = role
+                                        memberIconInput = icon
+                                    },
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = if (isSelected) EmeraldPrimary else EmeraldContainer,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(vertical = 8.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Text(text = icon, fontSize = 18.sp)
+                                        Text(
+                                            text = role,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (isSelected) Color.White else TextPrimary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val normLeader = FamilyRoleHelper.normalizeRoleTitle(leaderRoleInput)
+                        val normMember = FamilyRoleHelper.normalizeRoleTitle(memberRoleInput)
+                        person1Icon = leaderIconInput
+                        person2Icon = memberIconInput
+                        childPrefs.edit()
+                            .putBoolean("is_explicit_reis", true)
+                            .putBoolean("family_pool_created", true)
+                            .putBoolean("family_pool_has_members", true)
+                            .putBoolean("is_pool_member_joined", false)
+                            .putBoolean("user_explicitly_disconnected", false)
+                            .putString("user_role", "REIS")
+                            .putString("p1_name", normLeader)
+                            .putString("p1_icon", leaderIconInput)
+                            .putString("p2_name", normMember)
+                            .putString("p2_icon", memberIconInput)
+                            .putBoolean("has_p2", true)
+                            .putBoolean("has_p2_customized", true)
+                            .putString("family_pool_code", partnerInfo.myInviteCode)
+                            .apply()
+
+                        viewModel.approveJoinRequest(
+                            request = req,
+                            leaderRole = normLeader,
+                            leaderIcon = leaderIconInput,
+                            memberRole = normMember,
+                            memberIcon = memberIconInput
+                        )
+                        showApproveRequestDialog = false
+                        activeApprovingRequest = null
+                        refreshTrigger++
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = EmeraldPrimary)
+                ) {
+                    Text("Onayla & Havuza Ekle")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showApproveRequestDialog = false
+                    activeApprovingRequest = null
                 }) {
                     Text("Vazgeç", color = TextSecondary)
                 }

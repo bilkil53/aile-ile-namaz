@@ -130,6 +130,12 @@ object PartnerSyncManager {
         return "ain_pool_$clean"
     }
 
+    fun getSafeEmailTopic(email: String): String {
+        val clean = email.trim().lowercase(java.util.Locale.ROOT)
+        if (clean.isBlank()) return ""
+        return "ain_eml_" + clean.replace("@", "_at_").replace(".", "_")
+    }
+
     fun getCanonicalPairTopic(codeA: String, codeB: String): String {
         val a = normalizeCode(codeA)
         val b = normalizeCode(codeB)
@@ -211,13 +217,25 @@ object PartnerSyncManager {
     }
 
     /**
-     * Publishes my profile so that when someone enters my code, they can see my name and email.
+     * Publishes my profile so that when someone enters my code or email, they can see my name and email.
      */
     suspend fun publishMyProfile(myCode: String, name: String, email: String, icon: String = "") = withContext(Dispatchers.IO) {
         val cleaned = normalizeCode(myCode)
-        if (cleaned.isBlank()) return@withContext
+        val cleanEmail = email.trim().lowercase(java.util.Locale.ROOT)
+        if (cleaned.isBlank() && cleanEmail.isBlank()) return@withContext
         val normalizedName = FamilyRoleHelper.normalizeRoleTitle(name)
         val resolvedIcon = if (icon.isNotBlank()) icon else FamilyRoleHelper.getDefaultIconForRole(normalizedName)
+
+        val topics = mutableListOf<String>()
+        if (cleaned.isNotBlank()) {
+            topics.add("ain_usr_$cleaned")
+        }
+        if (cleanEmail.isNotBlank()) {
+            val emailTopic = getSafeEmailTopic(cleanEmail)
+            if (emailTopic.isNotBlank() && !topics.contains(emailTopic)) {
+                topics.add(emailTopic)
+            }
+        }
 
         try {
             val json = JSONObject().apply {
@@ -229,28 +247,39 @@ object PartnerSyncManager {
                 put("timestamp", System.currentTimeMillis())
             }
 
-            val request = Request.Builder()
-                .url("$BASE_URL/ain_usr_$cleaned")
-                .post(json.toString().toRequestBody(JSON_MEDIA_TYPE))
-                .build()
-
-            httpClient.newCall(request).execute().close()
+            val body = json.toString().toRequestBody(JSON_MEDIA_TYPE)
+            for (topic in topics) {
+                val request = Request.Builder()
+                    .url("$BASE_URL/$topic")
+                    .post(body)
+                    .build()
+                httpClient.newCall(request).execute().close()
+            }
         } catch (e: Exception) {
             Log.w(TAG, "Failed to publish profile: ${e.message}")
         }
     }
 
     /**
-     * Looks up user profile by invite code.
+     * Looks up user profile by invite code or email address.
      * Returns Triple(displayName, email, icon).
      */
-    suspend fun lookupProfileByCode(targetCode: String): Triple<String, String, String>? = withContext(Dispatchers.IO) {
-        val cleaned = normalizeCode(targetCode)
-        if (cleaned.isBlank()) return@withContext null
+    suspend fun lookupProfileByCode(targetCodeOrEmail: String): Triple<String, String, String>? = withContext(Dispatchers.IO) {
+        val target = targetCodeOrEmail.trim()
+        if (target.isBlank()) return@withContext null
+
+        val isEmail = target.contains("@")
+        val topic = if (isEmail) {
+            getSafeEmailTopic(target)
+        } else {
+            val cleaned = normalizeCode(target)
+            if (cleaned.isBlank()) return@withContext null
+            "ain_usr_$cleaned"
+        }
 
         try {
             val request = Request.Builder()
-                .url("$BASE_URL/ain_usr_$cleaned/json?poll=1")
+                .url("$BASE_URL/$topic/json?poll=1")
                 .get()
                 .build()
 
@@ -285,25 +314,41 @@ object PartnerSyncManager {
     }
 
     /**
-     * Called by User 2 when they enter User 1's code.
-     * User 2 sends a PAIR_CLAIMED notification directly to User 1's inbox.
+     * Called by a member to send a join request / claim to the pool owner.
+     * Supports both pool code (e.g. REIS-001234) and pool owner email (e.g. e.bilkil5391@gmail.com).
      */
     suspend fun sendPairClaim(
-        targetCode: String,
+        targetCodeOrEmail: String,
         myCode: String,
         myName: String,
         myEmail: String,
         myIcon: String = ""
     ): Boolean = withContext(Dispatchers.IO) {
-        val cleanedTarget = normalizeCode(targetCode)
-        if (cleanedTarget.isBlank()) return@withContext false
+        val rawTarget = targetCodeOrEmail.trim()
+        if (rawTarget.isBlank()) return@withContext false
+
         val normalizedName = FamilyRoleHelper.normalizeRoleTitle(myName)
         val resolvedIcon = if (myIcon.isNotBlank()) myIcon else FamilyRoleHelper.getDefaultIconForRole(normalizedName)
+        val isEmail = rawTarget.contains("@")
+        val cleanedCode = normalizeCode(rawTarget)
 
+        val topicsToSend = mutableListOf<String>()
+        if (isEmail) {
+            val emailTopic = getSafeEmailTopic(rawTarget)
+            if (emailTopic.isNotBlank()) topicsToSend.add(emailTopic)
+        } else if (cleanedCode.isNotBlank()) {
+            topicsToSend.add("ain_inv_$cleanedCode")
+            topicsToSend.add(getPoolTopic(cleanedCode))
+        }
+
+        if (topicsToSend.isEmpty()) return@withContext false
+
+        var anySuccess = false
         try {
             val json = JSONObject().apply {
                 put("type", "PAIR_CLAIMED")
-                put("partnerInviteCode", formatDisplayCode(targetCode))
+                put("partnerInviteCode", if (isEmail) rawTarget else formatDisplayCode(rawTarget))
+                put("targetEmail", if (isEmail) rawTarget.lowercase(java.util.Locale.ROOT) else "")
                 put("claimerCode", formatDisplayCode(myCode))
                 put("claimerName", normalizedName)
                 put("claimerEmail", myEmail.trim())
@@ -311,89 +356,144 @@ object PartnerSyncManager {
                 put("timestamp", System.currentTimeMillis())
             }
 
-            val request = Request.Builder()
-                .url("$BASE_URL/ain_inv_$cleanedTarget")
-                .post(json.toString().toRequestBody(JSON_MEDIA_TYPE))
-                .build()
-
-            httpClient.newCall(request).execute().use { resp ->
-                resp.isSuccessful
+            val body = json.toString().toRequestBody(JSON_MEDIA_TYPE)
+            for (topic in topicsToSend) {
+                try {
+                    val request = Request.Builder()
+                        .url("$BASE_URL/$topic")
+                        .post(body)
+                        .build()
+                    httpClient.newCall(request).execute().use { resp ->
+                        if (resp.isSuccessful) anySuccess = true
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to send pair claim to $topic: ${e.message}")
+                }
             }
         } catch (e: Exception) {
-            Log.w(TAG, "Failed to send pair claim: ${e.message}")
-            false
+            Log.w(TAG, "Failed to build pair claim: ${e.message}")
         }
+        anySuccess
     }
 
     /**
-     * Called by User 1 to check if someone claimed their invite code.
-     * When found, User 1 is automatically paired without ever entering a code!
+     * Checks for all incoming join requests for this pool owner (by invite code and by email).
+     * Returns a list of requests submitted in the last 24 hours.
      */
-    suspend fun checkForIncomingMatch(myCode: String): IncomingMatchInfo? = withContext(Dispatchers.IO) {
-        val cleaned = normalizeCode(myCode)
-        if (cleaned.isBlank()) return@withContext null
+    suspend fun checkForIncomingRequests(myCode: String, myEmail: String = ""): List<IncomingJoinRequest> = withContext(Dispatchers.IO) {
+        val cleanCode = normalizeCode(myCode)
+        val cleanEmail = myEmail.trim().lowercase(java.util.Locale.ROOT)
 
-        try {
-            val request = Request.Builder()
-                .url("$BASE_URL/ain_inv_$cleaned/json?poll=1")
-                .get()
-                .build()
+        val topicsToPoll = mutableListOf<String>()
+        if (cleanCode.isNotBlank()) {
+            topicsToPoll.add("ain_inv_$cleanCode")
+            topicsToPoll.add(getPoolTopic(cleanCode))
+        }
+        if (cleanEmail.isNotBlank()) {
+            val emailTopic = getSafeEmailTopic(cleanEmail)
+            if (emailTopic.isNotBlank() && !topicsToPoll.contains(emailTopic)) {
+                topicsToPoll.add(emailTopic)
+            }
+        }
 
-            httpClient.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) return@withContext null
-                val body = response.body?.string() ?: return@withContext null
+        if (topicsToPoll.isEmpty()) return@withContext emptyList()
 
-                var lastClaim: IncomingMatchInfo? = null
-                BufferedReader(StringReader(body)).useLines { lines ->
-                    for (line in lines) {
-                        try {
-                            val obj = JSONObject(line)
-                            if (obj.optString("event") == "message") {
-                                val msgStr = obj.optString("message", "")
-                                val msgJson = JSONObject(msgStr)
-                                if (msgJson.optString("type") == "PAIR_CLAIMED") {
-                                    val claimTime = msgJson.optLong("timestamp", 0L)
-                                    if (claimTime > 0L && System.currentTimeMillis() - claimTime > 5 * 60 * 1000L) {
-                                        // 5 dakikayı geçmiş eski talep, zaman aşımına uğramıştır
-                                        continue
-                                    }
-                                    val claimerCode = msgJson.optString("claimerCode", "")
-                                    val claimerName = msgJson.optString("claimerName", "")
-                                    val claimerEmail = msgJson.optString("claimerEmail", "")
-                                    val claimerIcon = msgJson.optString("claimerIcon", "")
-                                    if (claimerCode.isNotBlank()) {
+        val results = mutableMapOf<String, IncomingJoinRequest>()
+        val now = System.currentTimeMillis()
+
+        for (topic in topicsToPoll) {
+            try {
+                val request = Request.Builder()
+                    .url("$BASE_URL/$topic/json?poll=1")
+                    .get()
+                    .build()
+
+                httpClient.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) return@use
+                    val body = response.body?.string() ?: return@use
+
+                    BufferedReader(StringReader(body)).useLines { lines ->
+                        for (line in lines) {
+                            try {
+                                val obj = JSONObject(line)
+                                if (obj.optString("event") == "message") {
+                                    val msgStr = obj.optString("message", "")
+                                    val msgJson = JSONObject(msgStr)
+                                    val msgType = msgJson.optString("type", "")
+                                    if (msgType == "PAIR_CLAIMED" || msgType == "MEMBER_JOIN_REQUESTED") {
+                                        val claimerCode = msgJson.optString("claimerCode", "")
+                                        val claimerEmail = msgJson.optString("claimerEmail", "")
+                                        val normClaimCode = normalizeCode(claimerCode)
+
+                                        // Ignore self
+                                        if (normClaimCode == cleanCode || (cleanEmail.isNotBlank() && claimerEmail.trim().lowercase(java.util.Locale.ROOT) == cleanEmail)) {
+                                            continue
+                                        }
+
+                                        val claimTime = msgJson.optLong("timestamp", now)
+                                        // Valid if within 24 hours
+                                        if (now - claimTime > 24 * 60 * 60 * 1000L || claimTime - now > 4 * 60 * 60 * 1000L) {
+                                            continue
+                                        }
+
+                                        val claimerName = msgJson.optString("claimerName", "Aile Ferdi")
                                         val normName = FamilyRoleHelper.normalizeRoleTitle(claimerName)
-                                        val finalIcon = if (claimerIcon.isNotBlank() && !FamilyRoleHelper.isIconConflictingWithRole(claimerIcon, normName)) {
+                                        val claimerIcon = msgJson.optString("claimerIcon", "")
+                                        val resolvedIcon = if (claimerIcon.isNotBlank() && !FamilyRoleHelper.isIconConflictingWithRole(claimerIcon, normName)) {
                                             claimerIcon
                                         } else {
                                             FamilyRoleHelper.getDefaultIconForRole(normName)
                                         }
-                                        lastClaim = IncomingMatchInfo(
-                                            partnerCode = formatDisplayCode(claimerCode),
-                                            partnerName = normName,
-                                            partnerEmail = claimerEmail,
-                                            partnerIcon = finalIcon
+
+                                        val req = IncomingJoinRequest(
+                                            claimerCode = formatDisplayCode(claimerCode),
+                                            claimerName = normName,
+                                            claimerEmail = claimerEmail,
+                                            claimerIcon = resolvedIcon,
+                                            timestamp = claimTime
                                         )
+
+                                        val key = if (normClaimCode.isNotBlank()) normClaimCode else claimerEmail.lowercase(java.util.Locale.ROOT)
+                                        if (key.isNotBlank()) {
+                                            val existing = results[key]
+                                            if (existing == null || claimTime >= existing.timestamp) {
+                                                results[key] = req
+                                            }
+                                        }
                                     }
                                 }
-                            }
-                        } catch (_: Exception) { }
+                            } catch (_: Exception) { }
+                        }
                     }
                 }
-                lastClaim
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed checking incoming requests on topic $topic: ${e.message}")
             }
-        } catch (e: Exception) {
-            Log.w(TAG, "Failed to check incoming match: ${e.message}")
-            null
         }
+        results.values.sortedByDescending { it.timestamp }
+    }
+
+    /**
+     * Checks if someone claimed the invite code or email (returns the latest incoming match).
+     */
+    suspend fun checkForIncomingMatch(myCode: String, myEmail: String = ""): IncomingMatchInfo? = withContext(Dispatchers.IO) {
+        val requests = checkForIncomingRequests(myCode, myEmail)
+        val first = requests.firstOrNull() ?: return@withContext null
+        IncomingMatchInfo(
+            partnerCode = first.claimerCode,
+            partnerName = first.claimerName,
+            partnerEmail = first.claimerEmail,
+            partnerIcon = first.claimerIcon
+        )
     }
 
     /**
      * Called by Aile Reisi to assign mutual roles (both leader's role and member's role).
-     * Broadcasts to pair topic and directly to the member's personal inbox.
+     * Broadcasts to pair topic, member code topic, pool topic, and member email topic.
      */
     suspend fun broadcastRoleAssignment(
         targetCode: String,
+        targetEmail: String = "",
         myCode: String,
         leaderRole: String,
         leaderIcon: String,
@@ -402,7 +502,6 @@ object PartnerSyncManager {
     ) = withContext(Dispatchers.IO) {
         val cleanedTarget = normalizeCode(targetCode)
         val cleanedMine = normalizeCode(myCode)
-        if (cleanedTarget.isBlank() || cleanedMine.isBlank()) return@withContext
 
         val payload = JSONObject().apply {
             put("type", "ROLE_ASSIGNMENT")
@@ -415,75 +514,101 @@ object PartnerSyncManager {
             put("timestamp", System.currentTimeMillis())
         }.toString()
 
-        try {
-            val pairTopic = getCanonicalPairTopic(cleanedMine, cleanedTarget)
-            val req1 = Request.Builder()
-                .url("$BASE_URL/$pairTopic")
-                .post(payload.toRequestBody(JSON_MEDIA_TYPE))
-                .build()
-            httpClient.newCall(req1).execute().close()
-        } catch (_: Exception) { }
+        val topics = mutableListOf<String>()
+        if (cleanedMine.isNotBlank() && cleanedTarget.isNotBlank()) {
+            topics.add(getCanonicalPairTopic(cleanedMine, cleanedTarget))
+        }
+        if (cleanedTarget.isNotBlank()) {
+            topics.add("ain_inv_$cleanedTarget")
+            topics.add(getPoolTopic(cleanedTarget))
+        }
+        if (targetEmail.isNotBlank()) {
+            val emailTopic = getSafeEmailTopic(targetEmail)
+            if (emailTopic.isNotBlank() && !topics.contains(emailTopic)) {
+                topics.add(emailTopic)
+            }
+        }
 
-        try {
-            val req2 = Request.Builder()
-                .url("$BASE_URL/ain_inv_$cleanedTarget")
-                .post(payload.toRequestBody(JSON_MEDIA_TYPE))
-                .build()
-            httpClient.newCall(req2).execute().close()
-        } catch (_: Exception) { }
+        val reqBody = payload.toRequestBody(JSON_MEDIA_TYPE)
+        for (topic in topics) {
+            try {
+                val req = Request.Builder()
+                    .url("$BASE_URL/$topic")
+                    .post(reqBody)
+                    .build()
+                httpClient.newCall(req).execute().close()
+            } catch (_: Exception) { }
+        }
     }
 
-    suspend fun checkForIncomingRoleAssignment(myCode: String): RoleAssignmentInfo? = withContext(Dispatchers.IO) {
+    suspend fun checkForIncomingRoleAssignment(myCode: String, myEmail: String = ""): RoleAssignmentInfo? = withContext(Dispatchers.IO) {
         val cleaned = normalizeCode(myCode)
-        if (cleaned.isBlank()) return@withContext null
+        val cleanEmail = myEmail.trim().lowercase(java.util.Locale.ROOT)
 
-        try {
-            val request = Request.Builder()
-                .url("$BASE_URL/ain_inv_$cleaned/json?poll=1")
-                .get()
-                .build()
+        val topics = mutableListOf<String>()
+        if (cleaned.isNotBlank()) {
+            topics.add("ain_inv_$cleaned")
+            topics.add(getPoolTopic(cleaned))
+        }
+        if (cleanEmail.isNotBlank()) {
+            val emailTopic = getSafeEmailTopic(cleanEmail)
+            if (emailTopic.isNotBlank() && !topics.contains(emailTopic)) {
+                topics.add(emailTopic)
+            }
+        }
+        if (topics.isEmpty()) return@withContext null
 
-            httpClient.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) return@withContext null
-                val body = response.body?.string() ?: return@withContext null
+        var lastAssignment: RoleAssignmentInfo? = null
+        val now = System.currentTimeMillis()
 
-                var lastAssignment: RoleAssignmentInfo? = null
-                val now = System.currentTimeMillis()
-                BufferedReader(StringReader(body)).useLines { lines ->
-                    for (line in lines) {
-                        try {
-                            val obj = JSONObject(line)
-                            if (obj.optString("event") == "message") {
-                                val msgStr = obj.optString("message", "")
-                                val msgJson = JSONObject(msgStr)
-                                if (msgJson.optString("type") == "ROLE_ASSIGNMENT") {
-                                    val leaderCode = msgJson.optString("leaderCode", "")
-                                    val leaderRole = msgJson.optString("leaderRole", "Aile Reisi")
-                                    val leaderIcon = msgJson.optString("leaderIcon", "👑")
-                                    val memberRole = msgJson.optString("memberRole", "Aile Ferdi")
-                                    val memberIcon = msgJson.optString("memberIcon", "👥")
-                                    val ts = msgJson.optLong("timestamp", now)
-                                    if (leaderCode.isNotBlank() && (now - ts) < 30 * 60 * 1000L) {
-                                        lastAssignment = RoleAssignmentInfo(
-                                            leaderCode = formatDisplayCode(leaderCode),
-                                            leaderRole = leaderRole,
-                                            leaderIcon = leaderIcon,
-                                            memberRole = memberRole,
-                                            memberIcon = memberIcon,
-                                            timestamp = ts
-                                        )
+        for (topic in topics) {
+            try {
+                val request = Request.Builder()
+                    .url("$BASE_URL/$topic/json?poll=1")
+                    .get()
+                    .build()
+
+                httpClient.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) return@use
+                    val body = response.body?.string() ?: return@use
+
+                    BufferedReader(StringReader(body)).useLines { lines ->
+                        for (line in lines) {
+                            try {
+                                val obj = JSONObject(line)
+                                if (obj.optString("event") == "message") {
+                                    val msgStr = obj.optString("message", "")
+                                    val msgJson = JSONObject(msgStr)
+                                    if (msgJson.optString("type") == "ROLE_ASSIGNMENT") {
+                                        val leaderCode = msgJson.optString("leaderCode", "")
+                                        val leaderRole = msgJson.optString("leaderRole", "Aile Reisi")
+                                        val leaderIcon = msgJson.optString("leaderIcon", "👑")
+                                        val memberRole = msgJson.optString("memberRole", "Aile Ferdi")
+                                        val memberIcon = msgJson.optString("memberIcon", "👥")
+                                        val ts = msgJson.optLong("timestamp", now)
+                                        if (leaderCode.isNotBlank() && (now - ts) < 24 * 60 * 60 * 1000L) {
+                                            if (lastAssignment == null || ts >= lastAssignment!!.timestamp) {
+                                                lastAssignment = RoleAssignmentInfo(
+                                                    leaderCode = formatDisplayCode(leaderCode),
+                                                    leaderRole = leaderRole,
+                                                    leaderIcon = leaderIcon,
+                                                    memberRole = memberRole,
+                                                    memberIcon = memberIcon,
+                                                    timestamp = ts
+                                                )
+                                            }
+                                        }
                                     }
                                 }
-                            }
-                        } catch (_: Exception) { }
+                            } catch (_: Exception) { }
+                        }
                     }
                 }
-                lastAssignment
+            } catch (e: Exception) {
+                Log.w(TAG, "Failed to check role assignment on $topic: ${e.message}")
             }
-        } catch (e: Exception) {
-            Log.w(TAG, "Failed to check role assignment: ${e.message}")
-            null
         }
+        lastAssignment
     }
 
     /**

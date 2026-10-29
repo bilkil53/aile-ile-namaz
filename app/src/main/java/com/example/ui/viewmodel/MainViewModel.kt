@@ -52,6 +52,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val partnerInfo: StateFlow<PartnerInfoEntity>
     val kazaPrayers: StateFlow<List<KazaPrayerEntity>>
     val recentDailyPrayers: StateFlow<List<DailyPrayerEntity>>
+    val pendingJoinRequests: StateFlow<List<com.example.util.IncomingJoinRequest>>
 
     // Today and Yesterday Prayer flows
     lateinit var yesterdayPrayer: StateFlow<DailyPrayerEntity>
@@ -156,6 +157,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 started = SharingStarted.Eagerly,
                 initialValue = emptyList()
             )
+
+        pendingJoinRequests = repository.pendingJoinRequests.asStateFlow()
 
         val yesterdayCal = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
         val yesterdayDateStr = dateFormat.format(yesterdayCal.time)
@@ -628,14 +631,40 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun requestJoinFamilyPool(code: String) {
+    fun requestJoinFamilyPool(codeOrEmail: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            val success = repository.requestJoinFamilyPool(code)
+            val success = repository.requestJoinFamilyPool(codeOrEmail)
             if (success) {
                 _statusMessage.value = "Katılım talebiniz Aile Reisine iletildi. Onay bekleniyor... ⏳"
             } else {
-                _statusMessage.value = "Geçersiz aile kodu."
+                _statusMessage.value = "Geçersiz aile kodu veya e-posta adresi."
             }
+        }
+    }
+
+    fun approveJoinRequest(
+        request: com.example.util.IncomingJoinRequest,
+        leaderRole: String,
+        leaderIcon: String,
+        memberRole: String,
+        memberIcon: String
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val success = repository.approveJoinRequest(request, leaderRole, leaderIcon, memberRole, memberIcon)
+            if (success) {
+                _statusMessage.value = "${request.claimerName} aile havuzunuza katıldı! 🟢"
+            }
+            delay(3000)
+            _statusMessage.value = null
+        }
+    }
+
+    fun rejectJoinRequest(request: com.example.util.IncomingJoinRequest) {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.rejectJoinRequest(request)
+            _statusMessage.value = "${request.claimerName} katılım talebi reddedildi."
+            delay(2500)
+            _statusMessage.value = null
         }
     }
 

@@ -16,6 +16,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -31,6 +33,9 @@ class PrayerRepository(
     private val repositoryScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val pendingPrayerEventJobs = ConcurrentHashMap<String, Job>()
     private val processedEventSignatures = java.util.Collections.newSetFromMap(ConcurrentHashMap<String, Boolean>())
+
+    val pendingJoinRequests = MutableStateFlow<List<com.example.util.IncomingJoinRequest>>(emptyList())
+    private val dismissedJoinRequestKeys = java.util.Collections.newSetFromMap(ConcurrentHashMap<String, Boolean>())
 
     private var lastProcessedEventTime: Long = System.currentTimeMillis() - 60_000L
 
@@ -329,7 +334,7 @@ class PrayerRepository(
         val childPrefs = context?.getSharedPreferences("family_child_prefs", android.content.Context.MODE_PRIVATE)
 
         // 0. Check if Aile Reisi assigned roles for this member!
-        val roleAssignment = PartnerSyncManager.checkForIncomingRoleAssignment(current.myInviteCode)
+        val roleAssignment = PartnerSyncManager.checkForIncomingRoleAssignment(current.myInviteCode, current.myEmail)
         if (roleAssignment != null && (current.partnerInviteCode.isBlank() || current.partnerDisplayName != roleAssignment.leaderRole)) {
             val leaderRole = FamilyRoleHelper.normalizeRoleTitle(roleAssignment.leaderRole)
             val memberRole = FamilyRoleHelper.normalizeRoleTitle(roleAssignment.memberRole)
@@ -371,49 +376,34 @@ class PrayerRepository(
             return matched
         }
 
-        // 1. If NOT matched yet: check if someone has claimed my invite code!
-        if (!current.isMatched) {
-            // Re-publish my profile so spouse can see my name/email/icon upon entering code
-            val myIcon = childPrefs?.getString("p1_icon", "🧔") ?: "🧔"
-            PartnerSyncManager.publishMyProfile(current.myInviteCode, current.myDisplayName, current.myEmail, myIcon)
+        // 1. ALWAYS publish profile and check for incoming join requests for this pool owner (both by code and by email)
+        val myIcon = childPrefs?.getString("p1_icon", "🧔") ?: "🧔"
+        PartnerSyncManager.publishMyProfile(current.myInviteCode, current.myDisplayName, current.myEmail, myIcon)
 
-            val incomingMatch = PartnerSyncManager.checkForIncomingMatch(current.myInviteCode)
-            if (incomingMatch != null && incomingMatch.partnerCode.isNotBlank()) {
-                val normPartnerName = FamilyRoleHelper.normalizeRoleTitle(incomingMatch.partnerName.ifBlank { "Aile Ferdi" })
-                val roleIcon = if (incomingMatch.partnerIcon.isNotBlank() && !FamilyRoleHelper.isIconConflictingWithRole(incomingMatch.partnerIcon, normPartnerName)) {
-                    incomingMatch.partnerIcon
-                } else {
-                    FamilyRoleHelper.getDefaultIconForRole(normPartnerName)
-                }
-                childPrefs?.edit()
-                    ?.putBoolean("user_explicitly_disconnected", false)
-                    ?.putString("p2_name", normPartnerName)
-                    ?.putString("p2_icon", roleIcon)
-                    ?.apply()
+        try {
+            val incomingRequests = PartnerSyncManager.checkForIncomingRequests(current.myInviteCode, current.myEmail)
+            val filtered = incomingRequests.filter { req ->
+                val normCode = PartnerSyncManager.normalizeCode(req.claimerCode)
+                val isSelf = normCode == PartnerSyncManager.normalizeCode(current.myInviteCode)
+                val isCurrentPartner = current.isMatched && normCode == PartnerSyncManager.normalizeCode(current.partnerInviteCode)
+                val isDismissed = dismissedJoinRequestKeys.contains(normCode) ||
+                    (req.claimerEmail.isNotBlank() && dismissedJoinRequestKeys.contains(req.claimerEmail.lowercase(Locale.ROOT)))
+                !isSelf && !isCurrentPartner && !isDismissed
+            }
 
-                val matched = current.copy(
-                    isMatched = true,
-                    partnerDisplayName = normPartnerName,
-                    partnerEmail = incomingMatch.partnerEmail,
-                    partnerInviteCode = PartnerSyncManager.formatDisplayCode(incomingMatch.partnerCode),
-                    lastSyncTime = System.currentTimeMillis()
-                )
-                prayerDao.savePartnerInfo(matched)
+            val previousKeys = pendingJoinRequests.value.map { req -> req.claimerCode }.toSet()
+            pendingJoinRequests.value = filtered
 
-                // Show notification that match happened!
-                if (context != null) {
+            for (newReq in filtered) {
+                if (!previousKeys.contains(newReq.claimerCode) && context != null) {
                     NotificationHelper.showPartnerAlertNotification(
                         context,
-                        normPartnerName,
-                        FamilyRoleHelper.formatJoinMessageForReis(normPartnerName)
+                        newReq.claimerName,
+                        "${newReq.claimerName} aile havuzunuza katılmak istiyor! Onaylamak için dokunun."
                     )
                 }
-
-                // Immediately broadcast my status back to spouse
-                broadcastCurrentStatusToPartner(todayDate = today)
-                return matched
             }
-        }
+        } catch (_: Exception) { }
 
         val savedPoolCode = childPrefs?.getString("family_pool_code", null) ?: ""
         val effectivePoolCode = savedPoolCode.ifBlank {
@@ -659,7 +649,7 @@ class PrayerRepository(
 
         // 1. Send claim to partner's inbox so they get matched automatically
         PartnerSyncManager.sendPairClaim(
-            targetCode = displayTargetCode,
+            targetCodeOrEmail = displayTargetCode,
             myCode = current.myInviteCode,
             myName = myDisplayName,
             myEmail = current.myEmail,
@@ -705,20 +695,110 @@ class PrayerRepository(
         return true
     }
 
-    suspend fun requestJoinFamilyPool(code: String): Boolean {
+    suspend fun approveJoinRequest(
+        request: com.example.util.IncomingJoinRequest,
+        leaderRole: String,
+        leaderIcon: String,
+        memberRole: String,
+        memberIcon: String
+    ): Boolean {
+        val childPrefs = context?.getSharedPreferences("family_child_prefs", Context.MODE_PRIVATE)
+        val normLeader = FamilyRoleHelper.normalizeRoleTitle(leaderRole)
+        val normMember = FamilyRoleHelper.normalizeRoleTitle(memberRole)
+
         var current = prayerDao.getPartnerInfo().firstOrNull() ?: PartnerInfoEntity()
         if (current.myInviteCode.isBlank() || !current.myInviteCode.startsWith("REIS-00")) {
             current = ensureUniqueInviteCode()
         }
-        val targetCode = PartnerSyncManager.normalizeCode(code)
-        if (targetCode.isBlank() || targetCode.length < 5) return false
 
-        val displayTargetCode = PartnerSyncManager.formatDisplayCode(code)
+        childPrefs?.edit()
+            ?.putBoolean("is_explicit_reis", true)
+            ?.putBoolean("family_pool_created", true)
+            ?.putBoolean("family_pool_has_members", true)
+            ?.putBoolean("is_pool_member_joined", false)
+            ?.putBoolean("user_explicitly_disconnected", false)
+            ?.putString("user_role", "REIS")
+            ?.putString("p1_name", normLeader)
+            ?.putString("p1_icon", leaderIcon)
+            ?.putString("p2_name", normMember)
+            ?.putString("p2_icon", memberIcon)
+            ?.putBoolean("has_p2", true)
+            ?.putBoolean("has_p2_customized", true)
+            ?.putString("family_pool_code", current.myInviteCode)
+            ?.apply()
+
+        updateMyProfileName(normLeader)
+
+        val updated = current.copy(
+            isMatched = true,
+            partnerDisplayName = normMember,
+            partnerEmail = request.claimerEmail,
+            partnerInviteCode = request.claimerCode,
+            lastSyncTime = System.currentTimeMillis()
+        )
+        prayerDao.savePartnerInfo(updated)
+
+        // Broadcast role assignment to member so member's device instantly activates
+        PartnerSyncManager.broadcastRoleAssignment(
+            targetCode = request.claimerCode,
+            targetEmail = request.claimerEmail,
+            myCode = current.myInviteCode,
+            leaderRole = normLeader,
+            leaderIcon = leaderIcon,
+            memberRole = normMember,
+            memberIcon = memberIcon
+        )
+
+        // Broadcast pool member joined event
+        PartnerSyncManager.broadcastPoolMemberJoined(
+            poolCode = current.myInviteCode,
+            myCode = request.claimerCode,
+            myName = normMember,
+            myEmail = request.claimerEmail,
+            myIcon = memberIcon
+        )
+
+        // Remove from pending list
+        val normCode = PartnerSyncManager.normalizeCode(request.claimerCode)
+        if (normCode.isNotBlank()) dismissedJoinRequestKeys.add(normCode)
+        if (request.claimerEmail.isNotBlank()) {
+            dismissedJoinRequestKeys.add(request.claimerEmail.lowercase(Locale.ROOT))
+        }
+        pendingJoinRequests.value = pendingJoinRequests.value.filter { req ->
+            req.claimerCode != request.claimerCode && req.claimerEmail != request.claimerEmail
+        }
+
+        broadcastCurrentStatusToPartner()
+        triggerAutoCloudBackup()
+        return true
+    }
+
+    fun rejectJoinRequest(request: com.example.util.IncomingJoinRequest) {
+        val normCode = PartnerSyncManager.normalizeCode(request.claimerCode)
+        if (normCode.isNotBlank()) dismissedJoinRequestKeys.add(normCode)
+        if (request.claimerEmail.isNotBlank()) {
+            dismissedJoinRequestKeys.add(request.claimerEmail.lowercase(Locale.ROOT))
+        }
+        pendingJoinRequests.value = pendingJoinRequests.value.filter { req ->
+            req.claimerCode != request.claimerCode && req.claimerEmail != request.claimerEmail
+        }
+    }
+
+    suspend fun requestJoinFamilyPool(codeOrEmail: String): Boolean {
+        var current = prayerDao.getPartnerInfo().firstOrNull() ?: PartnerInfoEntity()
+        if (current.myInviteCode.isBlank() || !current.myInviteCode.startsWith("REIS-00")) {
+            current = ensureUniqueInviteCode()
+        }
+        val rawInput = codeOrEmail.trim()
+        if (rawInput.isBlank()) return false
+        val isEmail = rawInput.contains("@")
+        val targetDisplay = if (isEmail) rawInput.lowercase(Locale.ROOT) else PartnerSyncManager.formatDisplayCode(rawInput)
+
         val childPrefs = context?.getSharedPreferences("family_child_prefs", android.content.Context.MODE_PRIVATE)
 
         // Store pending request details (not joined yet until Reis approves!)
         childPrefs?.edit()
-            ?.putString("pending_pool_code", displayTargetCode)
+            ?.putString("pending_pool_code", targetDisplay)
             ?.putLong("pending_join_request_time", System.currentTimeMillis())
             ?.putBoolean("user_explicitly_disconnected", false)
             ?.remove("is_pool_member_joined")
@@ -733,26 +813,28 @@ class PrayerRepository(
             if (current.myEmail.isNotBlank()) current.myEmail.substringBefore("@") else "Aile Ferdi"
         }
 
-        // Send claim to Reis's inbox so Reis sees the request with timestamp
+        // Send claim to Reis's inbox so Reis sees the request with timestamp (supports code and email)
         PartnerSyncManager.sendPairClaim(
-            targetCode = displayTargetCode,
+            targetCodeOrEmail = rawInput,
             myCode = current.myInviteCode,
             myName = myDisplayName,
             myEmail = current.myEmail,
             myIcon = myIcon
         )
 
-        // Broadcast pending request to pair topic
-        PartnerSyncManager.broadcastPartnerEvent(
-            codeA = current.myInviteCode,
-            codeB = displayTargetCode,
-            myCode = current.myInviteCode,
-            myName = myDisplayName,
-            eventType = "MEMBER_JOIN_REQUESTED",
-            prayerName = "Aile Havuzu",
-            actionText = "$myDisplayName aile havuzunuza katılmak istiyor (Onay bekleniyor)",
-            senderIcon = myIcon
-        )
+        // Broadcast pending request to pair topic if code
+        if (!isEmail) {
+            PartnerSyncManager.broadcastPartnerEvent(
+                codeA = current.myInviteCode,
+                codeB = targetDisplay,
+                myCode = current.myInviteCode,
+                myName = myDisplayName,
+                eventType = "MEMBER_JOIN_REQUESTED",
+                prayerName = "Aile Havuzu",
+                actionText = "$myDisplayName aile havuzunuza katılmak istiyor (Onay bekleniyor)",
+                senderIcon = myIcon
+            )
+        }
 
         return true
     }
