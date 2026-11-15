@@ -20,14 +20,14 @@ class Push {
   // Firebase istemci ayarları (google-services.json karşılığı). Gizli değildir; APK'nın içinde de bulunur.
   // Güvenlik Firebase tarafında API kısıtlamalarıyla, veri güvenliği Supabase RLS ile sağlanır.
   static const _options = FirebaseOptions(
-    apiKey: 'AIzaSyAN2lEI-gh97nI9RMp1gkRpthTBsUHn4sQ',
+    apiKey: 'AIzaSyCgPOgKQPDXhtK2Y-xZkLW3oPHAD0_HPiQ',
     // Demo ayrı paket (com.bilkil53.aile_ile_namaz.demo) → Firebase'de ayrı uygulama kimliği
     appId: String.fromEnvironment('CHANNEL') == 'demo'
-        ? '1:736837751684:android:25af1ccf0bebf50645c3d1'
-        : '1:736837751684:android:dc1c39574b3dcbd945c3d1',
-    messagingSenderId: '736837751684',
-    projectId: 'aile-ile-namaz-d437f',
-    storageBucket: 'aile-ile-namaz-d437f.firebasestorage.app',
+        ? '1:318839766364:android:9bc0e71ce66fcc212a5599'
+        : '1:318839766364:android:485277e25d857b0f2a5599',
+    messagingSenderId: '318839766364',
+    projectId: 'aile-ile-namaz-app',
+    storageBucket: 'aile-ile-namaz-app.firebasestorage.app',
   );
 
   /// Son hatanın ayrıntısı (Ayarlar'da dokununca gösterilir; destek için).

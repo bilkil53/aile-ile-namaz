@@ -18,7 +18,7 @@ class AppConfig {
   static const googleWebClientId = String.fromEnvironment(
     'GOOGLE_WEB_CLIENT_ID',
     defaultValue:
-        '688413758748-g6lmmi2injhh48hpemku3n4475vfdvia.apps.googleusercontent.com',
+        '318839766364-a6jmhvudnandjnhd7iv6ahvk0qlp5c5q.apps.googleusercontent.com',
   );
 
   /// Google girişinden sonra uygulamaya dönüş adresi (yedek tarayıcı girişi için).
