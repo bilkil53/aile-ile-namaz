@@ -23,7 +23,11 @@ class AppConfig {
 
   /// Google girişinden sonra uygulamaya dönüş adresi (yedek tarayıcı girişi için).
   /// AndroidManifest / Info.plist içindeki şema ile aynı olmalıdır.
-  static const authRedirect = 'io.supabase.aileilenamaz://login-callback/';
+  /// Demo ayrı şema kullanır: iki uygulama aynı telefonda aynı dönüş adresini sahiplenmesin
+  /// (CI demo dalında manifeste aynı şemayı yazar).
+  static const authRedirect = String.fromEnvironment('CHANNEL') == 'demo'
+      ? 'io.supabase.aileilenamaz.demo://login-callback/'
+      : 'io.supabase.aileilenamaz://login-callback/';
 
   /// Öneri ve hata bildirimlerinin gideceği adres (kullanıcı mail uygulamasıyla gönderir).
   static const supportEmail = 'e.bilkil5391@gmail.com';
