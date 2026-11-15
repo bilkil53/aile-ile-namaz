@@ -13,6 +13,7 @@ import 'settings.dart';
 import 'sync_logic.dart';
 import 'models.dart';
 import 'privacy.dart';
+import 'pro.dart';
 
 SupabaseClient get supa => Supabase.instance.client;
 
@@ -675,6 +676,7 @@ class Repo {
   /// Bellekteki hesaba bağlı önbellek ve zamanlayıcıları sıfırlar (hesap değişince / çıkışta).
   static void resetUserCache() {
     AllPrayed.cancel();
+    Pro.reset();
     _myName = null;
     _poolIds = null;
     for (final t in [..._writeTimers.values, ..._announceTimers.values]) {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'data.dart';
@@ -263,6 +265,25 @@ class Pro {
     trialUntil = tr > 0 ? DateTime.fromMillisecondsSinceEpoch(tr) : null;
     final ts = AppSettings.prefs.getInt(_kTrialStart) ?? 0;
     trialStart = ts > 0 ? DateTime.fromMillisecondsSinceEpoch(ts) : null;
+  }
+
+  @visibleForTesting
+  static void loadCached() => _load();
+
+  /// Bellekteki hesaba bağlı Pro durumunu sıfırlar (çıkışta / hesap değişince): aynı telefonda giren
+  /// sonraki hesap öncekinin Pro'sunu, test rozetini ya da Pro isteklerini devralmasın.
+  /// Diskteki `pro.*` anahtarlarını LocalStore.wipeUserData siler. [changed] bilerek tetiklenmez:
+  /// çıkış sürerken bildirim kaydı / hatırlatmalar yeniden kurulmasın; yeni oturum ekranı baştan çizilir.
+  static void reset() {
+    _until = null;
+    source = null;
+    trialUntil = null;
+    trialStart = null;
+    isTester = false;
+    lastError = null;
+    requestNames = {};
+    // Ekran çizimi sırasında çağrılabilir (giriş kapısı): dinleyiciler çizim bitince uyarılır
+    scheduleMicrotask(() => requests.value = {});
   }
 
   static DateTime? _dt(Object? v) => v == null ? null : DateTime.tryParse(v.toString())?.toLocal();
