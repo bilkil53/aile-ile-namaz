@@ -52,4 +52,9 @@ void main() {
     expect(UpdateChecker.assetBase('r105'), endsWith('/releases/latest/download'));
     expect(UpdateChecker.assetBase('../kötü'), endsWith('/releases/latest/download'));
   });
+
+  test('Play bağlantısı çalışan uygulamanın paket adından kurulur (demo ayrı paket)', () {
+    expect(UpdateChecker.playUrl('com.bilkil53.aile_ile_namaz.demo'), endsWith('?id=com.bilkil53.aile_ile_namaz.demo'));
+    expect(UpdateChecker.playUrl('com.bilkil53.aile_ile_namaz'), endsWith('?id=com.bilkil53.aile_ile_namaz'));
+  });
 }
