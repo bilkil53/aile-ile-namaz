@@ -87,13 +87,19 @@ jobs:
           for perm in perms:
               if perm not in s:
                   s = s.replace('<application', f'<uses-permission android:name="{perm}"/>\n    <application', 1)
-          intent = '''<intent-filter>
+          # Demo ayrı dönüş şeması kullanır (lib/config.dart authRedirect ile aynı): iki uygulama
+          # aynı telefonda aynı şemayı sahiplenmesin
+          import os as _oc
+          scheme = 'io.supabase.aileilenamaz.demo' if _oc.environ.get('GITHUB_REF_NAME') == 'demo' else 'io.supabase.aileilenamaz'
+          intent = f'''<intent-filter>
                           <action android:name="android.intent.action.VIEW" />
                           <category android:name="android.intent.category.DEFAULT" />
                           <category android:name="android.intent.category.BROWSABLE" />
-                          <data android:scheme="io.supabase.aileilenamaz" android:host="login-callback" />
+                          <data android:scheme="{scheme}" android:host="login-callback" />
                       </intent-filter>'''
+          if '</activity>' not in s: raise SystemExit('</activity> satırı bulunamadı; giriş dönüş bağlantısı eklenemedi')
           s = s.replace('</activity>', intent + '\n        </activity>', 1)
+          assert s.count(f'android:scheme="{scheme}"') == 1, 'giriş dönüş şeması manifeste yazılamadı'
           s = s.replace('android:label="aile_ile_namaz"', 'android:label="Aile İle Namaz"')
           # Demo kanalı: telefonda "Namaz Demo" adıyla görünür (ayrı paket .demo, stabilin yanına kurulur)
           import os as _o

@@ -162,7 +162,7 @@
 |---|---|
 | Uygulama | Flutter (Dart 3), Material 3 · görünen sürüm `1.N`, `versionCode` = derleme no · tek pencere (`launchMode=singleTask`) · yazı ölçeği en fazla 1.0 |
 | Arka uç | Supabase — PostgreSQL, Row Level Security, Auth, Realtime, Edge Functions, pg_cron, pg_net (Frankfurt / eu-central-1) |
-| Giriş | Google Sign-In (telefondaki hesap seçici → `signInWithIdToken`); yedek: OAuth tarayıcı akışı, `io.supabase.aileilenamaz://login-callback/` |
+| Giriş | Google Sign-In (telefondaki hesap seçici → `signInWithIdToken`); yedek: OAuth tarayıcı akışı, `io.supabase.aileilenamaz://login-callback/` (demo: `io.supabase.aileilenamaz.demo://login-callback/`) |
 | Vakitler | aladhan.com, method 13 (Diyanet): her açılışta **30 gün ileri** aylık takvimle önbelleğe alınır → önbellek → (hiç yoksa) çevrimdışı yaklaşık hesap, ekranda "≈ Yaklaşık vakit" notuyla; 81 il koordinatı |
 | Konum | geolocator (son bilinen → anlık konum), geocoding (İlçe, İl); her açılışta otomatik, hata olursa 10 sn arayla 3 deneme; arka plandan dönüşte 1 saatten eskiyse yenilenir |
 | Bildirim | flutter_local_notifications (zamanlanmış, 10 gün ileri, kesin alarm; mübarek günler 60 gün ileri) · aile olayları: ön planda Realtime, arka planda **FCM** (`push-family` Edge Function) |
