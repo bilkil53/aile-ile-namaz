@@ -340,12 +340,15 @@ jobs:
 
       - name: Sunucu güvenlik testi (canlı veritabanında, sonunda her şey geri alınır)
         env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          DB_URL_MAIN: ${{ secrets.SUPABASE_DB_URL }}
+          DB_URL_DEMO: ${{ secrets.SUPABASE_DB_URL_DEMO }}
         run: |
+          # demo dalı demo veritabanında test edilir; demo adresi yoksa gerçek veritabanına düşmez, iş durur
+          if [ "$GITHUB_REF_NAME" = demo ]; then SUPABASE_DB_URL=$DB_URL_DEMO; n=SUPABASE_DB_URL_DEMO; else SUPABASE_DB_URL=$DB_URL_MAIN; n=SUPABASE_DB_URL; fi
           # Zorunlu (fail-closed): bağlantı bilgisi yoksa test sessizce atlanmaz, derleme ve yayın durur
           if [ -z "$SUPABASE_DB_URL" ]; then
-            echo "::error::SUPABASE_DB_URL gizli ayarı yok: sunucu güvenlik testi çalıştırılamadı; derleme ve yayın durduruldu."
-            echo '## Sunucu güvenlik testi: ÇALIŞTIRILAMADI (SUPABASE_DB_URL yok) — yayın durduruldu' >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::$n gizli ayarı yok: sunucu güvenlik testi çalıştırılamadı; derleme ve yayın durduruldu."
+            echo '## Sunucu güvenlik testi: ÇALIŞTIRILAMADI ($n yok) — yayın durduruldu' >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
           out=$(psql "$SUPABASE_DB_URL" -X -q -v ON_ERROR_STOP=1 -f supabase/tests/security_test.sql 2>&1 || true)
