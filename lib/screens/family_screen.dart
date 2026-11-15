@@ -291,7 +291,9 @@ class _FamilyScreenState extends State<FamilyScreen> {
     } catch (_) {
       // İnternet yok: son bilinen aile durumunu göster, bağlantı gelince kendiliğinden yenile
       await _loadSnapshot();
-      if (mounted) setState(() => _loading = false);
+      // Ekran bu arada kapandıysa zamanlayıcı kurulmaz (dispose sonrası kurulan zamanlayıcı hiç durmazdı)
+      if (!mounted) return;
+      setState(() => _loading = false);
       _offlineRetry ??= Timer.periodic(const Duration(seconds: 15), (_) => _load());
     }
   }
