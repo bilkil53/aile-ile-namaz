@@ -1,0 +1,38 @@
+name: Hızlı kontrol (analiz + birim testleri, yayın yok)
+
+# Yalnızca check/* dallarına gönderilince çalışır: büyük değişikliklerde (ör. çeviri) derlemeyi
+# beklemeden kodun hatasız olduğu birkaç dakikada görülür. Hiçbir zaman yayın yapmaz.
+on:
+  push:
+    branches: ['check/**']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quick-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          flutter-version: 3.47.9
+          cache: true
+      # Paket sürümleri pubspec.lock ile sabittir: kilit dosyasıyla uyuşmuyorsa durur
+      - run: flutter pub get --enforce-lockfile
+      - name: Kod analizi
+        run: |
+          set +e
+          flutter analyze --no-fatal-infos > analyze.txt 2>&1
+          rc=$?
+          cat analyze.txt
+          grep -E '^\s*(error|warning) •' analyze.txt | head -40 | while IFS= read -r l; do echo "::error::${l}"; done
+          exit $rc
+      - name: Birim testleri
+        run: flutter test
