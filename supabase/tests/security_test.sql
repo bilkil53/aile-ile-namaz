@@ -90,12 +90,24 @@ begin
   exception when others then fails := fails || 'test_remove_pro_listedekine_kapali: ' || sqlerrm || '; '; end;
 
   -- 3) pool_events: yalnızca izinli 6 sütun; tarih yazılamaz; değiştirme/silme yok
+  -- Dua yalnızca hazır metinlerden olabilir (48): serbest metin reddedilir. Blok her durumda hata ile
+  -- biter (eklenen satır geri alınır, hız sınırını etkilemez). Geçiş 48 uygulanmamış sunucuda başarısız olur.
   begin insert into public.pool_events(pool_id, sender_id, event_type, message) values (p, u, 'DUA', 'test');
+    raise exception 'dua_serbest_metin_kabul_edildi';
+  exception when others then
+    if sqlerrm = 'dua_not_preset' then passed := passed + 1;
+    else fails := fails || 'dua_hazir_metin_denetimi: ' || sqlerrm || '; '; end if;
+  end;
+  begin insert into public.pool_events(pool_id, sender_id, event_type, message)
+      values (p, u, 'DUA', 'Rabbim sana ve ailene afiyet, kalbine inşirah, hanene bereket ihsan eylesin.');
     passed := passed + 1;
   exception when others then fails := fails || 'pe_insert_6sutun: ' || sqlerrm || '; '; end;
-  begin insert into public.pool_events(pool_id, sender_id, event_type, message) values (p, u, 'DUA', 'test2');
+  begin insert into public.pool_events(pool_id, sender_id, event_type, message) values (p, u, 'DUA', '');
     fails := fails || 'dua_hiz_siniri_calismadi; ';
-  exception when sqlstate 'P0001' then passed := passed + 1; end;
+  exception when sqlstate 'P0001' then
+    if sqlerrm = 'rate_limited' then passed := passed + 1;
+    else fails := fails || 'dua_hiz_siniri: ' || sqlerrm || '; '; end if;
+  end;
   begin insert into public.pool_events(pool_id, sender_id, event_type, created_at) values (p, u, 'KAZA', now() - interval '2 days');
     fails := fails || 'pe_created_at_yazilabiliyor; ';
   exception when insufficient_privilege then passed := passed + 1; end;

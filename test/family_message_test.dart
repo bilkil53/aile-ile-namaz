@@ -69,4 +69,16 @@ void main() {
     final count = RegExp(r'^\s+"', multiLine: true).allMatches(block).length;
     expect(count, familyMessagesEn.length, reason: 'sunucuda fazladan ya da eski metin var');
   });
+
+  test('Sunucudaki hazır dua listesi (geçiş dosyaları) uygulamadaki bütün hazır mesajları içerir', () {
+    final sql = Directory('supabase/migrations')
+        .listSync()
+        .whereType<File>()
+        .map((f) => f.readAsStringSync())
+        .join('\n');
+    expect(sql.contains('private.is_dua_preset'), isTrue, reason: 'hazır dua denetimi yok');
+    for (final m in familyMessagesEn.keys) {
+      expect(sql.contains('\$m\$$m\$m\$'), isTrue, reason: 'sunucu bu hazır mesajı reddeder: $m');
+    }
+  });
 }
