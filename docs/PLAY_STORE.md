@@ -20,8 +20,8 @@ Bu dosya Play Store'a çıkış günü yapılacakları ve hazır olanları liste
 2. **Play App Signing**'i kabul et; ilk sürüm olarak son `aile-ile-namaz.aab` dosyasını "Dahili test" kanalına yükle.
 3. **⚠️ Google girişi (S2):** Play uygulamayı kendi anahtarıyla imzalar → SHA-1 değişir. Play Console → *Kurulum → Uygulama imzalama* sayfasındaki **"Uygulama imzalama anahtarı sertifikası" SHA-1**'ini kopyala ve şuralara ekle:
    - Google Cloud **aile-ile-namaz-513220** → APIs & Services → Credentials → *Aile ile Namaz Android* OAuth istemcisi. (Paket adı aynı, SHA-1 Play'inki olan **ikinci bir Android istemcisi** oluştur; mevcut olanı silme — GitHub APK'sı onu kullanıyor.)
-   - Firebase **aile-ile-namaz-d437f** → Proje ayarları → Android uygulaması → *Parmak izi ekle*.
-   - Google Cloud **aile-ile-namaz-d437f** → Credentials → *Android key (auto created by Firebase)* → Android uygulama kısıtlamasına aynı paket + Play SHA-1'ini ekle.
+   - Firebase **aile-ile-namaz-app** → Proje ayarları → Android uygulaması → *Parmak izi ekle*.
+   - Google Cloud **aile-ile-namaz-app** → Credentials → *Android key (auto created by Firebase)* → Android uygulama kısıtlamasına aynı paket + Play SHA-1'ini ekle.
 4. **Veri güvenliği formu** (Data safety):
    - Toplanan: Ad, e-posta (hesap yönetimi) · Uygulama etkinliği: namaz/kaza kayıtları, mesajlar (uygulama işlevi) · Cihaz kimliği: bildirim kimliği (uygulama işlevi) · Uygulama bilgileri ve performansı: çökme/hata raporu — **isteğe bağlı** (yalnızca kullanıcı "Raporu gönder" derse; hesapla ilişkilendirilmez; uygulama işlevi/hata giderme)
    - Konum: **yaklaşık konum paylaşılıyor, toplanmıyor** — yaklaşık 1 km'ye yuvarlanmış koordinat, kimlik bilgisi olmadan namaz vakti servisine (api.aladhan.com) gönderilir; sunucumuzda saklanmaz. Play formunda "Yaklaşık konum → uygulama işlevi → geçici işleme" olarak beyan edilir.

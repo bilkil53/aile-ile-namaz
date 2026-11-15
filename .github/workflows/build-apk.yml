@@ -601,7 +601,7 @@ jobs:
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
         timeout-minutes: 45
         run: |
-          gcloud config set project aile-ile-namaz-d437f >/dev/null
+          gcloud config set project aile-ile-namaz-app >/dev/null
           VIRT_EN="model=MediumPhone.arm,version=34,locale=en,orientation=portrait"
           VIRT_TR="model=MediumPhone.arm,version=34,locale=tr,orientation=portrait"
           if [ "$GITHUB_REF_NAME" = demo ]; then
@@ -657,7 +657,7 @@ jobs:
         continue-on-error: true
         run: |
           B=$(grep -oE 'gs://test-lab-[a-z0-9-]+' testlab.txt 2>/dev/null | head -1)
-          B=${B:-gs://test-lab-f0cq92dkn1676-m5y4ycp8z2w6s}
+          [ -n "$B" ] || { echo '::warning::Test Lab deposu bulunamadı, temizlik atlandı'; exit 0; }
           LIMIT=$(date -u -d '7 days ago' +%Y-%m-%d)
           n=0
           for d in $(gcloud storage ls "$B/"); do
