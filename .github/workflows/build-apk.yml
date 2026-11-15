@@ -1,0 +1,666 @@
+name: Android APK
+
+on:
+  push:
+    branches: [main, dev, demo]
+    # Yalnızca belge/web sayfası değişince yeni sürüm çıkmasın
+    paths-ignore: ['docs/**', '**.md']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Görünen sürüm ve yayın etiketi: main v1.N (v1.0, v1.1 … v1.10), demo v11.N (v11.0, v11.1 …).
+# Her kanalın N'si kendi yayınlarına göre bir artar, hiç sıfırlanmaz. Demo ayrı paket olduğu için ayrı sayılır.
+# Derleme numarası (BUILD_NO = N + 1): Android versionCode + uygulama içi güncelleme karşılaştırması.
+# 15 Kasım 2026'da yeni imza anahtarıyla numaralandırma sıfırlandı (eski v1.0.N yayınları sayılmaz;
+# eski uygulama kaldırılıp yeni kurulur).
+env:
+  # Google Play paketi (AAB) derlensin mi? Play'e çıkış hazırlığına kadar kapalı (yayını uzatmasın).
+  # Play'e çıkarken "true" yapılır.
+  PLAY_BUNDLE: "false"
+
+# Stabil ve demo aynı anda derlenirse aynı sürüm numarasını (rN) almasın: sırayla çalışsın.
+# Tam test (dev, elle başlatma) yayın üretmez: kendi sırasında, yayınla aynı anda çalışır.
+concurrency:
+  group: ${{ (github.ref_name == 'main' || github.ref_name == 'demo') && 'release-numbering' || format('test-{0}', github.ref_name) }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: stable
+          # Sabit sürüm: yeni bir Flutter yayınındaki yeni analiz uyarısı derlemeyi habersiz durdurmasın
+          flutter-version: 3.47.9
+          cache: true
+
+      - name: Android platform dosyalarını oluştur
+        run: |
+          flutter create . --org com.bilkil53 --project-name aile_ile_namaz --platforms android
+          # Paket sürümleri sabit kalmalı. "flutter create", yeni çıkan bir paket sürümünü kilit dosyasına
+          # yazabiliyor; bu durumda depodaki kilit dosyası geri alınır ve tam o sürümlerle kurulum zorlanır.
+          # Kilit dosyası gerçekten uyuşmuyorsa (kurulamıyorsa) burada durur.
+          if ! git diff --quiet pubspec.lock pubspec.yaml; then
+            echo "::warning::flutter create kilit dosyasını değiştirdi; depodaki sürümler geri alındı"
+            git diff --stat pubspec.lock pubspec.yaml
+            git checkout -- pubspec.lock pubspec.yaml
+          fi
+          flutter pub get --enforce-lockfile
+          git diff --exit-code pubspec.lock pubspec.yaml || { echo '::error::pubspec.lock / pubspec.yaml değişti (paket sürümleri sabit değil)'; exit 1; }
+
+      - name: Kapanma sebebi okuyucu (MainActivity)
+        run: |
+          f=$(find android/app/src/main -name 'MainActivity.kt' | head -1)
+          cp android-config/kotlin/MainActivity.kt "$f"
+          cp android-config/kotlin/App.kt "$(dirname "$f")/App.kt"
+          grep -q getHistoricalProcessExitReasons "$f"
+          # Uygulama simgesi (eski uygulamanın logosu: minare, hilal ve E harfi)
+          cp -r android-config/res/. android/app/src/main/res/
+          test -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+          # Zamanlanmış bildirim alıcısı R8 küçültmesinde bozulmasın
+          cp android-config/proguard-rules.pro android/app/proguard-rules.pro
+
+      - name: Manifest düzenle (internet izni, giriş dönüş bağlantısı, uygulama adı)
+        run: |
+          python3 - <<'PY'
+          p = 'android/app/src/main/AndroidManifest.xml'
+          s = open(p, encoding='utf-8').read()
+          perms = [
+              'android.permission.INTERNET',
+              'android.permission.REQUEST_INSTALL_PACKAGES',
+              'android.permission.ACCESS_COARSE_LOCATION',
+              'android.permission.ACCESS_FINE_LOCATION',
+              'android.permission.POST_NOTIFICATIONS',
+              'android.permission.RECEIVE_BOOT_COMPLETED',
+              'android.permission.SCHEDULE_EXACT_ALARM',
+          ]
+          for perm in perms:
+              if perm not in s:
+                  s = s.replace('<application', f'<uses-permission android:name="{perm}"/>\n    <application', 1)
+          intent = '''<intent-filter>
+                          <action android:name="android.intent.action.VIEW" />
+                          <category android:name="android.intent.category.DEFAULT" />
+                          <category android:name="android.intent.category.BROWSABLE" />
+                          <data android:scheme="io.supabase.aileilenamaz" android:host="login-callback" />
+                      </intent-filter>'''
+          s = s.replace('</activity>', intent + '\n        </activity>', 1)
+          s = s.replace('android:label="aile_ile_namaz"', 'android:label="Aile İle Namaz"')
+          # Demo kanalı: telefonda "Namaz Demo" adıyla görünür (ayrı paket .demo, stabilin yanına kurulur)
+          import os as _o
+          if _o.environ.get('GITHUB_REF_NAME') == 'demo':
+              s = s.replace('android:label="Aile İle Namaz"', 'android:label="Namaz Demo"')
+          if 'android:roundIcon' not in s:
+              s = s.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"', 1)
+          # Çökme kaydedici için kendi Application sınıfımız
+          s = s.replace('android:name="${applicationName}"', 'android:name=".App"', 1)
+          assert 'android:name=".App"' in s, 'Application adı değiştirilemedi'
+          # Güncelleme APK'sını kurulum ekranına vermek için kendi FileProvider'ımız
+          provider = '''<provider android:name="androidx.core.content.FileProvider" android:authorities="${applicationId}.aileupdate" android:exported="false" android:grantUriPermissions="true">
+                      <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/aile_update_paths" />
+                  </provider>'''
+          s = s.replace('</application>', provider + '\n    </application>', 1)
+          import os as _os
+          _os.makedirs('android/app/src/main/res/xml', exist_ok=True)
+          open('android/app/src/main/res/xml/aile_update_paths.xml', 'w', encoding='utf-8').write(
+              '<?xml version="1.0" encoding="utf-8"?>\n<paths>\n  <cache-path name="cache" path="." />\n  <files-path name="files" path="." />\n'
+              '  <external-cache-path name="ext_cache" path="." />\n  <external-files-path name="ext_files" path="." />\n</paths>\n')
+          # Tek pencere: güncelleme kurulumundan sonra "Aç" denince eski ve yeni iki kopya görünmesin
+          s = s.replace('android:launchMode="singleTop"', 'android:launchMode="singleTask"', 1)
+          assert 'android:launchMode="singleTask"' in s, 'launchMode değiştirilemedi'
+          # Android otomatik yedeklemesi kapalı: oturum bilgisi Drive yedeğine / başka cihaza taşınmaz.
+          # Kişinin namaz ve kaza kayıtları zaten hesabına bağlı bulutta; girişte otomatik geri gelir.
+          if 'android:allowBackup' not in s:
+              s = s.replace('<application', '<application android:allowBackup="false" android:fullBackupContent="false" android:dataExtractionRules="@xml/data_extraction_rules"', 1)
+          import os
+          os.makedirs('android/app/src/main/res/xml', exist_ok=True)
+          open('android/app/src/main/res/xml/data_extraction_rules.xml', 'w', encoding='utf-8').write(
+              '<?xml version="1.0" encoding="utf-8"?>\n<data-extraction-rules>\n'
+              '  <cloud-backup><exclude domain="root" /><exclude domain="sharedpref" /><exclude domain="database" /><exclude domain="file" /></cloud-backup>\n'
+              '  <device-transfer><exclude domain="root" /><exclude domain="sharedpref" /><exclude domain="database" /><exclude domain="file" /></device-transfer>\n'
+              '</data-extraction-rules>\n')
+          receivers = '''<receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+                  <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+                      <intent-filter>
+                          <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                          <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                          <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+                      </intent-filter>
+                  </receiver>'''
+          if 'ScheduledNotificationReceiver' not in s:
+              s = s.replace('</application>', receivers + '\n    </application>', 1)
+          # Android 11+: mail ve tarayıcı uygulamalarını görebilmek için
+          q = '''<intent><action android:name="android.intent.action.SENDTO" /><data android:scheme="mailto" /></intent>
+                  <intent><action android:name="android.intent.action.VIEW" /><data android:scheme="https" /></intent>'''
+          if 'android:scheme="mailto"' not in s:
+              if '<queries>' in s:
+                  s = s.replace('<queries>', '<queries>\n        ' + q, 1)
+              else:
+                  s = s.replace('</manifest>', '    <queries>\n        ' + q + '\n    </queries>\n</manifest>', 1)
+          open(p, 'w', encoding='utf-8').write(s)
+          PY
+
+      - name: Gradle ayarları (bildirim eklentisi için Java kütüphane desteği)
+        run: |
+          python3 - <<'PY'
+          import os
+          kts = 'android/app/build.gradle.kts'
+          if os.path.exists(kts):
+              s = open(kts, encoding='utf-8').read()
+              if 'isCoreLibraryDesugaringEnabled' not in s:
+                  s = s.replace('compileOptions {', 'compileOptions {\n        isCoreLibraryDesugaringEnabled = true', 1)
+                  s += '\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")\n    implementation("androidx.core:core:1.13.1")\n}\n'
+              # Demo ayrı paket: telefonda stabil uygulamanın yanına kurulur (üstüne yazmaz)
+              if os.environ.get('GITHUB_REF_NAME') == 'demo':
+                  old = 'applicationId = "com.bilkil53.aile_ile_namaz"'
+                  if old not in s: raise SystemExit('applicationId satırı bulunamadı; demo paket adı verilemedi')
+                  s = s.replace(old, 'applicationId = "com.bilkil53.aile_ile_namaz.demo"', 1)
+              open(kts, 'w', encoding='utf-8').write(s)
+          else:
+              p = 'android/app/build.gradle'
+              s = open(p, encoding='utf-8').read()
+              if 'coreLibraryDesugaringEnabled' not in s:
+                  s = s.replace('compileOptions {', 'compileOptions {\n        coreLibraryDesugaringEnabled true', 1)
+                  s += "\ndependencies {\n    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'\n    implementation 'androidx.core:core:1.13.1'\n}\n"
+              open(p, 'w', encoding='utf-8').write(s)
+          print('desugaring ok')
+          PY
+
+      - name: Firebase Gradle eklentisi (google-services) ve Maven aynası
+        run: |
+          cp android-config/google-services.json android/app/google-services.json
+          python3 - <<'PY'
+          import re
+          # Maven Central bazı büyük dosyaları GitHub'a yönlendiriyor; GitHub kesintisinde (504) derleme
+          # durmasın diye önce Google'ın Maven Central aynası denenir, sonra asıl Maven Central.
+          mirror = 'maven { url = uri("https://maven-central.storage-download.googleapis.com/maven2/") }'
+          for f in ['android/settings.gradle.kts', 'android/build.gradle.kts']:
+              try:
+                  t = open(f, encoding='utf-8').read()
+              except FileNotFoundError:
+                  continue
+              if mirror not in t:
+                  t = re.sub(r'(^[ \t]*)mavenCentral\(\)', lambda m: m.group(1) + mirror + '\n' + m.group(1) + 'mavenCentral()', t, flags=re.M)
+                  open(f, 'w', encoding='utf-8').write(t)
+              print(f, 'ayna:', mirror in t)
+          st = 'android/settings.gradle.kts'
+          s = open(st, encoding='utf-8').read()
+          if 'com.google.gms.google-services' not in s:
+              s = re.sub(r'(plugins\s*\{[^}]*?id\("com\.android\.application"\)[^\n]*\n)',
+                         r'\1    id("com.google.gms.google-services") version "4.4.2" apply false\n',
+                         s, count=1)
+          open(st, 'w', encoding='utf-8').write(s)
+          ap = 'android/app/build.gradle.kts'
+          s = open(ap, encoding='utf-8').read()
+          if 'com.google.gms.google-services' not in s:
+              s = s.replace('plugins {', 'plugins {\n    id("com.google.gms.google-services")', 1)
+          open(ap, 'w', encoding='utf-8').write(s)
+          print(open(st).read()[:1200])
+          PY
+          # Eklenti eksikse anlık bildirim çalışmaz: derlemeyi durdur
+          grep -q 'com.google.gms.google-services' android/settings.gradle.kts
+          grep -q 'id("com.google.gms.google-services")' android/app/build.gradle.kts
+          { echo '## Firebase Gradle eklentileri'; echo '```'; grep -n 'google\|crashlytics' android/settings.gradle.kts android/app/build.gradle.kts; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Kalıcı imza anahtarını ayarla (Google girişi için SHA-1 sabit kalmalı)
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_B64" ]; then
+            # Yayın dallarında (main/demo) imza anahtarı zorunlu: geçici anahtarla yayın çıkmaz.
+            if [ "$GITHUB_REF_NAME" = "main" ] || [ "$GITHUB_REF_NAME" = "demo" ]; then
+              echo "::error::ANDROID_KEYSTORE_BASE64 secret yok; $GITHUB_REF_NAME dalında yayın durduruldu (geçici anahtarla imzalanmış APK yayınlanmaz)."
+              exit 1
+            fi
+            echo "::warning::ANDROID_KEYSTORE_BASE64 secret yok; dev derlemesi geçici anahtarla imzalanacak (yayınlanmaz, Google girişi çalışmaz)."
+            exit 0
+          fi
+          # Takma ad gizli değil; secret yoksa "upload" kullan. Anahtar şifresi = depo şifresi.
+          KEY_ALIAS="${KEY_ALIAS:-upload}"
+          KEY_PASSWORD="${KEY_PASSWORD:-$KEYSTORE_PASSWORD}"
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          {
+            echo "KEYSTORE_PATH=$RUNNER_TEMP/upload.jks"
+            echo "KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
+            echo "KEY_ALIAS=$KEY_ALIAS"
+            echo "KEY_PASSWORD=$KEY_PASSWORD"
+          } >> "$GITHUB_ENV"
+          python3 - <<'PY'
+          import os
+          kts = 'android/app/build.gradle.kts'
+          groovy = 'android/app/build.gradle'
+          if os.path.exists(kts):
+              p = kts
+              block = '''    signingConfigs {
+                  create("release") {
+                      storeFile = file(System.getenv("KEYSTORE_PATH"))
+                      storePassword = System.getenv("KEYSTORE_PASSWORD")
+                      keyAlias = System.getenv("KEY_ALIAS")
+                      keyPassword = System.getenv("KEY_PASSWORD")
+                  }
+              }
+
+              buildTypes {'''
+              s = open(p, encoding='utf-8').read()
+              s = s.replace('    buildTypes {', block, 1)
+              s = s.replace('signingConfig = signingConfigs.getByName("debug")',
+                            'signingConfig = signingConfigs.getByName("release")')
+          else:
+              p = groovy
+              block = '''    signingConfigs {
+                  release {
+                      storeFile file(System.getenv("KEYSTORE_PATH"))
+                      storePassword System.getenv("KEYSTORE_PASSWORD")
+                      keyAlias System.getenv("KEY_ALIAS")
+                      keyPassword System.getenv("KEY_PASSWORD")
+                  }
+              }
+
+              buildTypes {'''
+              s = open(p, encoding='utf-8').read()
+              s = s.replace('    buildTypes {', block, 1)
+              s = s.replace('signingConfig signingConfigs.debug', 'signingConfig signingConfigs.release')
+          open(p, 'w', encoding='utf-8').write(s)
+          print('release signing ->', p, 'signingConfigs' in s and 'release' in s)
+          PY
+          # İmza sertifikasının SHA-256 parmak izi: uygulama kendini doğrular (değiştirilmiş kopya uyarı verir)
+          sig=$(keytool -list -v -keystore "$RUNNER_TEMP/upload.jks" -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" 2>/dev/null \
+            | grep -i 'SHA256:' | head -1 | sed 's/.*SHA256: *//; s/://g' | tr 'A-Z' 'a-z' | tr -d '[:space:]')
+          if [ -n "$sig" ]; then
+            echo "EXPECTED_SIG=$sig" >> "$GITHUB_ENV"
+            echo "İmza parmak izi (SHA-256) gömülecek: ${sig:0:16}…"
+          elif [ "$GITHUB_REF_NAME" = "main" ] || [ "$GITHUB_REF_NAME" = "demo" ]; then
+            echo "::error::İmza parmak izi okunamadı (anahtar şifresi/takma adı yanlış olabilir); yayın durduruldu."
+            exit 1
+          else
+            echo "::warning::İmza parmak izi okunamadı; imza kontrolü bu derlemede kapalı."
+          fi
+
+      # Paket sürümleri pubspec.lock ile sabittir: kilit dosyasıyla uyuşmuyorsa durur
+      - run: flutter pub get --enforce-lockfile
+
+      - name: Kod analizi (hata veya uyarı varsa derleme durur)
+        run: |
+          set +e
+          flutter analyze --no-fatal-infos > analyze.txt 2>&1
+          rc=$?
+          cat analyze.txt
+          {
+            echo '## flutter analyze'
+            echo '```'
+            head -c 6000 analyze.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          grep -E '^\s*(error|warning) •' analyze.txt | head -30 | while IFS= read -r l; do echo "::error::${l}"; done
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::flutter analyze hata/uyarı buldu (çıkış kodu $rc); derleme durduruldu."
+            exit "$rc"
+          fi
+
+      - name: Sunucu seçimi (demo dalı = demo sunucusu, diğerleri = gerçek sunucu)
+        run: |
+          # Değerler gizli değil (istemci anahtarı); güvenlik RLS kurallarıyla sağlanır.
+          if [ "$GITHUB_REF_NAME" = demo ]; then
+            ref=bqcjdxpogtccjmbonhcg; key=sb_publishable_YqK0-mpeB4KVFDk97QUCEQ_CUVEKJBp
+          else
+            ref=tgshrnodnhmnofjhzpqp; key=sb_publishable_ecpaSUNve-SlWZ1Vk6XRkA_R40sbBvf
+          fi
+          echo "SERVER_REF=$ref" >> "$GITHUB_ENV"
+          echo "SERVER_DEFINES=--dart-define=SUPABASE_URL=https://$ref.supabase.co --dart-define=SUPABASE_PUBLISHABLE_KEY=$key" >> "$GITHUB_ENV"
+          echo "Sunucu: $ref ($GITHUB_REF_NAME)"
+
+      - name: Birim testleri (biri bile başarısızsa derleme durur)
+        run: |
+          set +e
+          flutter test --reporter expanded > test.txt 2>&1
+          rc=$?
+          cat test.txt
+          {
+            echo '## flutter test'
+            echo '```'
+            tail -c 6000 test.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::Birim testleri başarısız (çıkış kodu $rc); derleme durduruldu."
+            exit "$rc"
+          fi
+
+      - name: Sunucu güvenlik testi (canlı veritabanında, sonunda her şey geri alınır)
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          # Zorunlu (fail-closed): bağlantı bilgisi yoksa test sessizce atlanmaz, derleme ve yayın durur
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::SUPABASE_DB_URL gizli ayarı yok: sunucu güvenlik testi çalıştırılamadı; derleme ve yayın durduruldu."
+            echo '## Sunucu güvenlik testi: ÇALIŞTIRILAMADI (SUPABASE_DB_URL yok) — yayın durduruldu' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          out=$(psql "$SUPABASE_DB_URL" -X -q -v ON_ERROR_STOP=1 -f supabase/tests/security_test.sql 2>&1 || true)
+          res=$(echo "$out" | grep -oE 'SONUC: .*' | head -1)
+          echo "$res"
+          { echo '## Sunucu güvenlik testi'; echo '```'; echo "${res:-sonuç okunamadı}"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          uy=$(echo "$res" | sed -n 's/.*UYARI: //p')
+          if [ -n "$uy" ] && [ "$uy" != "yok" ]; then echo "::warning::Sunucu güvenlik testi uyarısı: $uy"; fi
+          case "$res" in
+            "SONUC: OK"*) ;;
+            *)
+              # Teşhis: ilk satırlar (bağlantı adresi gizlenir; GitHub gizli değerleri ayrıca maskeler)
+              masked="${out//"$SUPABASE_DB_URL"/***}"
+              # Bağlantı adresi, sunucu adı ve kullanıcı adı loga yazılmaz
+              echo "$masked" | sed -E 's#postgres[a-z]*://[^ ]*#***#g; s#[a-z0-9.-]*supabase\.(co|com)#***#g; s#postgres\.[a-z0-9]+#***#g' | head -15
+              echo "::error::Sunucu güvenlik testi başarısız ya da çalıştırılamadı; derleme durduruldu."; exit 1 ;;
+          esac
+
+      - name: Sürüm numarası (main v1.N, demo v11.N; her kanal kendi yayınlarına göre artar)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Etiket v<KANAL>.N (main 1, demo 11). N hiç sıfırlanmaz; derleme numarası (Android versionCode) = N + 1.
+          # Yayınlar ve etiketlerin en büyüğü alınır: bir yayın yanlışlıkla silinse bile numara geri gitmez.
+          # Eski etiketler (v1.0.N, v1.0.N-demo, rN) bu desene uymaz, sayılmaz.
+          if [ "$GITHUB_REF_NAME" = demo ]; then major=11; else major=1; fi
+          F="select(test(\"^v${major}\\\\.[0-9]+\$\")) | split(\".\") | .[1] | tonumber + 1"
+          rel=$(gh release list -R "$GITHUB_REPOSITORY" --limit 1000 --json tagName -q "[.[].tagName | $F] | max // 0")
+          # Çok sayfalı yanıtta her sayfa ayrı satır verir: en büyüğü alınır
+          refs=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/v" --paginate \
+            -q "[.[].ref | ltrimstr(\"refs/tags/\") | $F] | max // 0")
+          tag=$(printf '%s\n' "$refs" | sort -n | tail -1)
+          # Okunamazsa tahmin yürütülmez (yanlış numara = kurulamayan güncelleme): yayın durur
+          for x in "$rel" "$tag"; do
+            case "$x" in ''|*[!0-9]*) echo "::error::Sürüm numarası okunamadı (yayın='$rel' etiket='$tag'); yayın durduruldu."; exit 1 ;; esac
+          done
+          last=$(( rel > tag ? rel : tag ))
+          echo "BUILD_NO=$((last + 1))" >> "$GITHUB_ENV"
+          echo "APP_VERSION=$major.$last" >> "$GITHUB_ENV"
+          echo "Sürüm: v$major.$last · derleme numarası: $((last + 1))"
+
+      - name: İmza kontrolü hazır mı (fail-closed kontrol yanlışlıkla herkesi kilitlemesin)
+        run: |
+          f=$(find android/app/src/main -name 'MainActivity.kt' | head -1)
+          if ! grep -q '"signatureSha256"' "$f"; then
+            echo "::error::MainActivity imza okuyucusunu (signatureSha256) içermiyor: imza kontrolü herkesi kilitlerdi; derleme durduruldu."
+            exit 1
+          fi
+          if [ -z "$EXPECTED_SIG" ]; then
+            case "$GITHUB_REF_NAME" in
+              main|demo) echo "::error::Beklenen imza (EXPECTED_SIG) boş; $GITHUB_REF_NAME dalında yayın durduruldu."; exit 1 ;;
+              *) echo "::warning::EXPECTED_SIG boş; imza kontrolü bu derlemede yapılmayacak (yalnızca $GITHUB_REF_NAME)." ;;
+            esac
+          fi
+          echo "İmza kontrolü hazır: ${EXPECTED_SIG:0:12}…"
+
+      - name: APK derle
+        run: |
+          set +e
+          flutter build apk --release --build-number=${{ env.BUILD_NO }} --build-name=${{ env.APP_VERSION }} --dart-define=CHANNEL=${{ github.ref_name == 'demo' && 'demo' || 'stable' }} ${{ env.SERVER_DEFINES }} --dart-define=EXPECTED_SIG=${{ env.EXPECTED_SIG }} --obfuscate --split-debug-info=build/symbols > build.txt 2>&1
+          code=$?
+          tail -n 80 build.txt
+          {
+            echo '## flutter build apk'
+            echo '```'
+            tail -c 6000 build.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$code" -ne 0 ]; then
+            grep -iE 'error|exception|failure|what went wrong' build.txt | head -15 | while IFS= read -r l; do echo "::error::${l}"; done
+          fi
+          exit $code
+
+      - name: Bildirim alıcısı koruma kontrolü (R8)
+        run: |
+          apk=build/app/outputs/flutter-apk/app-release.apk
+          mkdir -p /tmp/dexchk && unzip -o -q "$apk" 'classes*.dex' -d /tmp/dexchk
+          # Kural uygulandıysa eklentinin model sınıfı adıyla (karıştırılmadan) durur
+          strings -n 8 /tmp/dexchk/classes*.dex | grep -q 'Lcom/dexterous/flutterlocalnotifications/models/NotificationDetails;' \
+            || { echo '::error::proguard-rules.pro uygulanmadı (bildirim alıcısı bozulur)'; exit 1; }
+          strings -n 8 /tmp/dexchk/classes*.dex | grep -q 'Lcom/bilkil53/aile_ile_namaz/App;' \
+            || { echo '::error::App sınıfı APK içinde yok'; exit 1; }
+          echo 'R8 koruma kuralları APK içinde ✓'
+
+      - name: Sunucu kontrolü (APK yalnızca kendi sunucusuna bağlanır)
+        run: |
+          mkdir -p /tmp/sochk && unzip -o -q build/app/outputs/flutter-apk/app-release.apk 'lib/arm64-v8a/libapp.so' -d /tmp/sochk
+          so=/tmp/sochk/lib/arm64-v8a/libapp.so
+          if [ "$SERVER_REF" = bqcjdxpogtccjmbonhcg ]; then other=tgshrnodnhmnofjhzpqp; else other=bqcjdxpogtccjmbonhcg; fi
+          strings -n 8 "$so" | grep -q "$SERVER_REF" || { echo "::error::APK içinde beklenen sunucu ($SERVER_REF) yok"; exit 1; }
+          if strings -n 8 "$so" | grep -q "$other"; then echo "::error::APK içinde diğer sunucunun adresi ($other) var"; exit 1; fi
+          echo "APK sunucusu: $SERVER_REF ✓"
+
+      - name: APK dosya adını sabitle + işlemci türüne göre küçük APK'lar
+        run: |
+          cp build/app/outputs/flutter-apk/app-release.apk aile-ile-namaz.apk
+          flutter build apk --release --split-per-abi --build-number=${{ env.BUILD_NO }} --build-name=${{ env.APP_VERSION }} \
+            --dart-define=CHANNEL=${{ github.ref_name == 'demo' && 'demo' || 'stable' }} ${{ env.SERVER_DEFINES }} --dart-define=EXPECTED_SIG=${{ env.EXPECTED_SIG }} --obfuscate --split-debug-info=build/symbols-abi
+          for abi in arm64-v8a armeabi-v7a x86_64; do
+            cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "aile-ile-namaz-$abi.apk"
+          done
+          ls -la aile-ile-namaz*.apk
+
+      - name: Hata ayıklama sembolleri (çökme kayıtlarını çözmek için; her yayında)
+        run: |
+          (cd build && zip -qr ../debug-symbols.zip $(ls -d symbols symbols-abi 2>/dev/null))
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: aile-ile-namaz-apk
+          path: |
+            aile-ile-namaz*.apk
+            aile-ile-namaz.aab
+            debug-symbols.zip
+          retention-days: 14
+
+      - name: Demo dosya adları
+        if: github.ref == 'refs/heads/demo'
+        run: |
+          cp aile-ile-namaz.apk aile-ile-namaz-demo.apk
+          for abi in arm64-v8a armeabi-v7a x86_64; do cp "aile-ile-namaz-$abi.apk" "aile-ile-namaz-demo-$abi.apk"; done
+          ls -1 aile-ile-namaz-demo*.apk
+
+      - name: Demo sürüm notları
+        if: github.ref == 'refs/heads/demo'
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          V="v${{ env.APP_VERSION }}"
+          D="$(TZ=Europe/Istanbul date '+%d.%m.%Y %H:%M')"
+          # Başlıkta "Demo" geçmeli: demo uygulaması güncellemeyi bu adla bulur
+          echo "RELEASE_TITLE=$V Namaz Demo — $D" >> "$GITHUB_ENV"
+          {
+            echo "$(head -n 1 RELEASE_NOTES.md)"
+            echo
+            echo "**Namaz Demo** — Pro/Demo deneme uygulaması (ön sürüm). Ailenin stabil uygulaması bu sürümü görmez."
+            echo
+            echo "---"
+            echo "**Sürüm:** $V · derleme ${{ env.BUILD_NO }} · $D (İstanbul) · commit \`${GITHUB_SHA::7}\`"
+            echo
+            echo "**Bu güncellemedeki değişiklik:** $(printf '%s' "$COMMIT_MSG" | head -n 1)"
+          } > release_body.md
+
+      - name: Demo ön sürümünü yayınla (stabil son sürümü etkilemez)
+        if: github.ref == 'refs/heads/demo'
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
+        with:
+          tag_name: v${{ env.APP_VERSION }}
+          target_commitish: ${{ github.sha }}
+          name: ${{ env.RELEASE_TITLE }}
+          body_path: release_body.md
+          prerelease: true
+          make_latest: false
+          files: |
+            aile-ile-namaz-demo.apk
+            aile-ile-namaz-demo-arm64-v8a.apk
+            aile-ile-namaz-demo-armeabi-v7a.apk
+            aile-ile-namaz-demo-x86_64.apk
+
+      - name: Sürüm notlarını hazırla (RELEASE_NOTES.md + teknik ayrıntılar)
+        if: github.ref == 'refs/heads/main'
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          V="v${{ env.APP_VERSION }}"
+          D="$(TZ=Europe/Istanbul date '+%d.%m.%Y %H:%M')"
+          echo "RELEASE_TITLE=$V — $D" >> "$GITHUB_ENV"
+          {
+            # İlk satır uygulama içi güncelleme penceresinde gösterilir
+            echo "$(head -n 1 RELEASE_NOTES.md)"
+            tail -n +2 RELEASE_NOTES.md
+            echo
+            echo "---"
+            echo "**Sürüm:** $V · derleme ${{ env.BUILD_NO }} · $D (İstanbul) · commit \`${GITHUB_SHA::7}\`"
+            echo
+            echo "**Bu güncellemedeki değişiklik:** $(printf '%s' "$COMMIT_MSG" | head -n 1)"
+          } > release_body.md
+
+      - name: Yayınla (uygulama içi güncelleme buradan okur)
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
+        with:
+          tag_name: v${{ env.APP_VERSION }}
+          target_commitish: ${{ github.sha }}
+          name: ${{ env.RELEASE_TITLE }}
+          body_path: release_body.md
+          prerelease: false
+          make_latest: true
+          files: |
+            aile-ile-namaz.apk
+            aile-ile-namaz-arm64-v8a.apk
+            aile-ile-namaz-armeabi-v7a.apk
+            aile-ile-namaz-x86_64.apk
+            aile-ile-namaz.aab
+
+      # ── TEST ORTAMI 1: GitHub emülatörü ── gerçek uygulama bir Android emülatöründe açılır,
+      # misafir akışı parmakla dokunur gibi denenir. YAYINDAN SONRA çalışır: başarısızsa çalışma kırmızı olur,
+      # yayın yerinde kalır; sorun incelenip düzeltme yayını yapılır. (Zorunlu kontroller yayından önce.)
+      - name: Emülatör için donanım hızlandırma (KVM)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Ekran testi — GitHub emülatörü (Android 11, Türkçe ve İngilizce, misafir + giriş yapılmış akış)
+        timeout-minutes: 40
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
+        env:
+          # Giriş yapılmış akış yalnızca test hesabı gizli ayarları varsa çalışır (Supabase'de e-posta+şifre test kullanıcısı)
+          TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          profile: pixel_5
+          disable-animations: true
+          emulator-boot-timeout: 900
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot
+          script: bash -c 'set -o pipefail; for L in tr en; do echo "=== Ekran testi dili $L ==="; flutter test integration_test/app_test.dart ${{ env.SERVER_DEFINES }} --dart-define=UI_TEST=true --dart-define=TEST_LANG=$L -d emulator-5554 --reporter expanded 2>&1 | tee -a ui-test.txt || exit 1; done; if [ -n "$TEST_EMAIL" ] && [ -n "$TEST_PASSWORD" ]; then echo "=== Giriş yapılmış akış (tr) ==="; flutter test integration_test/signed_in_test.dart ${{ env.SERVER_DEFINES }} --dart-define=UI_TEST=true --dart-define=TEST_LANG=tr --dart-define=TEST_EMAIL="$TEST_EMAIL" --dart-define=TEST_PASSWORD="$TEST_PASSWORD" -d emulator-5554 --reporter expanded 2>&1 | tee -a ui-test.txt || exit 1; else echo "::warning::TEST_EMAIL ve TEST_PASSWORD yok, giriş yapılmış akış atlandı"; fi'
+
+      - name: Ekran testi sonucu (özet)
+        if: always()
+        run: |
+          [ -f ui-test.txt ] || exit 0
+          { echo '## GitHub emülatör ekran testi'; echo '```'; grep -vE '^(INFO|WARNING) ' ui-test.txt | tail -n 60; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+
+      # ── TEST ORTAMI 2: Google Firebase Test Lab ── yayınlanacak APK'nın kendisi Google'ın
+      # 1 gerçek telefonunda ve 1 sanal telefonunda robotla gezilir. Kota sınırlı olduğu için
+      # yalnızca yayın dallarında (main, demo). Yayından sonra çalışır; geçmezse çalışma kırmızı olur.
+      - name: Test Lab anahtarı var mı
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
+        env:
+          KEY: ${{ secrets.FIREBASE_TESTLAB_KEY }}
+        run: |
+          [ -n "$KEY" ] || { echo '::error::FIREBASE_TESTLAB_KEY yok: Google Test Lab testi yapılamadı (yayın yapıldı, test eksik).'; exit 1; }
+          echo 'Test Lab anahtarı hazır'
+
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
+        with:
+          credentials_json: ${{ secrets.FIREBASE_TESTLAB_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
+
+      # Günlük ücretsiz hak (Spark): 5 gerçek + 10 sanal telefon testi.
+      # Stabil: gerçek telefon (Türkçe) + sanal telefon (İngilizce) · Demo: yalnız sanal telefon (Türkçe)
+      - name: Ekran testi — Google Test Lab (stabil 2 telefon TR+EN, demo 1 sanal TR; robot gezinti)
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
+        timeout-minutes: 45
+        run: |
+          gcloud config set project aile-ile-namaz-d437f >/dev/null
+          VIRT_EN="model=MediumPhone.arm,version=34,locale=en,orientation=portrait"
+          VIRT_TR="model=MediumPhone.arm,version=34,locale=tr,orientation=portrait"
+          if [ "$GITHUB_REF_NAME" = demo ]; then
+            DEVICES=(--device "$VIRT_TR")
+            echo "Demo: 1 sanal telefon (MediumPhone, Android 14, Türkçe)"
+          else
+          # Kapasitesi yüksek (kuyrukta bekletmeyen) bir gerçek TELEFON seç: Android 14 → 13 → 15 → 12
+            gcloud firebase test android models list --filter='form=PHYSICAL AND formFactor=PHONE' --format=json > models.json
+          PHYS=$(python3 - <<'PY'
+          import json
+          ms = json.load(open('models.json'))
+          def high(m, v):
+              return any(p.get('versionId') == v and p.get('deviceCapacity') == 'DEVICE_CAPACITY_HIGH'
+                         for p in (m.get('perVersionInfo') or []))
+          for strict in (True, False):
+              for v in ('34', '33', '35', '32', '31'):
+                  for m in ms:
+                      if v in (m.get('supportedVersionIds') or []) and (high(m, v) or not strict):
+                          print(f"model={m['id']},version={v}"); raise SystemExit
+          PY
+          )
+            [ -n "$PHYS" ] || { echo '::error::Test Lab: uygun gerçek telefon bulunamadı'; exit 1; }
+            DEVICES=(--device "$PHYS,locale=tr,orientation=portrait" --device "$VIRT_EN")
+            echo "Stabil: gerçek telefon $PHYS (Türkçe) · sanal telefon MediumPhone, Android 14 (İngilizce)"
+          fi
+          run() {
+            gcloud firebase test android run --type robo --app aile-ile-namaz.apk \
+              "${DEVICES[@]}" \
+              --timeout 5m --no-auto-google-login --client-details matrixLabel="v${APP_VERSION}-${GITHUB_REF_NAME}" 2>&1 | tee testlab.txt
+            return ${PIPESTATUS[0]}
+          }
+          set +e
+          run; code=$?
+          # 15 = sonuç belirsiz, 20 = Google tarafında altyapı hatası → bir kez daha dene
+          if [ "$code" = 15 ] || [ "$code" = 20 ]; then echo '::warning::Test Lab belirsiz/altyapı hatası, tekrar deneniyor'; run; code=$?; fi
+          {
+            echo '## Google Test Lab'
+            echo '```'
+            tail -n 30 testlab.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$code" -ne 0 ]; then
+            echo "::error::Google Test Lab testi geçmedi (kod $code). Ayrıntı: yukarıdaki sonuç bağlantısı."
+            grep -iE 'denied|permission|forbidden' testlab.txt | head -3 | while IFS= read -r l; do echo "::error::${l}"; done
+            exit 1
+          fi
+          echo 'Google Test Lab: tüm telefonlarda geçti ✓'
+
+      # Test Lab deposu her testte dolar: 7 günden eski test klasörleri (APK, video, ekran görüntüsü)
+      # her yayından sonra silinir. Temizlik başarısız olursa yayın durmaz, yalnızca uyarı verilir.
+      - name: Test Lab deposunu temizle (7 günden eski raporlar)
+        if: always() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo') && env.GOOGLE_APPLICATION_CREDENTIALS != ''
+        continue-on-error: true
+        run: |
+          B=$(grep -oE 'gs://test-lab-[a-z0-9-]+' testlab.txt 2>/dev/null | head -1)
+          B=${B:-gs://test-lab-f0cq92dkn1676-m5y4ycp8z2w6s}
+          LIMIT=$(date -u -d '7 days ago' +%Y-%m-%d)
+          n=0
+          for d in $(gcloud storage ls "$B/"); do
+            day=$(basename "$d" | cut -c1-10)
+            case "$day" in [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) ;; *) continue ;; esac
+            if [[ "$day" < "$LIMIT" ]]; then gcloud storage rm -r --quiet "$d" && n=$((n+1)); fi
+          done
+          echo "Test Lab deposu: $LIMIT öncesine ait $n eski test klasörü silindi"
+          echo "Test Lab deposu: $n eski rapor silindi (son 7 gün saklanıyor)" >> "$GITHUB_STEP_SUMMARY"
