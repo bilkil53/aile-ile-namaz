@@ -456,25 +456,6 @@ jobs:
           if strings -n 8 "$so" | grep -q "$other"; then echo "::error::APK içinde diğer sunucunun adresi ($other) var"; exit 1; fi
           echo "APK sunucusu: $SERVER_REF ✓"
 
-      # Kararlı uygulamada test kodu olmaz: test paneli ve Pro test işlevleri yalnızca CHANNEL=demo
-      # derlemesinde derlenir (sabit koşul, derleyici çıkarır). Derleme karıştırıldığı (--obfuscate) için
-      # sınıf adı değil, test kodundaki yazılar aranır. Biri bile varsa yayın durur (fail-closed).
-      - name: Test kodu kontrolü (kararlı APK'da test paneli ve test işlevleri yok)
-        if: github.ref != 'refs/heads/demo'
-        run: |
-          so=/tmp/sochk/lib/arm64-v8a/libapp.so
-          [ -f "$so" ] || { echo '::error::libapp.so bulunamadı; test kodu kontrolü yapılamadı'; exit 1; }
-          strings -n 8 "$so" > /tmp/sochk/strings.txt
-          # Denetimin kendisi çalışıyor mu: kararlı sürümde de bulunan bir sunucu işlevi adı görünmeli
-          grep -q 'my_pro_status' /tmp/sochk/strings.txt || { echo '::error::Denetim yazıları okuyamıyor (my_pro_status bulunamadı); test kodu kontrolü yapılamadı'; exit 1; }
-          # Liste test/hardening_test.dart ile aynı tutulur (test, her yazının kodda geçtiğini denetler)
-          bad=''
-          for m in am_i_pro_tester test_restart_trial expire_pro_test redeem_pro_code not_tester; do
-            grep -q "$m" /tmp/sochk/strings.txt && bad="$bad $m"
-          done
-          if [ -n "$bad" ]; then echo "::error::Kararlı APK içinde test kodu var:$bad"; exit 1; fi
-          echo 'Kararlı APK: test paneli ve test işlevleri yok ✓'
-
       - name: APK dosya adını sabitle + işlemci türüne göre küçük APK'lar
         run: |
           cp build/app/outputs/flutter-apk/app-release.apk aile-ile-namaz.apk
@@ -484,6 +465,30 @@ jobs:
             cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "aile-ile-namaz-$abi.apk"
           done
           ls -la aile-ile-namaz*.apk
+
+      # Kararlı uygulamada test kodu olmaz: test paneli ve Pro test işlevleri yalnızca CHANNEL=demo
+      # derlemesinde derlenir (sabit koşul, derleyici çıkarır). Derleme karıştırıldığı (--obfuscate) için
+      # sınıf adı değil, test kodundaki yazılar aranır. Tek APK ve işlemci türüne göre her küçük APK
+      # denetlenir; biri bile test kodu içeriyorsa yayın durur (fail-closed).
+      - name: Test kodu kontrolü (kararlı APK'larda test paneli ve test işlevleri yok)
+        if: github.ref != 'refs/heads/demo'
+        run: |
+          bad=''
+          for apk in aile-ile-namaz.apk aile-ile-namaz-arm64-v8a.apk aile-ile-namaz-armeabi-v7a.apk aile-ile-namaz-x86_64.apk; do
+            d="/tmp/tcchk/$apk"; rm -rf "$d"; mkdir -p "$d"
+            unzip -o -q "$apk" 'lib/*/libapp.so' -d "$d" || { echo "::error::$apk içinde libapp.so yok; test kodu kontrolü yapılamadı"; exit 1; }
+            for so in "$d"/lib/*/libapp.so; do
+              strings -n 8 "$so" > "$so.txt"
+              # Denetimin kendisi çalışıyor mu: kararlı sürümde de bulunan bir sunucu işlevi adı görünmeli
+              grep -q 'my_pro_status' "$so.txt" || { echo "::error::Denetim yazıları okuyamıyor ($apk ${so#$d/}: my_pro_status yok); test kodu kontrolü yapılamadı"; exit 1; }
+              # Liste test/hardening_test.dart ile aynı tutulur (test, her yazının kodda geçtiğini denetler)
+              for m in am_i_pro_tester test_restart_trial expire_pro_test redeem_pro_code not_tester; do
+                grep -q "$m" "$so.txt" && bad="$bad $apk:${so#$d/lib/}:$m"
+              done
+            done
+          done
+          if [ -n "$bad" ]; then echo "::error::Kararlı APK içinde test kodu var:$bad"; exit 1; fi
+          echo "Kararlı APK'lar (tek + 3 işlemci türü): test paneli ve test işlevleri yok ✓"
 
       - name: Hata ayıklama sembolleri (çökme kayıtlarını çözmek için; her yayında)
         run: |
