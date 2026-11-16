@@ -18,7 +18,7 @@ function line(u: SessionUsage): string {
 function note(u: SessionUsage, isFull: boolean, deltas: number[]): string {
   const total = u.context.window - (u.context.tokens ?? 0)
   const left = k(total)
-  const last = deltas.length > 0 ? deltas[deltas.length - 1] : 0
+  const last = deltas.at(-1) ?? 0
   const avg = deltas.length > 0 ? Math.round(deltas.reduce((a, b) => a + b, 0) / deltas.length) : 0
   const forecast =
     avg > 0 ? ` | son tur +${k(last)}, ort. +${k(avg)}/tur, tahmini kalan: bu tur sonunda ~${k(total - avg)}, ~${Math.floor(total / avg)} tur daha` : ''
