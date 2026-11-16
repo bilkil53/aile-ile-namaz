@@ -517,6 +517,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               value: value,
               activeThumbColor: AppColors.emerald,
               activeTrackColor: AppColors.prayedMint,
+              inactiveThumbColor: Colors.white.withValues(alpha: 0.85),
+              inactiveTrackColor: Colors.white.withValues(alpha: 0.12),
+              trackOutlineColor: WidgetStateProperty.resolveWith((st) => st.contains(WidgetState.selected) ? Colors.transparent : Colors.white.withValues(alpha: 0.7)),
               onChanged: (v) async {
                 await AppSettings.setNotify(key, v);
                 setState(() {});
@@ -541,6 +544,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onChanged: onChanged,
             activeThumbColor: AppColors.emerald,
             activeTrackColor: AppColors.prayedMint,
+            inactiveThumbColor: Colors.white.withValues(alpha: 0.85),
+              inactiveTrackColor: Colors.white.withValues(alpha: 0.12),
+              trackOutlineColor: WidgetStateProperty.resolveWith((st) => st.contains(WidgetState.selected) ? Colors.transparent : Colors.white.withValues(alpha: 0.7)),
           ),
         ]),
       );
