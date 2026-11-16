@@ -101,10 +101,8 @@ class Push {
     await init();
     if (!_ready) return;
     if (isGuest) return _set(false, t('Giriş yapılmadı', 'Not signed in'));
-    if (Pro.isDemo) {
-      await unregister();
-      return _set(false, t('Ücretsiz sürümde kapalı', 'Off in the free version'));
-    }
+    // Ücretsizde de kayıtlı kalır: katılım ve Pro isteği bildirimleri herkese gider (sunucu namaz/kaza/dua
+    // bildirimlerini Pro kilidi açıksa ücretsiz kişiye göndermez; filtre sunucuda push_allowed_recipients).
     if (!AppSettings.familyAlerts) {
       await unregister();
       return _set(false, t('Aile bildirimleri kapalı', 'Family notifications are off'));
