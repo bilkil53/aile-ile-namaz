@@ -7,7 +7,7 @@ class AppColors {
   static const emeraldDark = Color(0xFF074336);
   static const emeraldLight = Color(0xFF166B58);
   static const emeraldContainer = Color(0xFFE2EFEA);
-  static const background = emerald;
+  static const background = Color(0xFF1A7561); // çam yeşilinden bir ton açık; beyaz yazı kontrastı ~5:1
   /// Yeşil zemine doğrudan (kart dışında) yazılan yazı ve ikonlar.
   static const onBackground = Color(0xFFFFFFFF);
   static const onBackgroundMuted = Color(0xCCFFFFFF); // beyaz %80: ikincil metin
