@@ -29,11 +29,12 @@ import 'settings_screen.dart';
 import 'today_screen.dart';
 
 /// Ana iskelet: yeşil üst bar + alt menü (Bugün, Aile Havuzu, Kaza, Karne).
-/// Ücretsiz sürümde (deneme bitti, Pro yok): Bugün'de işaretleme serbest; Kaza ve Karne kilitli (Pro penceresi).
+/// Ücretsiz sürümde (deneme bitti, Pro yok): tüm sekmelere girilir; Bugün'de işaretleme serbest, Kaza/Karne/Aile içi pasif görünür (işlem Pro penceresi açar).
 /// Aile sekmesi açılır ama içi pasiftir (durumlar "–", işlemler Pro ister); yalnızca havuza katılma
 /// serbesttir: Aile Reisi Pro alınca aileye katılan üye de Pro olur.
 abstract final class HomeShellTabs {
-  static bool locked(int i, {required bool demo}) => demo && (i == 2 || i == 3);
+  /// Hiçbir sekme kilitli değil: ücretsizde de tüm sekmelere girilir, içerik pasif görünür (işlem Pro ister).
+  static bool locked(int i, {required bool demo}) => false;
 }
 
 class HomeShell extends StatefulWidget {
