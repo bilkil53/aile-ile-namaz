@@ -1,0 +1,10 @@
+{
+  "syncClaudeAiSkills": false,
+  "enabledPlugins": {
+    "vercel@synced": false,
+    "engineering@synced": false,
+    "superpowers@synced": false,
+    "claude-code-setup@synced": false,
+    "cowork-plugin-management@synced": false
+  }
+}
