@@ -7,7 +7,6 @@ import 'package:flutter/services.dart' show PlatformException;
 
 import 'data.dart';
 import 'lang.dart';
-import 'pro.dart';
 import 'settings.dart';
 
 /// Uygulama kapalıyken de aile bildirimleri (Firebase Cloud Messaging).
