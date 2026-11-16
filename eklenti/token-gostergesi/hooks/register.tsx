@@ -16,16 +16,33 @@ function line(u: SessionUsage): string {
 }
 
 export const register: Register = on => {
+  let text = ''
+
   on('session.start', async ($, e, next) => {
-    $.ui.status(line(await $.session.usage()))
+    text = line(await $.session.usage())
+    $.ui.status(text)
     return next(e)
   })
   on('prompt.submit', async ($, e, next) => {
-    $.ui.status(line(await $.session.usage()))
+    text = line(await $.session.usage())
+    $.ui.status(text)
     return next(e)
   })
   on('turn.complete', async ($, e, next) => {
-    $.ui.status(line(await $.session.usage()))
+    text = line(await $.session.usage())
+    $.ui.status(text)
     return next(e)
+  })
+
+  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    if (text === '') {
+      text = line(await $.session.usage())
+    }
+    const { Box, Text } = $.ui.resolve(e)
+    return (
+      <Box>
+        <Text dimColor>{text}</Text>
+      </Box>
+    )
   })
 }
