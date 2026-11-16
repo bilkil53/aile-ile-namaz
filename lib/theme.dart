@@ -7,12 +7,17 @@ class AppColors {
   static const emeraldDark = Color(0xFF074336);
   static const emeraldLight = Color(0xFF166B58);
   static const emeraldContainer = Color(0xFFE2EFEA);
-  static const background = Color(0xFF1A7561); // çam yeşilinden bir ton açık; beyaz yazı kontrastı ~5:1
+  static const background = Color(0xFFF7FAF8); // krem zemin
   /// Yeşil zemine doğrudan (kart dışında) yazılan yazı ve ikonlar.
-  static const onBackground = Color(0xFFFFFFFF);
-  static const onBackgroundMuted = Color(0xCCFFFFFF); // beyaz %80: ikincil metin
+  static const onBackground = Color(0xFF142421);
+  static const onBackgroundMuted = Color(0xFF5B6E67);
   /// Beyaz yüzey içindeki krem kutular (eski zemin rengi).
   static const cream = Color(0xFFF7FAF8);
+  /// Çam yeşili kartlar ve üzerindeki beyaz yazı.
+  static const card = emerald;
+  static const onCard = Color(0xFFFFFFFF);
+  static const onCardMuted = Color(0xCCFFFFFF);
+  static const onCardFaint = Color(0xA6FFFFFF);
   static const white = Color(0xFFFFFFFF);
   static const cardBorder = Color(0xFFE2EBE6);
   static const segmentInactive = Color(0xFFD6E3DE);
@@ -25,6 +30,12 @@ class AppColors {
   static const gold = Color(0xFFD97706);
   static const goldContainer = Color(0xFFFEF3C7);
 }
+
+/// Yeşil kart içindeki yazı ve ikonlar varsayılan olarak beyaz.
+Widget onCardTheme(Widget child) => DefaultTextStyle.merge(
+      style: const TextStyle(color: AppColors.onCard),
+      child: IconTheme.merge(data: const IconThemeData(color: AppColors.onCard), child: child),
+    );
 
 ThemeData buildAppTheme() {
   final scheme = ColorScheme.fromSeed(seedColor: AppColors.emerald).copyWith(

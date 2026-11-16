@@ -133,7 +133,7 @@ class _KarneScreenState extends State<KarneScreen> {
   }
 
   (String, Color) _grade(int pct) => pct >= 90
-      ? (t('Pekiyi', 'Excellent'), AppColors.emerald)
+      ? (t('Pekiyi', 'Excellent'), AppColors.prayedMint)
       : pct >= 75
           ? (t('İyi', 'Good'), const Color(0xFF2E7D32))
           : pct >= 50
@@ -206,7 +206,7 @@ class _KarneScreenState extends State<KarneScreen> {
           // ---------- Başlık + dönem + genel not ----------
           Container(
             padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(color: AppColors.emeraldDark, borderRadius: BorderRadius.circular(20)),
+            decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(20)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Text(_name.isNotEmpty ? t('$_name · Karnesi', "$_name's Report") : t('İbadet Karnesi', 'Worship Report'),
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
@@ -326,17 +326,17 @@ class _KarneScreenState extends State<KarneScreen> {
             Text(t('📿 Kaza İlerlemen', '📿 Your Kaza Progress'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             if (owed == 0)
-              Text(t('Kayıtlı kaza borcun yok.', 'You have no recorded kaza prayers.'), style: TextStyle(color: AppColors.textSecondary))
+              Text(t('Kayıtlı kaza borcun yok.', 'You have no recorded kaza prayers.'), style: TextStyle(color: AppColors.onCardMuted))
             else ...[
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
-                    value: kazaPct, minHeight: 10, color: AppColors.emerald, backgroundColor: AppColors.segmentInactive),
+                    value: kazaPct, minHeight: 10, color: AppColors.prayedMint, backgroundColor: AppColors.segmentInactive),
               ),
               const SizedBox(height: 6),
               Text(t('$done / $owed eda edildi · %${(kazaPct * 100).round()} · kalan ${owed - done}',
                     '$done / $owed made up · ${(kazaPct * 100).round()}% · ${owed - done} left'),
-                  style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  style: const TextStyle(fontSize: 12, color: AppColors.onCardMuted)),
             ],
           ])),
           const SizedBox(height: 14),
@@ -380,9 +380,9 @@ class _KarneScreenState extends State<KarneScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: b.earned ? AppColors.goldContainer : AppColors.white,
+        color: b.earned ? AppColors.goldContainer : AppColors.card,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: b.earned ? AppColors.gold : AppColors.cardBorder),
+        border: Border.all(color: b.earned ? AppColors.gold : Colors.transparent),
       ),
       child: Row(children: [
         Opacity(opacity: b.earned ? 1 : 0.35, child: Text(b.emoji, style: const TextStyle(fontSize: 26))),
@@ -390,7 +390,7 @@ class _KarneScreenState extends State<KarneScreen> {
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              Flexible(child: Text(b.title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold))),
+              Flexible(child: Text(b.title, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: b.earned ? AppColors.textPrimary : AppColors.onCard))),
               if (b.levelName.isNotEmpty) ...[
                 const SizedBox(width: 6),
                 Container(
@@ -401,7 +401,7 @@ class _KarneScreenState extends State<KarneScreen> {
                 ),
               ],
             ]),
-            Text(b.desc, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+            Text(b.desc, style: TextStyle(fontSize: 11, color: b.earned ? AppColors.textSecondary : AppColors.onCardMuted)),
             if (showBar) ...[
               const SizedBox(height: 6),
               ClipRRect(
@@ -420,7 +420,7 @@ class _KarneScreenState extends State<KarneScreen> {
                     ? (b.earned ? t('Kazanıldı ✓', 'Earned ✓') : t('Henüz yok', 'Not yet'))
                     : '${b.value.clamp(0, next)}/$next',
             style: TextStyle(
-                fontSize: 11, fontWeight: FontWeight.bold, color: b.earned ? const Color(0xFF78350F) : AppColors.textMuted)),
+                fontSize: 11, fontWeight: FontWeight.bold, color: b.earned ? const Color(0xFF78350F) : AppColors.onCardFaint)),
       ]),
     );
   }
@@ -435,7 +435,7 @@ class _KarneScreenState extends State<KarneScreen> {
       if (d.isAfter(now)) return Colors.transparent;
       final prayed = prayerKeys.where((k) => _st(d, k) == PrayerStatus.prayed).length;
       final missed = prayerKeys.where((k) => _st(d, k) == PrayerStatus.missed).length;
-      if (_fullDay(d)) return AppColors.emerald;
+      if (_fullDay(d)) return Colors.white;
       if (prayed > 0) return AppColors.prayedMint;
       if (missed > 0) return AppColors.missedCoral;
       return AppColors.segmentInactive;
@@ -449,7 +449,7 @@ class _KarneScreenState extends State<KarneScreen> {
         for (final w in Lang.isEn ? const ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'] : const ['Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct', 'Pz'])
           Expanded(
               child: Text(w,
-                  textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, color: AppColors.textMuted))),
+                  textAlign: TextAlign.center, style: const TextStyle(fontSize: 11, color: AppColors.onCardFaint))),
       ]),
       const SizedBox(height: 4),
       GridView.count(
@@ -476,14 +476,14 @@ class _KarneScreenState extends State<KarneScreen> {
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: c == AppColors.emerald ? Colors.white : AppColors.textPrimary)),
+                        color: AppColors.textPrimary)),
               );
             }),
         ],
       ),
       const SizedBox(height: 8),
       Wrap(spacing: 10, runSpacing: 4, children: [
-        _legend(AppColors.emerald, t('5 vakit', 'All 5')),
+        _legend(Colors.white, t('5 vakit', 'All 5')),
         _legend(AppColors.prayedMint, t('Kısmen', 'Partly')),
         _legend(AppColors.missedCoral, t('Kılınmadı', 'Missed')),
         _legend(AppColors.segmentInactive, t('İşaretsiz', 'Unmarked')),
@@ -494,15 +494,15 @@ class _KarneScreenState extends State<KarneScreen> {
   Widget _legend(Color c, String label) => Row(mainAxisSize: MainAxisSize.min, children: [
         Container(width: 12, height: 12, decoration: BoxDecoration(color: c, borderRadius: BorderRadius.circular(3))),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+        Text(label, style: const TextStyle(fontSize: 11, color: AppColors.onCardMuted)),
       ]);
 
   Widget _tile(String emoji, String value, String label) => Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: AppColors.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.cardBorder),
+          border: Border.all(color: Colors.transparent),
         ),
         child: Row(children: [
           Text(emoji, style: const TextStyle(fontSize: 26)),
@@ -514,7 +514,7 @@ class _KarneScreenState extends State<KarneScreen> {
               Text(label,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                  style: const TextStyle(fontSize: 11, color: AppColors.onCardMuted)),
             ]),
           ),
         ]),
@@ -523,10 +523,10 @@ class _KarneScreenState extends State<KarneScreen> {
   Widget _card(Widget child) => Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: AppColors.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.cardBorder),
+          border: Border.all(color: Colors.transparent),
         ),
-        child: child,
+        child: onCardTheme(child),
       );
 }

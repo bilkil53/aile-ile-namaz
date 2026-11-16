@@ -125,7 +125,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: AppColors.white,
+              color: AppColors.card,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppColors.gold, width: 1.5),
             ),
@@ -134,10 +134,10 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(t('📩 ${withFirstName(_label(m!), m.firstName)} Pro istedi · ${Pro.fmt(at)}', '📩 ${withFirstName(_label(m), m.firstName)} asked for Pro · ${Pro.fmt(at)}'),
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.onCard)),
                 ),
               Text(t('Pro alırsan havuzdaki herkes (en fazla 5 kişi) Pro olur.', 'If you get Pro, everyone in the circle (up to 5 people) becomes Pro.'),
-                  style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  style: TextStyle(fontSize: 12, color: AppColors.onCardMuted)),
               const SizedBox(height: 8),
               Row(mainAxisAlignment: MainAxisAlignment.end, children: [
                 TextButton(
@@ -733,7 +733,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
     final white85 = Colors.white.withValues(alpha: 0.85);
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-      decoration: BoxDecoration(color: AppColors.emeraldDark, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(20)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -849,20 +849,20 @@ class _FamilyScreenState extends State<FamilyScreen> {
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(_myName.isNotEmpty ? _myName : roleText('Aile Ferdi'),
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.onCard)),
             Text('${roleText(me?.roleTitle ?? 'Aile Ferdi')} · ${isGuest ? t('Gezinti modu (giriş yapılmadı)', 'Browsing mode (not signed in)') : t('Google Hesabı Bağlı ✓', 'Google Account Connected ✓')}',
-                style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                style: const TextStyle(fontSize: 12, color: AppColors.onCardMuted)),
           ]),
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: family ? AppColors.emerald : AppColors.emeraldContainer,
+            color: family ? Colors.white : AppColors.emeraldContainer,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(family ? t('Aile Modu', 'Family Mode') : t('Bireysel Mod', 'Individual Mode'),
               style: TextStyle(
-                  fontSize: 11, fontWeight: FontWeight.bold, color: family ? Colors.white : AppColors.emerald)),
+                  fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.emerald)),
         ),
       ]),
     );
@@ -893,17 +893,17 @@ class _FamilyScreenState extends State<FamilyScreen> {
   Widget _whiteCard({required Widget child, Color? color}) => Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: color ?? AppColors.white,
+          color: color ?? AppColors.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.cardBorder),
+          border: Border.all(color: Colors.transparent),
         ),
-        child: child,
+        child: color == null ? onCardTheme(child) : child,
       );
 
   Widget _joinCard() {
     return Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: AppColors.emeraldDark, borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(16)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1052,7 +1052,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
     if (_members.length >= kPoolMax) {
       return Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: AppColors.emeraldDark, borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(16)),
         child: Row(children: [
           Text('🏡', style: TextStyle(fontSize: 22)),
           SizedBox(width: 10),
@@ -1065,7 +1065,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
     }
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppColors.emeraldDark, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1146,7 +1146,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             SizedBox(width: 10),
             Expanded(
               child: Text(t('Aile İbadet Havuzundasın', 'You are in a Family Worship Circle'),
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.onCard)),
             ),
           ]),
         ),
@@ -1198,7 +1198,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
         );
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: AppColors.emeraldDark, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1369,14 +1369,14 @@ class _FamilyScreenState extends State<FamilyScreen> {
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(isMe ? t('${roleText(m.shownName)} (sen)', '${roleText(m.shownName)} (you)') : _label(m),
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.onCard)),
                 Text(isOwner ? t('• 🏡 Havuz Yöneticisi', '• 🏡 Circle Admin') : t('• 👥 Aile Ferdi', '• 👥 Family Member'),
                     style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: isOwner ? AppColors.gold : AppColors.emerald)),
+                        color: isOwner ? AppColors.gold : AppColors.prayedMint)),
                 if (m.name.isNotEmpty && m.name != m.shownName && m.name != _label(m))
-                  Text(m.name, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                  Text(m.name, style: const TextStyle(fontSize: 11, color: AppColors.onCardFaint)),
               ]),
             ),
             Container(
@@ -1410,7 +1410,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               onPressed: () => _sendDua(to: m),
               icon: const Text('👏'),
               label: Text(t('Tebrik Et & Dua Gönder', 'Congratulate & Send Dua'),
-                  style: TextStyle(color: AppColors.emerald, fontWeight: FontWeight.bold)),
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ],
         ],

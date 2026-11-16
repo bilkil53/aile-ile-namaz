@@ -91,7 +91,7 @@ class _NotifyHealthScreenState extends State<NotifyHealthScreen> with WidgetsBin
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppColors.white,
+          color: AppColors.card,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: ok == false ? AppColors.missed : AppColors.cardBorder),
         ),
@@ -100,8 +100,8 @@ class _NotifyHealthScreenState extends State<NotifyHealthScreen> with WidgetsBin
           const SizedBox(width: 12),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-              Text(sub, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.onCard)),
+              Text(sub, style: const TextStyle(fontSize: 12, color: AppColors.onCardMuted)),
             ]),
           ),
           if (ok == false)
@@ -157,16 +157,16 @@ class _NotifyHealthScreenState extends State<NotifyHealthScreen> with WidgetsBin
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.white,
+                  color: AppColors.card,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.cardBorder),
+                  border: Border.all(color: Colors.transparent),
                 ),
                 child: Text(
                   [
                     if (Log.last('bildirim') != null) t('Son bildirim hatası: ', 'Last notification error: ') + '${Log.last('bildirim')}',
                     if (Log.last('aile') != null) t('Son aile gönderim hatası: ', 'Last family send error: ') + '${Log.last('aile')}',
                   ].join('\n'),
-                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  style: const TextStyle(fontSize: 11, color: AppColors.onCardMuted),
                 ),
               ),
             ],

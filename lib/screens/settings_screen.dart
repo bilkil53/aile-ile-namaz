@@ -350,7 +350,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _bigCard(List<Widget> children) => Container(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
         decoration: BoxDecoration(
-          color: AppColors.emeraldDark,
+          color: AppColors.emerald,
           borderRadius: BorderRadius.circular(24),
           boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 6, offset: Offset(0, 2))],
         ),
@@ -1019,9 +1019,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 18),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.card,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.black12),
+                  border: Border.all(color: Colors.transparent),
                 ),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(16),
@@ -1029,19 +1029,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     child: Row(children: [
-                      Icon(Icons.download, color: AppColors.textSecondary, size: 20),
+                      Icon(Icons.download, color: AppColors.onCard, size: 20),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           Text(t('Verilerimi indir', 'Download my data'),
-                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.onCard)),
                           Text(t('Namaz kayıtların, kaza sayıların ve aile üyeliklerin tek dosyada', 'Your prayer records, kaza counts and memberships in one file'),
-                              style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                              style: TextStyle(fontSize: 11, color: AppColors.onCardMuted)),
                         ]),
                       ),
                       _exporting
                           ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                          : Icon(Icons.chevron_right, color: AppColors.textSecondary),
+                          : Icon(Icons.chevron_right, color: AppColors.onCardMuted),
                     ]),
                   ),
                 ),
@@ -1049,9 +1049,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 10),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.card,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.missed.withValues(alpha: 0.5)),
+                  border: Border.all(color: AppColors.missedCoral.withValues(alpha: 0.5)),
                 ),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(16),
@@ -1059,17 +1059,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     child: Row(children: [
-                      const Icon(Icons.delete_forever, color: AppColors.missed, size: 20),
+                      const Icon(Icons.delete_forever, color: AppColors.missedCoral, size: 20),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           Text(t('Hesabımı ve verilerimi sil', 'Delete my account and data'),
-                              style: TextStyle(fontSize: 14, color: AppColors.missed, fontWeight: FontWeight.bold)),
+                              style: TextStyle(fontSize: 14, color: AppColors.missedCoral, fontWeight: FontWeight.bold)),
                           Text(t('Tüm kayıtların kalıcı olarak silinir', 'All your records are permanently deleted'),
-                              style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                              style: TextStyle(fontSize: 11, color: AppColors.onCardMuted)),
                         ]),
                       ),
-                      Icon(Icons.chevron_right, color: AppColors.missed.withValues(alpha: 0.7)),
+                      Icon(Icons.chevron_right, color: AppColors.missedCoral.withValues(alpha: 0.7)),
                     ]),
                   ),
                 ),
