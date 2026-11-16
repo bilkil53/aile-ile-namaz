@@ -145,7 +145,7 @@ class _AuthGateState extends State<AuthGate> {
         builder: (context, snapshot) {
           final session = auth.currentSession;
           if (session == null && !snapshot.hasData && !_waited) {
-            return const Scaffold(body: Center(child: CircularProgressIndicator()));
+            return const Scaffold(body: Center(child: CircularProgressIndicator(color: AppColors.onBackground)));
           }
           if (session != null) {
             // Telefondaki kişisel veriler bu hesaba bağlanır; başka hesabın verisi varsa silinir

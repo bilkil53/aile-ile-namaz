@@ -154,7 +154,7 @@ class _DiniGunCardState extends State<DiniGunCard> {
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-        decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(20)),
+        decoration: BoxDecoration(color: AppColors.emeraldDark, borderRadius: BorderRadius.circular(20)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Row(children: [
             Container(
@@ -170,7 +170,7 @@ class _DiniGunCardState extends State<DiniGunCard> {
                 Text(t('${g.name}nız mübarek olsun', '${g.name} Mubarak'),
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                 Text(t('Bayramın $dayNo. günü · ${g.days} gün sürer', 'Day $dayNo of Eid · lasts ${g.days} days'),
-                    style: const TextStyle(fontSize: 12, color: AppColors.prayedMint)),
+                    style: const TextStyle(fontSize: 12, color: Colors.white)),
               ]),
             ),
           ]),

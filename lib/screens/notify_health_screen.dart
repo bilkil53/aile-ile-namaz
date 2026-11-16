@@ -126,10 +126,10 @@ class _NotifyHealthScreenState extends State<NotifyHealthScreen> with WidgetsBin
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
           children: [
             Text(t('🔔 Bildirimlerin düzgün gelmesi için', '🔔 For notifications to arrive reliably'),
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.onBackground)),
             const SizedBox(height: 4),
             Text(t('Vakit hatırlatmaları ve aile bildirimleri için üç ayarın da ✅ olması gerekir.', 'All three settings must be ✅ for prayer reminders and family notifications.'),
-                style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+                style: TextStyle(fontSize: 13, color: AppColors.onBackgroundMuted)),
             const SizedBox(height: 14),
             _row(t('Bildirim izni', 'Notification permission'), t('Uygulama bildirim gösterebilsin', 'Let the app show notifications'), _notif, () async {
               await Notifications.requestPermission();
@@ -172,6 +172,10 @@ class _NotifyHealthScreenState extends State<NotifyHealthScreen> with WidgetsBin
             ],
             const SizedBox(height: 16),
             OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.onBackground,
+                side: const BorderSide(color: AppColors.onBackgroundMuted),
+              ),
               onPressed: () async {
                 await Notifications.showTest();
                 if (!context.mounted) return;

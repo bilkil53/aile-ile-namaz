@@ -350,7 +350,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _bigCard(List<Widget> children) => Container(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
         decoration: BoxDecoration(
-          color: AppColors.emerald,
+          color: AppColors.emeraldDark,
           borderRadius: BorderRadius.circular(24),
           boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 6, offset: Offset(0, 2))],
         ),
@@ -642,7 +642,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: warn ? AppColors.goldContainer : AppColors.prayedMint)),
+                      color: warn ? AppColors.goldContainer : Colors.white)),
             ),
           ]),
         );
@@ -759,7 +759,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ]),
               const SizedBox(height: 10),
               if (guest)
-                Text(syncText, style: const TextStyle(fontSize: 13, color: AppColors.prayedMint, fontWeight: FontWeight.w600))
+                Text(syncText, style: const TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600))
               else
                 _dataBox(email),
               const SizedBox(height: 6),
@@ -791,7 +791,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             : Padding(
                                 padding: const EdgeInsets.only(top: 6),
                                 child: Text('📩 Pro istedi: ${reqs.keys.map((id) => Pro.requestNames[id] ?? 'Aile ferdin').join(', ')}',
-                                    style: const TextStyle(fontSize: 13, color: AppColors.gold, fontWeight: FontWeight.bold)),
+                                    style: const TextStyle(fontSize: 13, color: AppColors.goldContainer, fontWeight: FontWeight.bold)),
                               ),
                       ),
                       // Pro'dayken (deneme, aile ya da alınmış) tekrar "Pro'ya geç" gösterilmez
@@ -830,7 +830,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ? null
                       : (LocationHelper.permissionDenied ? LocationHelper.openSettings : _gps),
                   child: Text(LocationHelper.permissionDenied ? t('İzin ver', 'Allow') : (_gpsBusy ? '…' : t('Yenile', 'Refresh')),
-                      style: const TextStyle(color: AppColors.prayedMint, fontWeight: FontWeight.bold)),
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ]),
               _divider(),
@@ -856,13 +856,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       decoration: BoxDecoration(
                         color: hasUpdate ? AppColors.goldContainer : Colors.white.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: hasUpdate ? AppColors.gold : AppColors.prayedMint),
+                        border: Border.all(color: hasUpdate ? AppColors.gold : Colors.white),
                       ),
                       child: Text(hasUpdate ? t('Güncelleme var!', 'Update available!') : t('✓ Güncel', '✓ Up to date'),
                           style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: hasUpdate ? const Color(0xFF78350F) : AppColors.prayedMint)),
+                              color: hasUpdate ? const Color(0xFF78350F) : Colors.white)),
                     ),
                   ]),
                 ),
@@ -911,7 +911,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Expanded(
                         child: Text(t('Ücretsiz sürümde bildirimler kapalı · Pro ile açılır', 'Notifications are off in the free version · open with Pro'),
                             style: TextStyle(color: Colors.white70, fontSize: 13))),
-                    TextButton(onPressed: () => showProCodeDialog(context), child: Text(t('Pro\'ya geç', 'Get Pro'))),
+                    TextButton(
+                        onPressed: () => showProCodeDialog(context),
+                        child: Text(t('Pro\'ya geç', 'Get Pro'), style: const TextStyle(color: Colors.white))),
                   ]),
                 ),
               ])
