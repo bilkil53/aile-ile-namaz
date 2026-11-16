@@ -634,6 +634,15 @@ jobs:
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
         timeout-minutes: 45
         run: |
+          # auth adımı anahtar dosyasındaki projeyi CLOUDSDK_CORE_PROJECT ile verir (config'i ezer):
+          # anahtar başka projeninse test o projede koşar. Proje tutmazsa durulur (fail-closed).
+          kp=$(python3 -c 'import json,os; print(json.load(open(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])).get("project_id",""))' 2>/dev/null)
+          if [ "$kp" != aile-ile-namaz-app ]; then
+            echo "::error::FIREBASE_TESTLAB_KEY başka projeye ait ('${kp:-okunamadı}'); beklenen aile-ile-namaz-app. Yeni projenin hizmet hesabı anahtarını gizli ayara koyun."
+            exit 1
+          fi
+          export CLOUDSDK_CORE_PROJECT=aile-ile-namaz-app
+          echo "CLOUDSDK_CORE_PROJECT=aile-ile-namaz-app" >> "$GITHUB_ENV"
           gcloud config set project aile-ile-namaz-app >/dev/null
           VIRT_EN="model=MediumPhone.arm,version=34,locale=en,orientation=portrait"
           VIRT_TR="model=MediumPhone.arm,version=34,locale=tr,orientation=portrait"
