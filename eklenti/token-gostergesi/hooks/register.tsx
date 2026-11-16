@@ -17,7 +17,12 @@ function line(u: SessionUsage): string {
 
 function note(u: SessionUsage): string {
   const left = k(u.context.window - (u.context.tokens ?? 0))
-  return `\n\n[token-gostergesi eklentisi: kalan ${left}. Cevabının son satırına aynen yaz: "Kalan token: ${left}"]`
+  const cats = (u.context.breakdown?.categories ?? [])
+    .filter(c => c.tokens > 0 && c.name !== 'Free space')
+    .sort((a, b) => b.tokens - a.tokens)
+    .map(c => `${c.name}${c.isDeferred ? ' (ertelenmiş)' : ''} ${k(c.tokens)}`)
+    .join(', ')
+  return `\n\n[token-gostergesi eklentisi: kalan ${left}. Dağılım: ${cats}. Cevabının sonuna şu iki satırı aynen yaz: "Dağılım: ${cats}" ve "Kalan token: ${left}"]`
 }
 
 export const register: Register = on => {
@@ -29,7 +34,7 @@ export const register: Register = on => {
     return next(e)
   })
   on('prompt.submit', async ($, e, next) => {
-    const u = await $.session.usage()
+    const u = await $.session.usage({ breakdown: 'summary' })
     text = line(u)
     $.ui.status(text)
     return next({ ...e, text: e.text + note(u) })
