@@ -30,7 +30,7 @@ class DangerBox extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.missedCoralCoral.withValues(alpha: 0.6)),
+            border: Border.all(color: AppColors.missedCoral.withValues(alpha: 0.6)),
           ),
           child: Row(children: [
             Icon(icon, color: AppColors.missedCoral, size: 20),
