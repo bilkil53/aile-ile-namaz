@@ -375,8 +375,8 @@ class _KazaScreenState extends State<KazaScreen> {
             width: 42,
             height: 42,
             alignment: Alignment.center,
-            decoration: BoxDecoration(color: AppColors.emeraldContainer, borderRadius: BorderRadius.circular(12)),
-            child: PrayerIcon(type, size: 22, color: AppColors.emerald),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
+            child: PrayerIcon(type, size: 22, color: AppColors.onCard),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -387,9 +387,9 @@ class _KazaScreenState extends State<KazaScreen> {
           ),
           IconButton(
             tooltip: t('Borcu azalt', 'Decrease'),
-            visualDensity: VisualDensity.compact,
+            style: IconButton.styleFrom(backgroundColor: Colors.white.withValues(alpha: 0.15), disabledBackgroundColor: Colors.white.withValues(alpha: 0.08)),
             onPressed: (Pro.isDemo || owed > done) ? () => _set(type, owed - 1, done) : null,
-            icon: const Icon(Icons.remove_circle_outline, color: Colors.white),
+            icon: const Icon(Icons.remove, color: Colors.white),
           ),
           Column(children: [
             Text(_n(left), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.onCard)),
@@ -397,9 +397,9 @@ class _KazaScreenState extends State<KazaScreen> {
           ]),
           IconButton(
             tooltip: t('Borç ekle', 'Add'),
-            visualDensity: VisualDensity.compact,
+            style: IconButton.styleFrom(backgroundColor: Colors.white.withValues(alpha: 0.15)),
             onPressed: () => _set(type, owed + 1, done),
-            icon: const Icon(Icons.add_circle_outline, color: Colors.white),
+            icon: const Icon(Icons.add, color: Colors.white),
           ),
         ]),
         const SizedBox(height: 8),
@@ -416,9 +416,9 @@ class _KazaScreenState extends State<KazaScreen> {
             : Container(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 alignment: Alignment.center,
-                decoration: BoxDecoration(color: AppColors.emeraldContainer, borderRadius: BorderRadius.circular(12)),
+                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
                 child: Text(t('Kaza Borcu Yok (Elhamdülillah) 🤲', 'No Kaza Left (Alhamdulillah) 🤲'),
-                    style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.emerald)),
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.onCardMuted)),
               ),
       ]),
     );

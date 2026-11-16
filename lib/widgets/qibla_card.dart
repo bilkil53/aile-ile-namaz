@@ -92,10 +92,12 @@ class _QiblaCardState extends State<QiblaCard> {
       child: Column(
         children: [
           ListTile(
-            leading: const Icon(Icons.explore, color: AppColors.emerald),
-            title: Text(t('Kıble Pusulası', 'Qibla Compass'), style: TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text(t('${AppSettings.cityName} için kıble: ${qibla.toStringAsFixed(0)}°', 'Qibla for ${AppSettings.cityName}: ${qibla.toStringAsFixed(0)}°')),
-            trailing: Icon(_open ? Icons.expand_less : Icons.expand_more),
+            iconColor: AppColors.onCard,
+            textColor: AppColors.onCard,
+            leading: const Icon(Icons.explore, color: AppColors.onCard),
+            title: Text(t('Kıble Pusulası', 'Qibla Compass'), style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.onCard)),
+            subtitle: Text(t('${AppSettings.cityName} için kıble: ${qibla.toStringAsFixed(0)}°', 'Qibla for ${AppSettings.cityName}: ${qibla.toStringAsFixed(0)}°'), style: const TextStyle(color: AppColors.onCardMuted)),
+            trailing: Icon(_open ? Icons.expand_less : Icons.expand_more, color: AppColors.onCard),
             onTap: () {
               setState(() => _open = !_open);
               _open ? _start() : _stop();
@@ -125,14 +127,14 @@ class _QiblaCardState extends State<QiblaCard> {
                             : (diff! > 0 ? t('Sağa dön (${diff.abs().toStringAsFixed(0)}°)', 'Turn right (${diff.abs().toStringAsFixed(0)}°)') : t('Sola dön (${diff.abs().toStringAsFixed(0)}°)', 'Turn left (${diff.abs().toStringAsFixed(0)}°)')),
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: aligned ? AppColors.emerald : AppColors.textSecondary,
+                      color: aligned ? AppColors.prayedMint : AppColors.onCardMuted,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     t('Telefonu yere paralel tut, metal ve mıknatıslardan uzak dur.', 'Hold the phone parallel to the ground, away from metal and magnets.'),
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+                    style: const TextStyle(fontSize: 11, color: AppColors.onCardFaint),
                   ),
                 ],
               ),
