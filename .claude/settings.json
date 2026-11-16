@@ -1,4 +1,5 @@
 {
+  "model": "sonnet",
   "syncClaudeAiSkills": false,
   "enabledPlugins": {
     "vercel@synced": false,
