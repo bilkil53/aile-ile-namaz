@@ -81,9 +81,9 @@ class _DiniGunCardState extends State<DiniGunCard> {
         _toast(t('Aileye gönderildi 🤲', 'Sent to your family 🤲'));
       }
     } catch (e) {
-      _toast(e.toString().contains('rate_limited')
+      _toast(duaSendError(e) ?? (e.toString().contains('rate_limited')
           ? t('Çok sık gönderdin. Biraz bekleyip tekrar dene.', 'You sent too often. Wait a little and try again.')
-          : t('Gönderilemedi. Biraz sonra tekrar dene.', 'Could not send. Try again a bit later.'));
+          : t('Gönderilemedi. Biraz sonra tekrar dene.', 'Could not send. Try again a bit later.')));
     } finally {
       if (mounted) setState(() => _sendingKey = null);
     }
