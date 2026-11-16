@@ -1,7 +1,7 @@
 # Lider özeti — Code sekmesi buradan devam eder
 
 > Depo herkese açık. Burada sır, kimlik numarası, hesap adı ve güvenlik açığı ayrıntısı yazılmaz.
-> Tam özet claude.ai'deki "Aile ile Namaz" projesinin belgesindedir (ajanlar/00-lider-ozet.md).
+> Bu dosya tek kaynaktır. Sohbet geçmişi silindi, çalışma yalnız Code sekmesinden yürür.
 
 ## Çalışma düzeni
 - Tek ajan (lider) çalışır. Bağımsız inceleme gerekirse ayrı ajan kullanılır.
@@ -22,7 +22,7 @@
 ## Sıradaki işler
 1. Demoda iki telefonla bildirim denemesi.
 2. main v1.0 (onaylı, adım adım, üç telefon aynı gün).
-3. Küçük işler ve temizlik (ayrıntı proje belgesinde).
+3. Küçük işler ve temizlik (ayrıntı listesi yok, gerektiğinde depodan çıkarılır).
 4. Code sekmesinde sabit token göstergesi (mod) kur.
 
 ## Play'e çıkarken yapılacaklar
