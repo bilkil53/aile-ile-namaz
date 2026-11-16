@@ -41,7 +41,7 @@ class _QiblaCardState extends State<QiblaCard> {
       final m = _m;
       _m = m == null ? [e.x, e.y, e.z] : [m[0] * 0.8 + e.x * 0.2, m[1] * 0.8 + e.y * 0.2, m[2] * 0.8 + e.z * 0.2];
       final h = _azimuth(_g, _m!);
-      if (h != null && mounted) setState(() => _heading = h);
+      if (h != null && mounted) setState(() => _heading = (h + _declination(AppSettings.lat, AppSettings.lng) + 360) % 360);
     });
   }
 
@@ -50,6 +50,14 @@ class _QiblaCardState extends State<QiblaCard> {
     _magSub?.cancel();
     _accSub = null;
     _magSub = null;
+  }
+
+  /// Manyetik kuzey ile gerçek kuzey farkı (derece, doğuya pozitif). Sensör manyetik kuzeyi gösterir, kıble açısı
+  /// gerçek kuzeye göre hesaplanır; fark düzeltilmezse ok Türkiye'de ~6° kayar. Türkiye için yaklaşık değer
+  /// (2026, ±1,5°): İstanbul ≈ 6,0°, doğuya gittikçe artar. Türkiye dışında düzeltme yapılmaz.
+  static double _declination(double lat, double lng) {
+    if (lat < 34 || lat > 43 || lng < 25 || lng > 46) return 0;
+    return 5.9 + 0.2 * (lng - 29.2);
   }
 
   /// Android SensorManager.getRotationMatrix + getOrientation ile aynı hesap.
