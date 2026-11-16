@@ -196,6 +196,9 @@ class UpdateChecker {
     }
   }
 
+  /// Play sayfası çalışan uygulamanın kendi paketine gider (demo ayrı paket: .demo).
+  static String playUrl(String packageName) => 'https://play.google.com/store/apps/details?id=$packageName';
+
   static Future<void> _playUpdate(BuildContext context) async {
     try {
       final info = await InAppUpdate.checkForUpdate();
@@ -208,7 +211,7 @@ class UpdateChecker {
         await InAppUpdate.performImmediateUpdate();
       }
     } catch (_) {
-      await launchUrl(Uri.parse('https://play.google.com/store/apps/details?id=com.bilkil53.aile_ile_namaz'),
+      await launchUrl(Uri.parse(playUrl((await PackageInfo.fromPlatform()).packageName)),
           mode: LaunchMode.externalApplication);
     }
   }

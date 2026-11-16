@@ -31,6 +31,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # sızıntı taraması tüm geçmişe bakar
+
+      # Sızıntı taraması: depo geçmişinin tamamında şifre/anahtar aranır; bulunursa iş durur (fail-closed).
+      # İstisnalar .gitleaks.toml içinde, yalnızca tam değerle yazılır. Bulunan değer loga yazılmaz (--redact).
+      - name: Sızıntı taraması (gitleaks)
+        run: |
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.18.4 \
+            detect --source /repo --config /repo/.gitleaks.toml --redact --no-banner -v \
+            || { echo "::error::Depoda şifre/anahtar olabilecek bir değer bulundu (gitleaks). Değeri kaldırın; gizli değilse .gitleaks.toml'a tam değeriyle ekleyin."; exit 1; }
 
       - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
@@ -87,13 +97,19 @@ jobs:
           for perm in perms:
               if perm not in s:
                   s = s.replace('<application', f'<uses-permission android:name="{perm}"/>\n    <application', 1)
-          intent = '''<intent-filter>
+          # Demo ayrı dönüş şeması kullanır (lib/config.dart authRedirect ile aynı): iki uygulama
+          # aynı telefonda aynı şemayı sahiplenmesin
+          import os as _oc
+          scheme = 'io.supabase.aileilenamaz.demo' if _oc.environ.get('GITHUB_REF_NAME') == 'demo' else 'io.supabase.aileilenamaz'
+          intent = f'''<intent-filter>
                           <action android:name="android.intent.action.VIEW" />
                           <category android:name="android.intent.category.DEFAULT" />
                           <category android:name="android.intent.category.BROWSABLE" />
-                          <data android:scheme="io.supabase.aileilenamaz" android:host="login-callback" />
+                          <data android:scheme="{scheme}" android:host="login-callback" />
                       </intent-filter>'''
+          if '</activity>' not in s: raise SystemExit('</activity> satırı bulunamadı; giriş dönüş bağlantısı eklenemedi')
           s = s.replace('</activity>', intent + '\n        </activity>', 1)
+          assert s.count(f'android:scheme="{scheme}"') == 1, 'giriş dönüş şeması manifeste yazılamadı'
           s = s.replace('android:label="aile_ile_namaz"', 'android:label="Aile İle Namaz"')
           # Demo kanalı: telefonda "Namaz Demo" adıyla görünür (ayrı paket .demo, stabilin yanına kurulur)
           import os as _o
@@ -460,6 +476,30 @@ jobs:
           done
           ls -la aile-ile-namaz*.apk
 
+      # Kararlı uygulamada test kodu olmaz: test paneli ve Pro test işlevleri yalnızca CHANNEL=demo
+      # derlemesinde derlenir (sabit koşul, derleyici çıkarır). Derleme karıştırıldığı (--obfuscate) için
+      # sınıf adı değil, test kodundaki yazılar aranır. Tek APK ve işlemci türüne göre her küçük APK
+      # denetlenir; biri bile test kodu içeriyorsa yayın durur (fail-closed).
+      - name: Test kodu kontrolü (kararlı APK'larda test paneli ve test işlevleri yok)
+        if: github.ref != 'refs/heads/demo'
+        run: |
+          bad=''
+          for apk in aile-ile-namaz.apk aile-ile-namaz-arm64-v8a.apk aile-ile-namaz-armeabi-v7a.apk aile-ile-namaz-x86_64.apk; do
+            d="/tmp/tcchk/$apk"; rm -rf "$d"; mkdir -p "$d"
+            unzip -o -q "$apk" 'lib/*/libapp.so' -d "$d" || { echo "::error::$apk içinde libapp.so yok; test kodu kontrolü yapılamadı"; exit 1; }
+            for so in "$d"/lib/*/libapp.so; do
+              strings -n 8 "$so" > "$so.txt"
+              # Denetimin kendisi çalışıyor mu: kararlı sürümde de bulunan bir sunucu işlevi adı görünmeli
+              grep -q 'my_pro_status' "$so.txt" || { echo "::error::Denetim yazıları okuyamıyor ($apk ${so#$d/}: my_pro_status yok); test kodu kontrolü yapılamadı"; exit 1; }
+              # Liste test/hardening_test.dart ile aynı tutulur (test, her yazının kodda geçtiğini denetler)
+              for m in am_i_pro_tester test_restart_trial expire_pro_test redeem_pro_code not_tester; do
+                grep -q "$m" "$so.txt" && bad="$bad $apk:${so#$d/lib/}:$m"
+              done
+            done
+          done
+          if [ -n "$bad" ]; then echo "::error::Kararlı APK içinde test kodu var:$bad"; exit 1; fi
+          echo "Kararlı APK'lar (tek + 3 işlemci türü): test paneli ve test işlevleri yok ✓"
+
       - name: Hata ayıklama sembolleri (çökme kayıtlarını çözmek için; her yayında)
         run: |
           (cd build && zip -qr ../debug-symbols.zip $(ls -d symbols symbols-abi 2>/dev/null))
@@ -609,6 +649,15 @@ jobs:
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
         timeout-minutes: 45
         run: |
+          # auth adımı anahtar dosyasındaki projeyi CLOUDSDK_CORE_PROJECT ile verir (config'i ezer):
+          # anahtar başka projeninse test o projede koşar. Proje tutmazsa durulur (fail-closed).
+          kp=$(python3 -c 'import json,os; print(json.load(open(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])).get("project_id",""))' 2>/dev/null)
+          if [ "$kp" != aile-ile-namaz-app ]; then
+            echo "::error::FIREBASE_TESTLAB_KEY başka projeye ait ('${kp:-okunamadı}'); beklenen aile-ile-namaz-app. Yeni projenin hizmet hesabı anahtarını gizli ayara koyun."
+            exit 1
+          fi
+          export CLOUDSDK_CORE_PROJECT=aile-ile-namaz-app
+          echo "CLOUDSDK_CORE_PROJECT=aile-ile-namaz-app" >> "$GITHUB_ENV"
           gcloud config set project aile-ile-namaz-app >/dev/null
           VIRT_EN="model=MediumPhone.arm,version=34,locale=en,orientation=portrait"
           VIRT_TR="model=MediumPhone.arm,version=34,locale=tr,orientation=portrait"

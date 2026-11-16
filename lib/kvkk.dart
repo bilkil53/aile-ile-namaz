@@ -234,7 +234,7 @@ class Kvkk {
           ),
         ),
       );
-      await Push.unregister();
+      await Push.unregister(signOut: true);
       await Repo.signOut();
       return;
     }
@@ -287,7 +287,7 @@ class Kvkk {
     if (ok == true && _uid != null) {
       await give(); // sunucuya yazma home_shell'deki syncServer ile (açılışı bekletmez)
     } else {
-      await Push.unregister();
+      await Push.unregister(signOut: true);
       await Repo.signOut();
     }
   }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'data.dart';
@@ -65,7 +67,8 @@ class Pro {
   /// Bu hesap Pro test listesinde mi? (Sunucu her işlemde ayrıca denetler; burası yalnızca
   /// test panelini göstermek için.) null = öğrenilemedi (internet yok / sunucuya ulaşılamadı).
   static Future<bool?> testerStatus() async {
-    if (isGuest) return false;
+    // Kararlı sürümde test sunucu işlevleri hiç çağrılmaz; derleyici bu gövdeyi çıkarır (CI denetler)
+    if (!kTestChannel || isGuest) return false;
     try {
       final r = await supa.rpc('am_i_pro_tester').timeout(const Duration(seconds: 6));
       final was = isTester;
@@ -232,6 +235,7 @@ class Pro {
   /// TEST: denemeyi baştan başlat (7 gün, Pro kaldırılır).
   /// Başarılıysa true; değilse [lastError] doldurulur.
   static Future<bool> testRestartTrial() async {
+    if (!kTestChannel) return false; // kararlı sürümde yok
     try {
       await supa.rpc('test_restart_trial').timeout(const Duration(seconds: 8));
       lastError = null;
@@ -263,6 +267,25 @@ class Pro {
     trialUntil = tr > 0 ? DateTime.fromMillisecondsSinceEpoch(tr) : null;
     final ts = AppSettings.prefs.getInt(_kTrialStart) ?? 0;
     trialStart = ts > 0 ? DateTime.fromMillisecondsSinceEpoch(ts) : null;
+  }
+
+  @visibleForTesting
+  static void loadCached() => _load();
+
+  /// Bellekteki hesaba bağlı Pro durumunu sıfırlar (çıkışta / hesap değişince): aynı telefonda giren
+  /// sonraki hesap öncekinin Pro'sunu, test rozetini ya da Pro isteklerini devralmasın.
+  /// Diskteki `pro.*` anahtarlarını LocalStore.wipeUserData siler. [changed] bilerek tetiklenmez:
+  /// çıkış sürerken bildirim kaydı / hatırlatmalar yeniden kurulmasın; yeni oturum ekranı baştan çizilir.
+  static void reset() {
+    _until = null;
+    source = null;
+    trialUntil = null;
+    trialStart = null;
+    isTester = false;
+    lastError = null;
+    requestNames = {};
+    // Ekran çizimi sırasında çağrılabilir (giriş kapısı): dinleyiciler çizim bitince uyarılır
+    scheduleMicrotask(() => requests.value = {});
   }
 
   static DateTime? _dt(Object? v) => v == null ? null : DateTime.tryParse(v.toString())?.toLocal();
@@ -309,6 +332,7 @@ class Pro {
   /// Pro'ya geçer (test aşaması: yalnızca test listesindeki hesaplar, kod gerekmez; gerçek satışta
   /// Google Play ödemesine geçilecek). Başarılıysa true.
   static Future<bool> redeem([String code = '']) async {
+    if (!kTestChannel) return false; // test aşaması: kararlı sürümde yok (Play ödemesi gelecek)
     try {
       final r = await supa.rpc('redeem_pro_code', params: {'p_code': code}).timeout(const Duration(seconds: 8));
       await _save(r == null ? null : DateTime.tryParse(r as String)?.toLocal());
@@ -329,6 +353,7 @@ class Pro {
   /// TEST: demo süresini hemen bitirir.
   /// Pro'dan düşer (ücretsize döner). Başarılıysa true; değilse [lastError] doldurulur.
   static Future<bool> expireTest() async {
+    if (!kTestChannel) return false; // kararlı sürümde yok
     try {
       final r = await supa.rpc('expire_pro_test').timeout(const Duration(seconds: 8));
       await _save(r == null ? null : DateTime.tryParse(r as String)?.toLocal());

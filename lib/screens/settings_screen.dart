@@ -341,7 +341,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
     if (!mounted) return;
     Navigator.of(context).popUntil((r) => r.isFirst);
-    await Push.unregister();
+    await Push.unregister(signOut: true);
     await Repo.signOut();
   }
 

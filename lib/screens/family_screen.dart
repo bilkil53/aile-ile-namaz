@@ -8,6 +8,7 @@ import 'package:intl/intl.dart' show DateFormat;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../content/daily_content.dart';
+import '../content/family_message.dart';
 import '../data.dart';
 import '../lang.dart';
 import '../local_store.dart';
@@ -291,7 +292,9 @@ class _FamilyScreenState extends State<FamilyScreen> {
     } catch (_) {
       // İnternet yok: son bilinen aile durumunu göster, bağlantı gelince kendiliğinden yenile
       await _loadSnapshot();
-      if (mounted) setState(() => _loading = false);
+      // Ekran bu arada kapandıysa zamanlayıcı kurulmaz (dispose sonrası kurulan zamanlayıcı hiç durmazdı)
+      if (!mounted) return;
+      setState(() => _loading = false);
       _offlineRetry ??= Timer.periodic(const Duration(seconds: 15), (_) => _load());
     }
   }
@@ -440,6 +443,8 @@ class _FamilyScreenState extends State<FamilyScreen> {
 
   String _err(Object e) {
     final s = e.toString();
+    final dua = duaSendError(e);
+    if (dua != null) return dua;
     if (s.contains('already_member')) return t('Zaten bu havuzdasın.', 'You are already in this circle.');
     if (s.contains('too_many_attempts')) return t('Çok fazla deneme. Biraz sonra tekrar dene.', 'Too many attempts. Try again a bit later.');
     if (s.contains('request_expired')) return t('İsteğin 5 dakikalık onay süresi doldu. Tekrar istek gönderebilirsin.', 'Your request\'s 5-minute approval window expired. You can send a new request.');

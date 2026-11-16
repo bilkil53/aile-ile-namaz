@@ -19,6 +19,16 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # sızıntı taraması tüm geçmişe bakar
+
+      # Sızıntı taraması: depo geçmişinin tamamında şifre/anahtar aranır; bulunursa iş durur (fail-closed).
+      # İstisnalar .gitleaks.toml içinde, yalnızca tam değerle yazılır. Bulunan değer loga yazılmaz (--redact).
+      - name: Sızıntı taraması (gitleaks)
+        run: |
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.18.4 \
+            detect --source /repo --config /repo/.gitleaks.toml --redact --no-banner -v \
+            || { echo "::error::Depoda şifre/anahtar olabilecek bir değer bulundu (gitleaks). Değeri kaldırın; gizli değilse .gitleaks.toml'a tam değeriyle ekleyin."; exit 1; }
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
