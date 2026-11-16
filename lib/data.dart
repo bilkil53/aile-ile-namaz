@@ -14,6 +14,7 @@ import 'sync_logic.dart';
 import 'models.dart';
 import 'privacy.dart';
 import 'pro.dart';
+import 'push.dart';
 
 SupabaseClient get supa => Supabase.instance.client;
 
@@ -643,6 +644,7 @@ class Repo {
   static Future<void> deleteMyAccount() async {
     final uid = myId;
     await supa.rpc('delete_my_account');
+    await Push.unregister(signOut: true); // bu telefonun adresi de iptal edilir (hata silmeyi engellemez)
     await signOut(keepPending: false);
     LocalStore.dropParked(uid);
   }

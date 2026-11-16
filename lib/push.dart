@@ -48,6 +48,9 @@ class Push {
   static String? _token;
   static StreamSubscription<String>? _refreshSub;
 
+  /// Çıkışta başlatılan, henüz bitmemiş cihaz adresi iptali (zaman aşımı onu durdurmaz).
+  static Future<void>? _deleting;
+
   static Future<void>? _initF;
 
   /// Tek seferlik başlatma (aynı anda iki yerden çağrılsa da bir kez çalışır).
@@ -108,6 +111,14 @@ class Push {
     }
     try {
       final fm = FirebaseMessaging.instance;
+      // Önceki hesabın çıkışında başlayan adres iptali geç biterse yeni hesabın adresini de iptal
+      // ederdi: yeni adres istenmeden önce o iptalin bitmesi beklenir (en fazla 10 sn)
+      final del = _deleting;
+      if (del != null) {
+        try {
+          await del.timeout(const Duration(seconds: 10));
+        } catch (_) {}
+      }
       await fm.setAutoInitEnabled(true);
       String? tok;
       for (var i = 0; i < 3 && tok == null; i++) {
@@ -175,8 +186,12 @@ class Push {
       // Yenilenen adres çıkış bitmeden bu hesaba yeniden kaydedilmesin (register tekrar dinler)
       await _refreshSub?.cancel();
       _refreshSub = null;
-      await FirebaseMessaging.instance.deleteToken().timeout(wait);
+      final del = _deleting = FirebaseMessaging.instance.deleteToken();
+      unawaited(del.whenComplete(() {
+        if (identical(_deleting, del)) _deleting = null;
+      }).catchError((_) {}));
       _token = null;
+      await del.timeout(wait);
     } catch (_) {}
   }
 }
