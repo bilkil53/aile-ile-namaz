@@ -302,7 +302,7 @@ class _TodayScreenState extends State<TodayScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 14),
       decoration: BoxDecoration(
-        color: AppColors.emeraldDark,
+        color: AppColors.emerald,
         borderRadius: BorderRadius.circular(20),
         boxShadow: const [BoxShadow(color: Color(0x22000000), blurRadius: 6, offset: Offset(0, 2))],
       ),
@@ -373,26 +373,26 @@ class _TodayScreenState extends State<TodayScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.cardBorder),
+        border: Border.all(color: Colors.transparent),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(q.category.toUpperCase(),
-              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.emerald, letterSpacing: 0.8)),
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.prayedMint, letterSpacing: 0.8)),
           const SizedBox(height: 6),
           if (q.arabic != null) ...[
             Text(q.arabic!,
                 textAlign: TextAlign.right,
                 textDirection: TextDirection.rtl,
-                style: const TextStyle(fontSize: 18, color: AppColors.textPrimary, height: 1.6)),
+                style: const TextStyle(fontSize: 18, color: AppColors.onCard, height: 1.6)),
             const SizedBox(height: 6),
           ],
-          Text(q.text, style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, height: 1.4)),
+          Text(q.text, style: const TextStyle(fontSize: 14, color: AppColors.onCard, height: 1.4)),
           const SizedBox(height: 6),
-          Text(q.source, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+          Text(q.source, style: const TextStyle(fontSize: 11, color: AppColors.onCardFaint)),
         ],
       ),
     );
@@ -427,7 +427,7 @@ class _TodayScreenState extends State<TodayScreen> {
               child: Container(
                 height: 5,
                 decoration: BoxDecoration(
-                  color: map[prayerKeys[i]] == PrayerStatus.prayed ? AppColors.prayedMint : Colors.white.withValues(alpha: 0.25),
+                  color: map[prayerKeys[i]] == PrayerStatus.prayed ? AppColors.emerald : AppColors.segmentInactive,
                   borderRadius: BorderRadius.circular(3),
                 ),
               ),
@@ -454,7 +454,7 @@ class _TodayScreenState extends State<TodayScreen> {
             PrayerStatus.none => (t('Dokunarak işaretle', 'Tap to mark'), Colors.white.withValues(alpha: 0.75)),
           };
     return Material(
-      color: arrived ? AppColors.emeraldDark : AppColors.emeraldDark.withValues(alpha: 0.55),
+      color: arrived ? AppColors.emerald : AppColors.emerald.withValues(alpha: 0.7),
       borderRadius: BorderRadius.circular(16),
       elevation: 1,
       child: InkWell(

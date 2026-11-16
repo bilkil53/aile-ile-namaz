@@ -21,7 +21,7 @@ class DangerBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: AppColors.card,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
@@ -30,18 +30,18 @@ class DangerBox extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.missed.withValues(alpha: 0.5)),
+            border: Border.all(color: AppColors.missedCoralCoral.withValues(alpha: 0.6)),
           ),
           child: Row(children: [
-            Icon(icon, color: AppColors.missed, size: 20),
+            Icon(icon, color: AppColors.missedCoral, size: 20),
             const SizedBox(width: 10),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(title, style: const TextStyle(fontSize: 14, color: AppColors.missed, fontWeight: FontWeight.bold)),
-                Text(subtitle, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                Text(title, style: const TextStyle(fontSize: 14, color: AppColors.missedCoral, fontWeight: FontWeight.bold)),
+                Text(subtitle, style: const TextStyle(fontSize: 11, color: AppColors.onCardMuted)),
               ]),
             ),
-            const Icon(Icons.chevron_right, color: AppColors.missed),
+            const Icon(Icons.chevron_right, color: AppColors.missedCoral),
           ]),
         ),
       ),

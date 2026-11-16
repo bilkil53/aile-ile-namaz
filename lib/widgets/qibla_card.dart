@@ -82,11 +82,12 @@ class _QiblaCardState extends State<QiblaCard> {
 
     // Material: ListTile dokunma efekti kartın üstünde görünsün (Container arka planı onu gizliyordu)
     return Material(
-      color: AppColors.white,
+      textStyle: const TextStyle(color: AppColors.onCard),
+      color: AppColors.card,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppColors.cardBorder),
+        side: const BorderSide(color: Colors.transparent),
       ),
       child: Column(
         children: [

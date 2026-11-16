@@ -252,7 +252,7 @@ class _KazaScreenState extends State<KazaScreen> {
         children: _demoWrap([
           Container(
             padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(color: AppColors.emeraldDark, borderRadius: BorderRadius.circular(20)),
+            decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(20)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Text(t('📿 Kaza Namazı Takibi', '📿 Kaza Prayer Tracking'),
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
@@ -262,7 +262,7 @@ class _KazaScreenState extends State<KazaScreen> {
               Row(children: [
                 Expanded(child: _tile(t('Kalan Kaza Borcu', 'Kaza Remaining'), _n(remaining), AppColors.goldContainer, const Color(0xFF78350F))),
                 const SizedBox(width: 10),
-                Expanded(child: _tile(t('Kılınan Kaza', 'Kaza Completed'), _n(done), AppColors.prayedMint, AppColors.emeraldDark)),
+                Expanded(child: _tile(t('Kılınan Kaza', 'Kaza Completed'), _n(done), AppColors.prayedMint, AppColors.emerald)),
               ]),
               const SizedBox(height: 12),
               ClipRRect(
@@ -284,13 +284,13 @@ class _KazaScreenState extends State<KazaScreen> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: AppColors.card,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.cardBorder),
+                border: Border.all(color: Colors.transparent),
               ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(t('👨‍👩‍👧 Aile Fertleri Kaza Durumu (Detaysız)', '👨‍👩‍👧 Family Kaza Status (Summary only)'),
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.onCard)),
                 const SizedBox(height: 8),
                 for (final m in _family)
                   Padding(
@@ -298,7 +298,7 @@ class _KazaScreenState extends State<KazaScreen> {
                     child: Row(children: [
                       MemberIcon(m.icon, size: 20),
                       const SizedBox(width: 8),
-                      Expanded(child: Text(_me == null ? m.shownName : kinLabel(viewer: _me!, target: m, reis: _reis), style: const TextStyle(fontWeight: FontWeight.w600))),
+                      Expanded(child: Text(_me == null ? m.shownName : kinLabel(viewer: _me!, target: m, reis: _reis), style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.onCard))),
                       Builder(builder: (_) {
                         final k = _familyKaza[m.userId];
                         final left = k == null ? 0 : (k[0] > k[1] ? k[0] - k[1] : 0);
@@ -307,7 +307,7 @@ class _KazaScreenState extends State<KazaScreen> {
                           style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: left == 0 ? AppColors.emerald : AppColors.gold),
+                              color: left == 0 ? AppColors.prayedMint : const Color(0xFFFCD34D)),
                         );
                       }),
                     ]),
@@ -365,9 +365,9 @@ class _KazaScreenState extends State<KazaScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.cardBorder),
+        border: Border.all(color: Colors.transparent),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(children: [
@@ -381,32 +381,32 @@ class _KazaScreenState extends State<KazaScreen> {
           const SizedBox(width: 10),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-              Text(t('$rekat | Kılınan: ${_n(done)}', '$rekat | Done: ${_n(done)}'), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.onCard)),
+              Text(t('$rekat | Kılınan: ${_n(done)}', '$rekat | Done: ${_n(done)}'), style: const TextStyle(fontSize: 12, color: AppColors.onCardMuted)),
             ]),
           ),
           IconButton(
             tooltip: t('Borcu azalt', 'Decrease'),
             visualDensity: VisualDensity.compact,
             onPressed: (Pro.isDemo || owed > done) ? () => _set(type, owed - 1, done) : null,
-            icon: const Icon(Icons.remove_circle_outline, color: AppColors.emerald),
+            icon: const Icon(Icons.remove_circle_outline, color: Colors.white),
           ),
           Column(children: [
-            Text(_n(left), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-            Text(t('Borç', 'Left'), style: const TextStyle(fontSize: 10, color: AppColors.textMuted)),
+            Text(_n(left), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.onCard)),
+            Text(t('Borç', 'Left'), style: const TextStyle(fontSize: 10, color: AppColors.onCardFaint)),
           ]),
           IconButton(
             tooltip: t('Borç ekle', 'Add'),
             visualDensity: VisualDensity.compact,
             onPressed: () => _set(type, owed + 1, done),
-            icon: const Icon(Icons.add_circle_outline, color: AppColors.emerald),
+            icon: const Icon(Icons.add_circle_outline, color: Colors.white),
           ),
         ]),
         const SizedBox(height: 8),
         left > 0
             ? FilledButton.icon(
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.emerald,
+                  backgroundColor: Colors.white, foregroundColor: AppColors.emerald,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 onPressed: () => _set(type, owed, done + 1, announce: true),
