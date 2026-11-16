@@ -39,8 +39,10 @@ begin
   exception when insufficient_privilege or undefined_table then passed := passed + 1; end;
   begin perform public.push_hook_secret(); fails := fails || 'anon_bildirim_anahtari_acik; ';
   exception when insufficient_privilege then passed := passed + 1; end;
-  begin insert into public.crash_reports(app_version, error) values ('t', 'test'); passed := passed + 1;
-  exception when others then fails := fails || 'anon_hata_raporu: ' || sqlerrm || '; '; end;
+  -- Değişiklik 48: misafir hata raporu yazamaz
+  begin insert into public.crash_reports(app_version, error) values ('t', 'test');
+    fails := fails || 'anon_hata_raporu_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
   begin insert into public.crash_reports(error, created_at) values ('t', now() + interval '1 year');
     fails := fails || 'hata_raporu_tarihi_yazilabiliyor; ';
   exception when insufficient_privilege then passed := passed + 1; end;
@@ -55,6 +57,10 @@ begin
   -- Giriş yapmış kullanıcı u olarak
   perform set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true);
   set local role authenticated;
+
+  -- Girişli kullanıcı hata raporu yazabilir (kimliksiz; değişiklik 48)
+  begin insert into public.crash_reports(app_version, error) values ('t', 'test'); passed := passed + 1;
+  exception when others then fails := fails || 'auth_hata_raporu: ' || sqlerrm || '; '; end;
 
   -- 2) Normal Pro akışı çalışır, iç fonksiyon çağrılamaz
   begin perform public.my_pro_status(); passed := passed + 1;
