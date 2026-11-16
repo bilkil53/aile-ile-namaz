@@ -171,7 +171,7 @@ class _KarneScreenState extends State<KarneScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_loading) return const Center(child: CircularProgressIndicator(color: AppColors.onBackground));
     final demo = Pro.isDemo; // demo: kaza kapalı olduğu için kaza bölümleri gizlenir
     final days = _days;
     final (p, tot) = _score(days);
@@ -206,7 +206,7 @@ class _KarneScreenState extends State<KarneScreen> {
           // ---------- Başlık + dönem + genel not ----------
           Container(
             padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(20)),
+            decoration: BoxDecoration(color: AppColors.emeraldDark, borderRadius: BorderRadius.circular(20)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Text(_name.isNotEmpty ? t('$_name · Karnesi', "$_name's Report") : t('İbadet Karnesi', 'Worship Report'),
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
@@ -344,10 +344,10 @@ class _KarneScreenState extends State<KarneScreen> {
           // ---------- Kişisel rozetler (demo'da gizli) ----------
           if (!demo) ...[
           Text(t('🏅 Manevi Rozetler', '🏅 Spiritual Badges'),
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.onBackground)),
           const SizedBox(height: 8),
           if (badges.any((b) => b.seasonal)) ...[
-            Text(t('Mübarek günler', 'Blessed days'), style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+            Text(t('Mübarek günler', 'Blessed days'), style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.onBackgroundMuted)),
             const SizedBox(height: 6),
             for (final b in badges.where((b) => b.seasonal)) _badgeTile(b),
             const SizedBox(height: 6),
@@ -360,7 +360,7 @@ class _KarneScreenState extends State<KarneScreen> {
           const SizedBox(height: 10),
           Center(
             child: Text(t('Karne sadece senin kayıtlarından hazırlanır · Aile ile Namaz v$_version', 'The report is built only from your own records · Aile ile Namaz v$_version'),
-                style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                style: const TextStyle(fontSize: 11, color: AppColors.onBackgroundMuted)),
           ),
         ],
       ),

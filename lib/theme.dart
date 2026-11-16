@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-/// Uygulama renkleri (çam yeşili + krem zemin).
+/// Uygulama renkleri (çam yeşili zemin + beyaz kartlar).
 class AppColors {
   static const emerald = Color(0xFF0E5A4A);
   static const emeraldDark = Color(0xFF074336);
   static const emeraldLight = Color(0xFF166B58);
   static const emeraldContainer = Color(0xFFE2EFEA);
-  static const background = Color(0xFFF7FAF8);
+  static const background = emerald;
+  /// Yeşil zemine doğrudan (kart dışında) yazılan yazı ve ikonlar.
+  static const onBackground = Color(0xFFFFFFFF);
+  static const onBackgroundMuted = Color(0xCCFFFFFF); // beyaz %80: ikincil metin
+  /// Beyaz yüzey içindeki krem kutular (eski zemin rengi).
+  static const cream = Color(0xFFF7FAF8);
   static const white = Color(0xFFFFFFFF);
   static const cardBorder = Color(0xFFE2EBE6);
   static const segmentInactive = Color(0xFFD6E3DE);
@@ -39,7 +45,8 @@ ThemeData buildAppTheme() {
     colorScheme: scheme,
     scaffoldBackgroundColor: AppColors.background,
     appBarTheme: const AppBarTheme(
-      backgroundColor: AppColors.emerald,
+      backgroundColor: AppColors.emeraldDark, // yeşil zeminden ayrışsın
+      systemOverlayStyle: SystemUiOverlayStyle.light, // durum çubuğu ikonları açık renk
       foregroundColor: AppColors.white,
       elevation: 3,
       surfaceTintColor: Colors.transparent,
