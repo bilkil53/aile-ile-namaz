@@ -679,6 +679,8 @@ class _FamilyScreenState extends State<FamilyScreen> {
             ],
             _matrix(),
             const SizedBox(height: 10),
+            if (_members.length > 1) ...[
+            const SizedBox(height: 0),
             FilledButton.icon(
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.white,
@@ -691,6 +693,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
               icon: const Text('🤲'),
               label: Text(t('Aileye Dua Gönder', 'Send a Dua to the Family'), style: TextStyle(fontWeight: FontWeight.bold)),
             ),
+            ],
             const SizedBox(height: 16),
             _membersSection(),
             const SizedBox(height: 16),
