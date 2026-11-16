@@ -56,7 +56,7 @@ ThemeData buildAppTheme() {
     colorScheme: scheme,
     scaffoldBackgroundColor: AppColors.background,
     appBarTheme: const AppBarTheme(
-      backgroundColor: AppColors.emeraldDark, // yeşil zeminden ayrışsın
+      backgroundColor: AppColors.emerald, // eski tasarımdaki gibi kartlarla aynı çam yeşili
       systemOverlayStyle: SystemUiOverlayStyle.light, // durum çubuğu ikonları açık renk
       foregroundColor: AppColors.white,
       elevation: 3,
