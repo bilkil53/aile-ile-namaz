@@ -1,4 +1,5 @@
 import 'package:aile_ile_namaz/local_store.dart';
+import 'package:aile_ile_namaz/pro.dart';
 import 'package:aile_ile_namaz/settings.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -163,5 +164,25 @@ void main() {
       expect(LocalStore.parkedCount('A'), 0);
       expect(LocalStore.parkedCount('local'), 0);
     });
+  });
+
+  test('Çıkışta bellekteki Pro durumu sıfırlanır: sonraki hesap öncekinin Pro\'sunu devralmaz', () async {
+    final until = DateTime.now().add(const Duration(days: 30)).millisecondsSinceEpoch;
+    await start({'pro.until': until, 'pro.source': 'paid', 'pro.trialUntil': until, 'pro.trialStart': until});
+    Pro.loadCached();
+    Pro.isTester = true;
+    Pro.requests.value = {'A-uye': DateTime.now()};
+    Pro.requestNames = {'A-uye': 'Kızın'};
+    expect(Pro.until, isNotNull);
+
+    Pro.reset();
+    await Future<void>.delayed(Duration.zero);
+    expect(Pro.until, isNull);
+    expect(Pro.source, isNull);
+    expect(Pro.trialUntil, isNull);
+    expect(Pro.trialStart, isNull);
+    expect(Pro.isTester, isFalse);
+    expect(Pro.requests.value, isEmpty);
+    expect(Pro.requestNames, isEmpty);
   });
 }
