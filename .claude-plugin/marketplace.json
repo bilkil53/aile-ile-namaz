@@ -1,0 +1,5 @@
+{
+  "name": "aile-ile-namaz",
+  "owner": { "name": "aile-ile-namaz" },
+  "plugins": [{ "name": "token-gostergesi", "source": "./eklenti/token-gostergesi", "description": "Sabit token göstergesi" }]
+}
