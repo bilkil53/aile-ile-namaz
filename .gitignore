@@ -21,6 +21,15 @@ android/key.properties
 ios/Pods/
 ios/.symlinks/
 
-# Gizli dosyalar
+# Gizli dosyalar (anahtar, şifre, servis hesabı): asla depoya girmez
 .env
+.env.*
 *.secret
+*.p12
+*.pem
+*.key
+client_secret*.json
+*service-account*.json
+*serviceaccount*.json
+*-firebase-adminsdk-*.json
+ANDROID_KEYSTORE*.txt
