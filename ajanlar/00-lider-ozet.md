@@ -23,7 +23,7 @@
 1. Demoda iki telefonla bildirim denemesi.
 2. main v1.0 (onaylı, adım adım, üç telefon aynı gün).
 3. Küçük işler ve temizlik (ayrıntı listesi yok, gerektiğinde depodan çıkarılır).
-4. Token göstergesi eklentisi yazıldı (`eklenti/token-gostergesi`). Kurulum, istemde bir kez: `/plugin install token-gostergesi --marketplace bilkil53/aile-ile-namaz` (dal main'e girince). Telefonda/uygulamada görünürlük denenecek.
+4. Token göstergesi denendi ve kaldırıldı (kullanıcı kararı). Token için `/context` kullanılır.
 
 ## Play'e çıkarken yapılacaklar
 AAB ve Play testleri; Play App Signing; Google giriş ekranını yayınla; Pro test işlevlerini kaldır; KVKK ve avukat; Play Integrity; Play Billing; AdMob; Supabase ücretli plan; Diyanet resmî vakitleri; Test Lab yetkisini daralt; Developer Device Platform'a geçiş (en geç Nisan 2027).
