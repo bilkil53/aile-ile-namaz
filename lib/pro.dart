@@ -67,7 +67,8 @@ class Pro {
   /// Bu hesap Pro test listesinde mi? (Sunucu her işlemde ayrıca denetler; burası yalnızca
   /// test panelini göstermek için.) null = öğrenilemedi (internet yok / sunucuya ulaşılamadı).
   static Future<bool?> testerStatus() async {
-    if (isGuest) return false;
+    // Kararlı sürümde test sunucu işlevleri hiç çağrılmaz; derleyici bu gövdeyi çıkarır (CI denetler)
+    if (!kTestChannel || isGuest) return false;
     try {
       final r = await supa.rpc('am_i_pro_tester').timeout(const Duration(seconds: 6));
       final was = isTester;
@@ -234,6 +235,7 @@ class Pro {
   /// TEST: denemeyi baştan başlat (7 gün, Pro kaldırılır).
   /// Başarılıysa true; değilse [lastError] doldurulur.
   static Future<bool> testRestartTrial() async {
+    if (!kTestChannel) return false; // kararlı sürümde yok
     try {
       await supa.rpc('test_restart_trial').timeout(const Duration(seconds: 8));
       lastError = null;
@@ -330,6 +332,7 @@ class Pro {
   /// Pro'ya geçer (test aşaması: yalnızca test listesindeki hesaplar, kod gerekmez; gerçek satışta
   /// Google Play ödemesine geçilecek). Başarılıysa true.
   static Future<bool> redeem([String code = '']) async {
+    if (!kTestChannel) return false; // test aşaması: kararlı sürümde yok (Play ödemesi gelecek)
     try {
       final r = await supa.rpc('redeem_pro_code', params: {'p_code': code}).timeout(const Duration(seconds: 8));
       await _save(r == null ? null : DateTime.tryParse(r as String)?.toLocal());
@@ -350,6 +353,7 @@ class Pro {
   /// TEST: demo süresini hemen bitirir.
   /// Pro'dan düşer (ücretsize döner). Başarılıysa true; değilse [lastError] doldurulur.
   static Future<bool> expireTest() async {
+    if (!kTestChannel) return false; // kararlı sürümde yok
     try {
       final r = await supa.rpc('expire_pro_test').timeout(const Duration(seconds: 8));
       await _save(r == null ? null : DateTime.tryParse(r as String)?.toLocal());

@@ -456,6 +456,25 @@ jobs:
           if strings -n 8 "$so" | grep -q "$other"; then echo "::error::APK içinde diğer sunucunun adresi ($other) var"; exit 1; fi
           echo "APK sunucusu: $SERVER_REF ✓"
 
+      # Kararlı uygulamada test kodu olmaz: test paneli ve Pro test işlevleri yalnızca CHANNEL=demo
+      # derlemesinde derlenir (sabit koşul, derleyici çıkarır). Derleme karıştırıldığı (--obfuscate) için
+      # sınıf adı değil, test kodundaki yazılar aranır. Biri bile varsa yayın durur (fail-closed).
+      - name: Test kodu kontrolü (kararlı APK'da test paneli ve test işlevleri yok)
+        if: github.ref != 'refs/heads/demo'
+        run: |
+          so=/tmp/sochk/lib/arm64-v8a/libapp.so
+          [ -f "$so" ] || { echo '::error::libapp.so bulunamadı; test kodu kontrolü yapılamadı'; exit 1; }
+          strings -n 8 "$so" > /tmp/sochk/strings.txt
+          # Denetimin kendisi çalışıyor mu: kararlı sürümde de bulunan bir sunucu işlevi adı görünmeli
+          grep -q 'my_pro_status' /tmp/sochk/strings.txt || { echo '::error::Denetim yazıları okuyamıyor (my_pro_status bulunamadı); test kodu kontrolü yapılamadı'; exit 1; }
+          # Liste test/hardening_test.dart ile aynı tutulur (test, her yazının kodda geçtiğini denetler)
+          bad=''
+          for m in am_i_pro_tester test_restart_trial expire_pro_test redeem_pro_code not_tester; do
+            grep -q "$m" /tmp/sochk/strings.txt && bad="$bad $m"
+          done
+          if [ -n "$bad" ]; then echo "::error::Kararlı APK içinde test kodu var:$bad"; exit 1; fi
+          echo 'Kararlı APK: test paneli ve test işlevleri yok ✓'
+
       - name: APK dosya adını sabitle + işlemci türüne göre küçük APK'lar
         run: |
           cp build/app/outputs/flutter-apk/app-release.apk aile-ile-namaz.apk

@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:aile_ile_namaz/prayer_times.dart';
+import 'package:aile_ile_namaz/pro.dart';
 import 'package:aile_ile_namaz/update_checker.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -56,5 +59,25 @@ void main() {
   test('Play bağlantısı çalışan uygulamanın paket adından kurulur (demo ayrı paket)', () {
     expect(UpdateChecker.playUrl('com.bilkil53.aile_ile_namaz.demo'), endsWith('?id=com.bilkil53.aile_ile_namaz.demo'));
     expect(UpdateChecker.playUrl('com.bilkil53.aile_ile_namaz'), endsWith('?id=com.bilkil53.aile_ile_namaz'));
+  });
+
+  test('Kararlı kanalda Pro test işlevleri sunucuya hiç gitmez (Supabase açılmadan false döner)', () async {
+    expect(kTestChannel, isFalse); // testler CHANNEL verilmeden = kararlı kanal
+    expect(await Pro.testerStatus(), isFalse);
+    expect(await Pro.testRestartTrial(), isFalse);
+    expect(await Pro.expireTest(), isFalse);
+    expect(await Pro.redeem(), isFalse);
+  });
+
+  test('CI test kodu denetimindeki yazılar kodda geçer (denetim eskimesin)', () {
+    final wf = File('.github/workflows/build-apk.yml').readAsStringSync();
+    final m = RegExp(r'for m in ([a-z_ ]+); do').firstMatch(wf);
+    expect(m, isNotNull, reason: 'build-apk.yml test kodu denetimi yok');
+    final markers = m!.group(1)!.trim().split(' ');
+    expect(markers, containsAll(['am_i_pro_tester', 'test_restart_trial', 'expire_pro_test']));
+    final src = File('lib/pro.dart').readAsStringSync();
+    for (final x in markers) {
+      expect(src.contains(x), isTrue, reason: 'denetim yazısı kodda yok: $x');
+    }
   });
 }
