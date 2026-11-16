@@ -307,7 +307,20 @@ jobs:
       # Paket sürümleri pubspec.lock ile sabittir: kilit dosyasıyla uyuşmuyorsa durur
       - run: flutter pub get --enforce-lockfile
 
+      # Demo hızlı yayın: ci/demo-testsiz.txt içindeki sayı > 0 ise yalnız demo dalında testler atlanır
+      # (analiz, birim, sunucu güvenlik, ekran testleri). Sayıyı her demo yayınında bir azaltın. main'de asla atlanmaz.
+      - name: Testsiz demo yayını mı
+        id: testsiz
+        run: |
+          n=$(tr -dc '0-9' < ci/demo-testsiz.txt 2>/dev/null || echo 0); n=${n:-0}
+          if [ "$GITHUB_REF" = "refs/heads/demo" ] && [ "$n" -gt 0 ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"; echo "::warning::Testsiz demo yayını (kalan hak: $n); testler atlanıyor"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Kod analizi (hata veya uyarı varsa derleme durur)
+        if: steps.testsiz.outputs.skip != 'true'
         run: |
           set +e
           flutter analyze --no-fatal-infos > analyze.txt 2>&1
@@ -338,6 +351,7 @@ jobs:
           echo "Sunucu: $ref ($GITHUB_REF_NAME)"
 
       - name: Birim testleri (biri bile başarısızsa derleme durur)
+        if: steps.testsiz.outputs.skip != 'true'
         run: |
           set +e
           flutter test --reporter expanded > test.txt 2>&1
@@ -355,6 +369,7 @@ jobs:
           fi
 
       - name: Sunucu güvenlik testi (canlı veritabanında, sonunda her şey geri alınır)
+        if: steps.testsiz.outputs.skip != 'true'
         env:
           DB_URL_MAIN: ${{ secrets.SUPABASE_DB_URL }}
           DB_URL_DEMO: ${{ secrets.SUPABASE_DB_URL_DEMO }}
@@ -596,12 +611,14 @@ jobs:
       # misafir akışı parmakla dokunur gibi denenir. YAYINDAN SONRA çalışır: başarısızsa çalışma kırmızı olur,
       # yayın yerinde kalır; sorun incelenip düzeltme yayını yapılır. (Zorunlu kontroller yayından önce.)
       - name: Emülatör için donanım hızlandırma (KVM)
+        if: steps.testsiz.outputs.skip != 'true'
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
       - name: Ekran testi — GitHub emülatörü (Android 11, Türkçe ve İngilizce, misafir + giriş yapılmış akış)
+        if: steps.testsiz.outputs.skip != 'true'
         timeout-minutes: 40
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         env:
@@ -628,7 +645,7 @@ jobs:
       # 1 gerçek telefonunda ve 1 sanal telefonunda robotla gezilir. Kota sınırlı olduğu için
       # yalnızca yayın dallarında (main, demo). Yayından sonra çalışır; geçmezse çalışma kırmızı olur.
       - name: Test Lab anahtarı var mı
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
+        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo') && steps.testsiz.outputs.skip != 'true'
         env:
           KEY: ${{ secrets.FIREBASE_TESTLAB_KEY }}
         run: |
@@ -636,17 +653,17 @@ jobs:
           echo 'Test Lab anahtarı hazır'
 
       - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
+        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo') && steps.testsiz.outputs.skip != 'true'
         with:
           credentials_json: ${{ secrets.FIREBASE_TESTLAB_KEY }}
 
       - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
+        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo') && steps.testsiz.outputs.skip != 'true'
 
       # Günlük ücretsiz hak (Spark): 5 gerçek + 10 sanal telefon testi.
       # Stabil: gerçek telefon (Türkçe) + sanal telefon (İngilizce) · Demo: yalnız sanal telefon (Türkçe)
       - name: Ekran testi — Google Test Lab (stabil 2 telefon TR+EN, demo 1 sanal TR; robot gezinti)
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
+        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo') && steps.testsiz.outputs.skip != 'true'
         timeout-minutes: 45
         run: |
           # auth adımı anahtar dosyasındaki projeyi CLOUDSDK_CORE_PROJECT ile verir (config'i ezer):
