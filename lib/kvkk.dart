@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'data.dart';
 import 'lang.dart';
+import 'log.dart';
 import 'push.dart';
 import 'settings.dart';
 import 'theme.dart';
@@ -133,7 +134,9 @@ class Kvkk {
             .timeout(const Duration(seconds: 8));
         // Satır güncellenmediyse (profil yok) yazılmadı say, sonra yeniden dene
         if (ack.isNotEmpty && _uid == uid) await p.setBool(_kSynced(uid), true);
-      } catch (_) {}
+      } catch (e) {
+        Log.warn('kvkk', e); // bayrak false kalır: bir sonraki açılışta yeniden denenir
+      }
     }
     if (_rizaUsers.contains(uid) && !(p.getBool(_kRizaSynced(uid)) ?? false)) {
       try {
@@ -143,7 +146,9 @@ class Kvkk {
             .timeout(const Duration(seconds: 8));
         // Profil satırı yoksa ya da metin eskimişse tarih dönmez → yazılmadı say
         if (at != null && _uid == uid) await p.setBool(_kRizaSynced(uid), true);
-      } catch (_) {}
+      } catch (e) {
+        Log.warn('kvkk', e);
+      }
     }
   }
 
