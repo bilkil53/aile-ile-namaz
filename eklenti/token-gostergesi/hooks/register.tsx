@@ -15,6 +15,11 @@ function line(u: SessionUsage): string {
   return parts.join(' · ')
 }
 
+function note(u: SessionUsage): string {
+  const left = k(u.context.window - (u.context.tokens ?? 0))
+  return `\n\n[token-gostergesi eklentisi: kalan ${left}. Cevabının son satırına aynen yaz: "Kalan token: ${left}"]`
+}
+
 export const register: Register = on => {
   let text = ''
 
@@ -24,9 +29,10 @@ export const register: Register = on => {
     return next(e)
   })
   on('prompt.submit', async ($, e, next) => {
-    text = line(await $.session.usage())
+    const u = await $.session.usage()
+    text = line(u)
     $.ui.status(text)
-    return next(e)
+    return next({ ...e, text: e.text + note(u) })
   })
   on('turn.complete', async ($, e, next) => {
     text = line(await $.session.usage())
