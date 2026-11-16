@@ -5,10 +5,10 @@
 
 ## Çalışma düzeni
 - Tek ajan (lider) çalışır. Bağımsız inceleme gerekirse ayrı ajan kullanılır.
-- Onaylar anketle sorulur. Cevaplar Türkçe ve kısa. Her raporda Play listesi ve token grafiği (explain-usage).
+- Onaylar anketle sorulur. Cevaplar Türkçe ve kısa. Play listesi ve token grafiği yalnız istenince.
 - Akış: iş dalı (check/...) → analiz + test → bağımsız inceleme → demo → kullanıcı telefonda bakar → onayla main. Demo ve main aynı anda yayınlanmaz.
 - Gerçek veritabanına yazma, işlev yükleme, silme: ayrı onay ve önce geri alınan deneme.
-- Sohbet uzayınca: "yeni sohbete geç" → bu özet güncellenir → kullanıcı /clear → /yenisohbet.
+- Sohbet uzayınca: kullanıcı `/compact` yazar (aynı sohbette devam). Yeni sohbet gerekirse önce "özeti güncelle", sonra yeni oturumda `/yenisohbet`.
 
 ## Durum (16 Kasım 2026)
 - Demo v11.3 yayında (çam yeşili zemin), tüm testler geçti, tasarım onaylandı.
@@ -27,3 +27,8 @@
 
 ## Play'e çıkarken yapılacaklar
 AAB ve Play testleri; Play App Signing; Google giriş ekranını yayınla; Pro test işlevlerini kaldır; KVKK ve avukat; Play Integrity; Play Billing; AdMob; Supabase ücretli plan; Diyanet resmî vakitleri; Test Lab yetkisini daralt; Developer Device Platform'a geçiş (en geç Nisan 2027).
+
+## /sondurum kontrolleri (bu proje)
+- Depo: bu oturuma bağlı depo (`git remote`); dallar ve etiketler `git ls-remote --heads --tags origin`, çalışmalar ve yayınlar GitHub araçlarıyla.
+- Sunucu: bağlı Supabase projesi, yalnız okuma (değişiklik listesi, hesap sayıları). Kimlik numarası yazma.
+- Play listesi bu özetteki "Play'e çıkarken" bölümüdür, rapora yalnız istenince eklenir.
