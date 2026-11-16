@@ -1240,7 +1240,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                       style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
                 ),
                 Text(_demo ? t('%–', '–%') : t('%$pct', '$pct%'),
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.prayedMint)),
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
               ]),
             );
           }),

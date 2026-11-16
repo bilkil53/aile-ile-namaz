@@ -170,7 +170,7 @@ class _DiniGunCardState extends State<DiniGunCard> {
                 Text(t('${g.name}nız mübarek olsun', '${g.name} Mubarak'),
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                 Text(t('Bayramın $dayNo. günü · ${g.days} gün sürer', 'Day $dayNo of Eid · lasts ${g.days} days'),
-                    style: const TextStyle(fontSize: 12, color: AppColors.prayedMint)),
+                    style: const TextStyle(fontSize: 12, color: Colors.white)),
               ]),
             ),
           ]),

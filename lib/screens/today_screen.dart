@@ -221,7 +221,7 @@ class _TodayScreenState extends State<TodayScreen> {
             children: [
               const Text(
                 'AİLE İLE NAMAZ',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.prayedMint, letterSpacing: 0.8),
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 0.8),
               ),
               Text(
                 _name.isEmpty ? t('Selamün aleyküm', 'Assalamu alaikum') : t('Selamün aleyküm,\n$_name', 'Assalamu alaikum,\n$_name'),
@@ -344,7 +344,7 @@ class _TodayScreenState extends State<TodayScreen> {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: name == n.name ? AppColors.prayedMint : Colors.white,
+                        color: name == n.name ? Colors.white : Colors.white.withValues(alpha: 0.7),
                       )),
                 ]),
             ],
@@ -448,13 +448,13 @@ class _TodayScreenState extends State<TodayScreen> {
     final (statusText, statusColor) = !arrived
         ? (t('Vakti henüz girmedi', 'Not time yet'), Colors.white.withValues(alpha: 0.65))
         : switch (status) {
-            PrayerStatus.prayed => (t('✓ Kılındı', '✓ Prayed'), AppColors.prayedMint),
+            PrayerStatus.prayed => (t('✓ Kılındı', '✓ Prayed'), Colors.white),
             PrayerStatus.missed => (t('✕ Kılınmadı', '✕ Missed'), AppColors.missedCoral),
             PrayerStatus.excused => (t('— Muaf', '— Excused'), const Color(0xFFE5E7EB)),
             PrayerStatus.none => (t('Dokunarak işaretle', 'Tap to mark'), Colors.white.withValues(alpha: 0.75)),
           };
     return Material(
-      color: arrived ? AppColors.emeraldDark : AppColors.emeraldDark.withValues(alpha: 0.82),
+      color: arrived ? AppColors.emeraldDark : AppColors.emeraldDark.withValues(alpha: 0.55),
       borderRadius: BorderRadius.circular(16),
       elevation: 1,
       child: InkWell(
