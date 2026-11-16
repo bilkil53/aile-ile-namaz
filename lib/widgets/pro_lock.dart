@@ -130,7 +130,8 @@ Future<void> showProCodeDialog(BuildContext context) async {
         ]),
         actions: [
           TextButton(onPressed: busy ? null : () => Navigator.pop(ctx), child: Text(t('Kapat', 'Close'))),
-          if (tester)
+          // Sabit kanal koşulu: kararlı derlemede düğme ve test çağrısı derleyiciyle tamamen çıkar
+          if (kTestChannel && tester)
             FilledButton(
               onPressed: busy
                   ? null
