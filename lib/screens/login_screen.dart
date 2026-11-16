@@ -294,7 +294,7 @@ class _Feature extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: AppColors.background,
+          color: AppColors.cream,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(color: AppColors.cardBorder),
         ),

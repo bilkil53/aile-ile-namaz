@@ -235,7 +235,7 @@ class _KazaScreenState extends State<KazaScreen> {
   @override
   Widget build(BuildContext context) {
     final demo = Pro.isDemo;
-    if (_loading && !demo) return const Center(child: CircularProgressIndicator());
+    if (_loading && !demo) return const Center(child: CircularProgressIndicator(color: AppColors.onBackground));
     var owed = 0, done = 0;
     for (final (t, _, _, _) in _types) {
       final (o, c) = _of(t);
@@ -252,7 +252,7 @@ class _KazaScreenState extends State<KazaScreen> {
         children: _demoWrap([
           Container(
             padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(20)),
+            decoration: BoxDecoration(color: AppColors.emeraldDark, borderRadius: BorderRadius.circular(20)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Text(t('📿 Kaza Namazı Takibi', '📿 Kaza Prayer Tracking'),
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
@@ -317,18 +317,18 @@ class _KazaScreenState extends State<KazaScreen> {
           ],
           const SizedBox(height: 10),
           Row(children: [
-            Icon(Icons.lock_outline, size: 14, color: AppColors.textMuted),
+            Icon(Icons.lock_outline, size: 14, color: AppColors.onBackgroundMuted),
             SizedBox(width: 6),
             Expanded(
               child: Text(t('Hangi vakti kaza ettiğin sadece sende görünür; ailen yalnızca toplamı görür.', 'Which prayers you missed is visible only to you; your family only sees the total.'),
-                  style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                  style: TextStyle(fontSize: 11, color: AppColors.onBackgroundMuted)),
             ),
           ]),
           const SizedBox(height: 10),
           OutlinedButton.icon(
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.emerald,
-              side: const BorderSide(color: AppColors.emerald),
+              foregroundColor: AppColors.onBackground,
+              side: const BorderSide(color: AppColors.onBackgroundMuted),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: _bulkAdd,

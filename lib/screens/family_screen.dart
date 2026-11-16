@@ -638,7 +638,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_loading) return const Center(child: CircularProgressIndicator(color: AppColors.onBackground));
     final pool = _pool;
     return RefreshIndicator(
       onRefresh: _load,
@@ -733,7 +733,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
     final white85 = Colors.white.withValues(alpha: 0.85);
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-      decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(color: AppColors.emeraldDark, borderRadius: BorderRadius.circular(20)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -903,7 +903,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   Widget _joinCard() {
     return Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: AppColors.emeraldLight, borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(color: AppColors.emeraldDark, borderRadius: BorderRadius.circular(16)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1052,7 +1052,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
     if (_members.length >= kPoolMax) {
       return Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: AppColors.emeraldLight, borderRadius: BorderRadius.circular(16)),
+        decoration: BoxDecoration(color: AppColors.emeraldDark, borderRadius: BorderRadius.circular(16)),
         child: Row(children: [
           Text('🏡', style: TextStyle(fontSize: 22)),
           SizedBox(width: 10),
@@ -1065,7 +1065,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
     }
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppColors.emeraldLight, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: AppColors.emeraldDark, borderRadius: BorderRadius.circular(16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1198,7 +1198,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
         );
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: AppColors.emeraldDark, borderRadius: BorderRadius.circular(16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1240,7 +1240,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                       style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
                 ),
                 Text(_demo ? t('%–', '–%') : t('%$pct', '$pct%'),
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.prayedMint)),
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
               ]),
             );
           }),
@@ -1332,10 +1332,10 @@ class _FamilyScreenState extends State<FamilyScreen> {
         Row(children: [
           Expanded(
             child: Text(t('Havuzdaki Bireyler ve Durumları', 'Circle Members and Their Status'),
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.onBackground)),
           ),
           Text(t('👥 ${_members.length}/$kPoolMax kişi', '👥 ${_members.length}/$kPoolMax people'),
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textSecondary)),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.onBackgroundMuted)),
         ]),
         const SizedBox(height: 8),
         for (final m in _members) ...[
@@ -1346,7 +1346,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
           Padding(
             padding: EdgeInsets.all(8),
             child: Text(t('Aile fertlerin davet kodun ile havuza dahil oldukça burada listelenecek ⏳', 'Family members will be listed here as they join with your invite code ⏳'),
-                style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
+                style: TextStyle(fontSize: 12, color: AppColors.onBackgroundMuted)),
           ),
       ],
     );
