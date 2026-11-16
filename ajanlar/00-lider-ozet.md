@@ -5,7 +5,7 @@
 
 ## Çalışma düzeni
 - Tek ajan (lider) çalışır. Bağımsız inceleme gerekirse ayrı ajan kullanılır.
-- Onaylar anketle sorulur. Cevaplar Türkçe ve kısa. Her raporda Play listesi ve token grafiği (explain-usage).
+- Onaylar anketle sorulur. Cevaplar Türkçe ve kısa. Play listesi ve token grafiği yalnız istenince.
 - Akış: iş dalı (check/...) → analiz + test → bağımsız inceleme → demo → kullanıcı telefonda bakar → onayla main. Demo ve main aynı anda yayınlanmaz.
 - Gerçek veritabanına yazma, işlev yükleme, silme: ayrı onay ve önce geri alınan deneme.
 - Sohbet uzayınca: kullanıcı `/compact` yazar (aynı sohbette devam). Yeni sohbet gerekirse önce "özeti güncelle", sonra yeni oturumda `/yenisohbet`.
