@@ -66,5 +66,12 @@ final Map<String, String> familyMessagesEn = {
 /// kullanan birinin eski sürümden gönderdiği tebrik Türkçe alıcıda Türkçe görünsün.
 final Map<String, String> familyMessagesTr = {for (final e in familyMessagesEn.entries) e.value: e.key};
 
+/// Sunucu hazır listede olmayan dua metnini reddetti (geçiş 48): kendi metni değil, eski/değiştirilmiş
+/// uygulama. Diğer hatalarda null (çağıran kendi mesajını gösterir).
+String? duaSendError(Object e) => e.toString().contains('dua_not_preset')
+    ? t('Bu dua gönderilemedi: yalnızca hazır dualar gönderilebilir. Uygulamayı güncelleyip tekrar dene.',
+        'This dua could not be sent: only the ready-made duas can be sent. Update the app and try again.')
+    : null;
+
 /// Gelen aile mesajını alıcının dilinde döndürür; kendi yazılmış mesajlar olduğu gibi kalır.
 String familyMessageText(String m) => (Lang.isEn ? familyMessagesEn[m] : familyMessagesTr[m]) ?? m;

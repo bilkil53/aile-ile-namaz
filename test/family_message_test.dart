@@ -81,4 +81,14 @@ void main() {
       expect(sql.contains('\$m\$$m\$m\$'), isTrue, reason: 'sunucu bu hazır mesajı reddeder: $m');
     }
   });
+
+  test('Sunucunun hazır olmayan dua reddi kendi mesajıyla gösterilir; diğer hatalar dokunulmaz', () async {
+    await Lang.set(AppLang.tr);
+    final e = Exception('PostgrestException(message: dua_not_preset, code: P0001)');
+    expect(duaSendError(e), contains('yalnızca hazır dualar'));
+    await Lang.set(AppLang.en);
+    expect(duaSendError(e), contains('only the ready-made duas'));
+    expect(duaSendError(Exception('rate_limited')), isNull);
+    expect(duaSendError(Exception('SocketException')), isNull);
+  });
 }
