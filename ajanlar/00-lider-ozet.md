@@ -32,6 +32,7 @@
 - CLAUDE.md'ye /sondurum kuralı eklendi (önce özet, özetteki kontroller, rapor eksiksiz); iş dalında `483727f`, main'e henüz alınmadı.
 - Güvenlik taraması eklendi (17 Kasım 2026, demo f49cbf8, main 0f05664, `[skip ci]` ile; uygulama koduna dokunulmadı): `.github/dependabot.yml` (haftalık pub ve Actions güncelleme PR'ı, kendiliğinden birleşmez) ve `dependency-scan.yml` (OSV ile pubspec.lock taraması, açık varsa kırmızı). Main'de elle çalıştırıldı, yeşil (141 paket, açık yok). Mevcut taramalara dokunulmadı.
 - Kullanıcı eklenti/bağlayıcı temizliği için `/plugin` ile kapatma yapacak; `.claude/settings.json`'da 5 eklenti zaten kapalı.
+- Pro lisans işi (dal `claude/blissful-cori-prfpmy`, main'e ALINMADI): geçiş 50 (plan 3_ay/12_ay, yönetici işlevleri, günlük yenileme hatırlatması 7 gün önce, yalnız bildirim; e-posta yok), `push-family` yenileme dalı, ayrı Flutter uygulaması `admin_app/` + iş akışı `admin-app.yml`. Demo sunucuya geçiş ve işlev uygulandı (geri alınan deneme geçti; kron, işlevler, kolonlar var, anonim erişim kapalı); iki yönetici hesap demoda tanımlı. Gerçek sunucuya UYGULANMADI. Doğrulanmadı: bildirimin telefona ulaşması, `admin_app` derlemesi (CI çalışması görünmedi), güvenlik testine yeni işlevler eklenmedi, işlev dosyası demoya elle aktarıldı (birebir karşılaştırılamadı).
 
 ## Kullanıcıdan beklenen
 1. Demo v11.18'i telefonda denemek (uygulama içi güncelleme): Karne'de hafta ve 30 gün seçeneğinde her vakitte payda 7 ve 30, toplam 35 ve 150 görünmeli; misafirde "Henüz kayıt yok". Onaylarsa main'e geçilir.
@@ -42,8 +43,10 @@
 6. Telefonda misafir olarak Ayarlar → Öneri yaz'ı denemek (main'de uygulama adresine gitmeli).
 7. GitHub'daki eski repo için arşivleme ya da silme kararı (yerel klon silindi).
 8. Demo'daki eski test hesabı için Supabase'de oturumları kapatmak (önceki sıfırlama linkinde oturum bilgisi paylaşıldı, token 1 saatte geçersiz olur) ve hesabı demo'da bırakmak ya da silmek.
+9. Yönetim uygulaması için GitHub secret'ları (YONETIM_SUPABASE_URL, YONETIM_SUPABASE_ANON_KEY) eklemek; demo hesapla yenileme bildirimi denemesi için hesap seçmek.
 
 ## Sıradaki işler
+000. Pro lisans işi: demo bildirim denemesi → `admin_app` CI sonucu → güvenlik testine yönetici işlevleri → testler yeşilse main + gerçek sunucu (ayrı onay).
 000. Dependabot ilk PR'ları (pazartesi) açılınca: testleri yeşil mi bak, özetle, kullanıcıya sor, onayla birleştir. Birleştirme demo → test → main akışına uyar. Ayrıca gerçek sunucuda `test_*` ve `expire_pro_test` işlevleri girişli herkese açık: Play'den önce kaldırılacak (kullanıcıyla konuşuldu, henüz yapılmadı).
 00. Etiketler `v1.4`, `v1.5`, `v11.16` şimdilik olduğu gibi kalır (karar: sonra bakılacak, silinip yeniden oluşturulabilir). Eski commit'lere işaret ediyorlar (adres eski geçmişte). Yazma 403 ile reddediliyor; yol: geçici iş akışı ya da kullanıcının kendi bilgisayarında `git push --force origin <sha>:refs/tags/<etiket>`. Doğru commit'ler: `1eb6c7a` (v1.4), `c652bf0` (v1.5), `69f9964` (v11.16). `v11.17` (`2b7fa00`) zaten doğru. Temizlik #2 çalıştı: `v1.3`, `v11.14`, `v11.15` silindi.
 0. Karne kuralı (demo v11.18) telefonda onaylanınca main'e almak; ayrıca CLAUDE.md /sondurum kuralını main'e almak. Main çalışması 44092955273 yeşil bitti (Test Lab dahil), bu madde kapandı.
@@ -58,6 +61,7 @@
 Kullanıcı isteyince uygulama bu listeye göre tek tek kontrol edilir.
 
 ## Play'e çıkarken yapılacaklar
+Pro planları ve fiyat (kullanıcı notu, 17 Kasım 2026): 3 aylık 153 ₺, yıllık 1453 ₺ → Play Billing ürünleri bu fiyatlarla açılır; yönetim uygulaması ve yenileme hatırlatması (geçiş 50) bu planlara göre çalışır.
 AAB ve Play testleri; Play App Signing; Google giriş ekranını yayınla; Pro test işlevlerini kaldır; KVKK ve avukat; Play Integrity; Play Billing; AdMob; Supabase ücretli plan; Diyanet resmî vakitleri; Test Lab yetkisini daralt; Developer Device Platform'a geçiş (en geç Nisan 2027).
 
 ## /sondurum kontrolleri (bu proje)
