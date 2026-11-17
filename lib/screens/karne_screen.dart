@@ -172,7 +172,7 @@ class _KarneScreenState extends State<KarneScreen> {
     final first = karneFirstMarkedDay(_data);
     final hasData = first != null;
     final today0 = DateTime.now();
-    final activeDays = hasData ? DateTime(today0.year, today0.month, today0.day).difference(DateTime.parse(first!)).inDays + 1 : 0;
+    final activeDays = hasData ? DateTime(today0.year, today0.month, today0.day).difference(DateTime.parse(first)).inDays + 1 : 0;
     String? weakest;
     var weakPct = 101;
     for (final k in prayerKeys) {
