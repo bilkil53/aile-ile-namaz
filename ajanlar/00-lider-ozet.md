@@ -19,17 +19,21 @@
 - Bildirim ve Google girişi yeni Firebase projesine geçti; eski Google istemci kimliğinin gerçek sunucudan silinmesine karar verildi. Kodda eski projeye iz yok.
 - main'deki son derleme (852dcab, v1.2) yalnız giriş yapılmış ekran testinde kırmızı: test hesabı gerçek sunucuda girişe izin vermiyor (hesap yok ya da parola farklı). Neden doğrulanmadı; kayıtlarda kök neden incelenmedi. Yayın etkilenmedi.
 - Token göstergesi işi iptal edildi.
+- `check/destek-log` dalı (hızlı kontrol yeşil, demo bekliyor): destek adresi kişisel adresten ayrı uygulama adresine taşındı (uygulama + gizlilik/hesap silme sayfaları); kör noktadaki 7 boş `catch`'e `Log.warn`; Ayarlar → Hata kaydı (telefonda son 50 hata, kişi isterse kimliksiz `crash_reports`'a gönderir, otomatik gönderim yok).
 
 ## Kullanıcıdan beklenen
 1. Demo v11.13'ü telefonda denemek; bittiğinde main'de tam testi başlatmak için onay vermek.
 2. Üç telefona aynı gün v1.2 kurmak; Google girişi ve bildirimi denemek (v1.1'de kalan bildirim almaz, Google girişi yapamaz).
 3. Ekran testi için test hesabını gerçek sunucuda yeniden açmak ya da GitHub'daki test hesabı ayarlarını güncellemek.
 4. Eski Firebase projesini (Firebase konsolunda) silmek isteyip istemediğine karar vermek.
+5. Play Console'daki geliştirici e-postasını yeni destek adresine çevirmek; hesap silme talepleri artık o kutuya gelir.
 
 ## Sıradaki işler
 1. Demo → main için onay; onaydan sonra main'de tam testi çalıştırmak (testler yeşil olursa main'e geçiş).
-2. Telefon denemesi sonrası eski FCM kayıtlarını ve eski dalları temizlemek (onaylı).
-3. Küçük işler ve temizlik (ayrıntı proje belgesinde).
+2. `check/destek-log` → demo → telefonda deneme → onayla main (v11.13 main'e geçtikten sonra).
+3. Telefon denemesi sonrası eski FCM kayıtlarını ve eski dalları temizlemek (onaylı).
+4. Küçük işler ve temizlik (ayrıntı proje belgesinde).
+5. Ertelenen bulgular (düşük): family_screen (1628 satır) ve settings_screen (1092 satır) bölünmesi, family_screen testi; kalan 69 `catch (_)` hatayı kaydetmiyor (çoğu bilerek).
 
 ## Sonra kontrol edilecek: mobil uygulama yayın öncesi 20 madde (kullanıcı notu, 16 Kasım 2026)
 1 Kullanıcı izinleri · 2 Gizlilik politikası · 3 Hesap silme · 4 Veri güvenliği · 5 Kayıt ve giriş · 6 E-posta doğrulama · 7 Şifre sıfırlama · 8 Onboarding · 9 Ana kullanıcı akışı · 10 Verilerin kaydı · 11 Ödeme ve abonelik · 12 Satın alımları yükleme · 13 Yükleniyor ekranları · 14 Boş ekranlar · 15 Hata ekranları · 16 İnternet bağlantısı · 17 Bildirimler · 18 Analytics ve çökme raporu · 19 Farklı cihazlar · 20 Gerçek kullanıcı testi.
