@@ -119,7 +119,7 @@ class _KarneScreenState extends State<KarneScreen> {
   }
 
   /// Muaf günler hesaba katılmaz: başarı = kılınan / (toplam − muaf).
-  /// İlk kayıt gününden önceki günler ve bugünün işaretsiz vakitleri sayılmaz (bkz. [karneScore]).
+  /// Dönemin her günü 5 vakit sayılır, bugün dahil (bkz. [karneScore]).
   (int prayed, int total) _score(Iterable<DateTime> days, [String? key]) => karneScore(_data, days, key: key);
 
   (String, Color) _grade(int pct) => pct >= 90
