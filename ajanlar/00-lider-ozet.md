@@ -7,6 +7,7 @@
 - Tek ajan (lider) çalışır. Bağımsız inceleme gerekirse ayrı ajan kullanılır.
 - Onaylar anketle sorulur. Cevaplar Türkçe ve kısa. Play listesi ve token grafiği yalnız istenince.
 - Akış (16 Kasım 2026'da güncellendi): iş dalı (check/...) → önce demo yayını → testler (analiz, CI, bağımsız inceleme) ile kullanıcının telefonda denemesi paralel yürür → onayla main. Demo ve main aynı anda yayınlanmaz.
+- Workflow düzeltmesi (tırnak/YAML hatası dahil) ve demo yeniden çalıştırma sonucu, üst model (advisor/Opus) incelemeden onaylamadan main'e alınmaz; yalnız testler yeşil + üst model onayı + kullanıcı onayı. (kullanıcı kararı, 17 Kasım 2026)
 - Testler kırmızı çıkarsa demo düzeltilip yeniden yayınlanır; main'e yalnız testler yeşil + kullanıcı onayıyla geçilir.
 - Gerçek veritabanına yazma, işlev yükleme, silme: ayrı onay ve önce geri alınan deneme.
 - Sohbet uzayınca: kullanıcı `/compact` yazar (aynı sohbette devam). Yeni oturum özeti CLAUDE.md sayesinde kendiliğinden okur. "Özeti güncelle" denince bu dosya güncellenip doğrudan main'e push edilir (tek güncel kaynak main; iş dalına push edilmez).
