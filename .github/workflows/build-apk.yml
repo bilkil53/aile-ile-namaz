@@ -31,6 +31,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # sızıntı taraması tüm geçmişe bakar
+
+      # Sızıntı taraması: depo geçmişinin tamamında şifre/anahtar aranır; bulunursa iş durur (fail-closed).
+      # İstisnalar .gitleaks.toml içinde, yalnızca tam değerle yazılır. Bulunan değer loga yazılmaz (--redact).
+      - name: Sızıntı taraması (gitleaks)
+        run: |
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.18.4 \
+            detect --source /repo --config /repo/.gitleaks.toml --redact --no-banner -v \
+            || { echo "::error::Depoda şifre/anahtar olabilecek bir değer bulundu (gitleaks). Değeri kaldırın; gizli değilse .gitleaks.toml'a tam değeriyle ekleyin."; exit 1; }
 
       - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
         with:
@@ -87,13 +97,19 @@ jobs:
           for perm in perms:
               if perm not in s:
                   s = s.replace('<application', f'<uses-permission android:name="{perm}"/>\n    <application', 1)
-          intent = '''<intent-filter>
+          # Demo ayrı dönüş şeması kullanır (lib/config.dart authRedirect ile aynı): iki uygulama
+          # aynı telefonda aynı şemayı sahiplenmesin
+          import os as _oc
+          scheme = 'io.supabase.aileilenamaz.demo' if _oc.environ.get('GITHUB_REF_NAME') == 'demo' else 'io.supabase.aileilenamaz'
+          intent = f'''<intent-filter>
                           <action android:name="android.intent.action.VIEW" />
                           <category android:name="android.intent.category.DEFAULT" />
                           <category android:name="android.intent.category.BROWSABLE" />
-                          <data android:scheme="io.supabase.aileilenamaz" android:host="login-callback" />
+                          <data android:scheme="{scheme}" android:host="login-callback" />
                       </intent-filter>'''
+          if '</activity>' not in s: raise SystemExit('</activity> satırı bulunamadı; giriş dönüş bağlantısı eklenemedi')
           s = s.replace('</activity>', intent + '\n        </activity>', 1)
+          assert s.count(f'android:scheme="{scheme}"') == 1, 'giriş dönüş şeması manifeste yazılamadı'
           s = s.replace('android:label="aile_ile_namaz"', 'android:label="Aile İle Namaz"')
           # Demo kanalı: telefonda "Namaz Demo" adıyla görünür (ayrı paket .demo, stabilin yanına kurulur)
           import os as _o
@@ -291,7 +307,20 @@ jobs:
       # Paket sürümleri pubspec.lock ile sabittir: kilit dosyasıyla uyuşmuyorsa durur
       - run: flutter pub get --enforce-lockfile
 
+      # Demo hızlı yayın: ci/demo-testsiz.txt içindeki sayı > 0 ise yalnız demo dalında testler atlanır
+      # (analiz, birim, sunucu güvenlik, ekran testleri). Sayıyı her demo yayınında bir azaltın. main'de asla atlanmaz.
+      - name: Testsiz demo yayını mı
+        id: testsiz
+        run: |
+          n=$(tr -dc '0-9' < ci/demo-testsiz.txt 2>/dev/null || echo 0); n=${n:-0}
+          if [ "$GITHUB_REF" = "refs/heads/demo" ] && [ "$n" -gt 0 ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"; echo "::warning::Testsiz demo yayını (kalan hak: $n); testler atlanıyor"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Kod analizi (hata veya uyarı varsa derleme durur)
+        if: steps.testsiz.outputs.skip != 'true'
         run: |
           set +e
           flutter analyze --no-fatal-infos > analyze.txt 2>&1
@@ -322,6 +351,7 @@ jobs:
           echo "Sunucu: $ref ($GITHUB_REF_NAME)"
 
       - name: Birim testleri (biri bile başarısızsa derleme durur)
+        if: steps.testsiz.outputs.skip != 'true'
         run: |
           set +e
           flutter test --reporter expanded > test.txt 2>&1
@@ -339,13 +369,25 @@ jobs:
           fi
 
       - name: Sunucu güvenlik testi (canlı veritabanında, sonunda her şey geri alınır)
+        if: steps.testsiz.outputs.skip != 'true'
         env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          DB_URL_MAIN: ${{ secrets.SUPABASE_DB_URL }}
+          DB_URL_DEMO: ${{ secrets.SUPABASE_DB_URL_DEMO }}
         run: |
+          # demo dalı demo veritabanında test edilir; demo adresi yoksa gerçek veritabanına düşmez, iş durur
+          if [ "$GITHUB_REF_NAME" = demo ]; then SUPABASE_DB_URL=$DB_URL_DEMO; n=SUPABASE_DB_URL_DEMO; else SUPABASE_DB_URL=$DB_URL_MAIN; n=SUPABASE_DB_URL; fi
+          # Yanlış sırra karşı: demo testi yalnızca demo veritabanına, diğerleri yalnızca gerçek veritabanına gider
+          if [ -n "$SUPABASE_DB_URL" ]; then
+            case "$GITHUB_REF_NAME:$SUPABASE_DB_URL" in
+              demo:*bqcjdxpogtccjmbonhcg*) ;;
+              demo:*) echo "::error::$n demo veritabanını göstermiyor; test durduruldu."; exit 1 ;;
+              *bqcjdxpogtccjmbonhcg*) echo "::error::$n demo veritabanını gösteriyor; test durduruldu."; exit 1 ;;
+            esac
+          fi
           # Zorunlu (fail-closed): bağlantı bilgisi yoksa test sessizce atlanmaz, derleme ve yayın durur
           if [ -z "$SUPABASE_DB_URL" ]; then
-            echo "::error::SUPABASE_DB_URL gizli ayarı yok: sunucu güvenlik testi çalıştırılamadı; derleme ve yayın durduruldu."
-            echo '## Sunucu güvenlik testi: ÇALIŞTIRILAMADI (SUPABASE_DB_URL yok) — yayın durduruldu' >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::$n gizli ayarı yok: sunucu güvenlik testi çalıştırılamadı; derleme ve yayın durduruldu."
+            echo "## Sunucu güvenlik testi: ÇALIŞTIRILAMADI ($n yok) — yayın durduruldu" >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
           out=$(psql "$SUPABASE_DB_URL" -X -q -v ON_ERROR_STOP=1 -f supabase/tests/security_test.sql 2>&1 || true)
@@ -449,6 +491,30 @@ jobs:
           done
           ls -la aile-ile-namaz*.apk
 
+      # Kararlı uygulamada test kodu olmaz: test paneli ve Pro test işlevleri yalnızca CHANNEL=demo
+      # derlemesinde derlenir (sabit koşul, derleyici çıkarır). Derleme karıştırıldığı (--obfuscate) için
+      # sınıf adı değil, test kodundaki yazılar aranır. Tek APK ve işlemci türüne göre her küçük APK
+      # denetlenir; biri bile test kodu içeriyorsa yayın durur (fail-closed).
+      - name: Test kodu kontrolü (kararlı APK'larda test paneli ve test işlevleri yok)
+        if: github.ref != 'refs/heads/demo'
+        run: |
+          bad=''
+          for apk in aile-ile-namaz.apk aile-ile-namaz-arm64-v8a.apk aile-ile-namaz-armeabi-v7a.apk aile-ile-namaz-x86_64.apk; do
+            d="/tmp/tcchk/$apk"; rm -rf "$d"; mkdir -p "$d"
+            unzip -o -q "$apk" 'lib/*/libapp.so' -d "$d" || { echo "::error::$apk içinde libapp.so yok; test kodu kontrolü yapılamadı"; exit 1; }
+            for so in "$d"/lib/*/libapp.so; do
+              strings -n 8 "$so" > "$so.txt"
+              # Denetimin kendisi çalışıyor mu: kararlı sürümde de bulunan bir sunucu işlevi adı görünmeli
+              grep -q 'my_pro_status' "$so.txt" || { echo "::error::Denetim yazıları okuyamıyor ($apk ${so#$d/}: my_pro_status yok); test kodu kontrolü yapılamadı"; exit 1; }
+              # Liste test/hardening_test.dart ile aynı tutulur (test, her yazının kodda geçtiğini denetler)
+              for m in am_i_pro_tester test_restart_trial expire_pro_test redeem_pro_code not_tester; do
+                grep -q "$m" "$so.txt" && bad="$bad $apk:${so#$d/lib/}:$m"
+              done
+            done
+          done
+          if [ -n "$bad" ]; then echo "::error::Kararlı APK içinde test kodu var:$bad"; exit 1; fi
+          echo "Kararlı APK'lar (tek + 3 işlemci türü): test paneli ve test işlevleri yok ✓"
+
       - name: Hata ayıklama sembolleri (çökme kayıtlarını çözmek için; her yayında)
         run: |
           (cd build && zip -qr ../debug-symbols.zip $(ls -d symbols symbols-abi 2>/dev/null))
@@ -545,12 +611,14 @@ jobs:
       # misafir akışı parmakla dokunur gibi denenir. YAYINDAN SONRA çalışır: başarısızsa çalışma kırmızı olur,
       # yayın yerinde kalır; sorun incelenip düzeltme yayını yapılır. (Zorunlu kontroller yayından önce.)
       - name: Emülatör için donanım hızlandırma (KVM)
+        if: steps.testsiz.outputs.skip != 'true'
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
       - name: Ekran testi — GitHub emülatörü (Android 11, Türkçe ve İngilizce, misafir + giriş yapılmış akış)
+        if: steps.testsiz.outputs.skip != 'true'
         timeout-minutes: 40
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2
         env:
@@ -577,7 +645,7 @@ jobs:
       # 1 gerçek telefonunda ve 1 sanal telefonunda robotla gezilir. Kota sınırlı olduğu için
       # yalnızca yayın dallarında (main, demo). Yayından sonra çalışır; geçmezse çalışma kırmızı olur.
       - name: Test Lab anahtarı var mı
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
+        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo') && steps.testsiz.outputs.skip != 'true'
         env:
           KEY: ${{ secrets.FIREBASE_TESTLAB_KEY }}
         run: |
@@ -585,20 +653,29 @@ jobs:
           echo 'Test Lab anahtarı hazır'
 
       - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
+        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo') && steps.testsiz.outputs.skip != 'true'
         with:
           credentials_json: ${{ secrets.FIREBASE_TESTLAB_KEY }}
 
       - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
+        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo') && steps.testsiz.outputs.skip != 'true'
 
       # Günlük ücretsiz hak (Spark): 5 gerçek + 10 sanal telefon testi.
       # Stabil: gerçek telefon (Türkçe) + sanal telefon (İngilizce) · Demo: yalnız sanal telefon (Türkçe)
       - name: Ekran testi — Google Test Lab (stabil 2 telefon TR+EN, demo 1 sanal TR; robot gezinti)
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo'
+        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo') && steps.testsiz.outputs.skip != 'true'
         timeout-minutes: 45
         run: |
-          gcloud config set project aile-ile-namaz-d437f >/dev/null
+          # auth adımı anahtar dosyasındaki projeyi CLOUDSDK_CORE_PROJECT ile verir (config'i ezer):
+          # anahtar başka projeninse test o projede koşar. Proje tutmazsa durulur (fail-closed).
+          kp=$(python3 -c 'import json,os; print(json.load(open(os.environ["GOOGLE_APPLICATION_CREDENTIALS"])).get("project_id",""))' 2>/dev/null)
+          if [ "$kp" != aile-ile-namaz-app ]; then
+            echo "::error::FIREBASE_TESTLAB_KEY başka projeye ait ('${kp:-okunamadı}'); beklenen aile-ile-namaz-app. Yeni projenin hizmet hesabı anahtarını gizli ayara koyun."
+            exit 1
+          fi
+          export CLOUDSDK_CORE_PROJECT=aile-ile-namaz-app
+          echo "CLOUDSDK_CORE_PROJECT=aile-ile-namaz-app" >> "$GITHUB_ENV"
+          gcloud config set project aile-ile-namaz-app >/dev/null
           VIRT_EN="model=MediumPhone.arm,version=34,locale=en,orientation=portrait"
           VIRT_TR="model=MediumPhone.arm,version=34,locale=tr,orientation=portrait"
           if [ "$GITHUB_REF_NAME" = demo ]; then
@@ -654,7 +731,7 @@ jobs:
         continue-on-error: true
         run: |
           B=$(grep -oE 'gs://test-lab-[a-z0-9-]+' testlab.txt 2>/dev/null | head -1)
-          B=${B:-gs://test-lab-f0cq92dkn1676-m5y4ycp8z2w6s}
+          [ -n "$B" ] || { echo '::warning::Test Lab deposu bulunamadı, temizlik atlandı'; exit 0; }
           LIMIT=$(date -u -d '7 days ago' +%Y-%m-%d)
           n=0
           for d in $(gcloud storage ls "$B/"); do

@@ -26,11 +26,22 @@ jobs:
 
       - name: Sunucu güvenlik testi (canlı veritabanında, sonunda her şey geri alınır)
         env:
-          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          DB_URL_MAIN: ${{ secrets.SUPABASE_DB_URL }}
+          DB_URL_DEMO: ${{ secrets.SUPABASE_DB_URL_DEMO }}
         run: |
+          # demo dalı demo veritabanında test edilir; demo adresi yoksa gerçek veritabanına düşmez, iş durur
+          if [ "$GITHUB_REF_NAME" = demo ]; then SUPABASE_DB_URL=$DB_URL_DEMO; n=SUPABASE_DB_URL_DEMO; else SUPABASE_DB_URL=$DB_URL_MAIN; n=SUPABASE_DB_URL; fi
+          # Yanlış sırra karşı: demo testi yalnızca demo veritabanına, diğerleri yalnızca gerçek veritabanına gider
+          if [ -n "$SUPABASE_DB_URL" ]; then
+            case "$GITHUB_REF_NAME:$SUPABASE_DB_URL" in
+              demo:*bqcjdxpogtccjmbonhcg*) ;;
+              demo:*) echo "::error::$n demo veritabanını göstermiyor; test durduruldu."; exit 1 ;;
+              *bqcjdxpogtccjmbonhcg*) echo "::error::$n demo veritabanını gösteriyor; test durduruldu."; exit 1 ;;
+            esac
+          fi
           # Zorunlu (fail-closed): bağlantı bilgisi yoksa test sessizce atlanmaz, iş başarısız olur
           if [ -z "$SUPABASE_DB_URL" ]; then
-            echo "::error::SUPABASE_DB_URL gizli ayarı yok: sunucu güvenlik testi çalıştırılamadı."
+            echo "::error::$n gizli ayarı yok: sunucu güvenlik testi çalıştırılamadı."
             exit 1
           fi
           command -v psql >/dev/null || { sudo apt-get update -q && sudo apt-get install -y -q postgresql-client; }

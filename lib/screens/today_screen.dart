@@ -177,7 +177,7 @@ class _TodayScreenState extends State<TodayScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_loading) return const Center(child: CircularProgressIndicator(color: AppColors.onBackground));
     return RefreshIndicator(
       onRefresh: _load,
       child: ListView(
@@ -221,20 +221,20 @@ class _TodayScreenState extends State<TodayScreen> {
             children: [
               const Text(
                 'AİLE İLE NAMAZ',
-                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.emerald, letterSpacing: 0.8),
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white, letterSpacing: 0.8),
               ),
               Text(
                 _name.isEmpty ? t('Selamün aleyküm', 'Assalamu alaikum') : t('Selamün aleyküm,\n$_name', 'Assalamu alaikum,\n$_name'),
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary, height: 1.25),
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.onBackground, height: 1.25),
               ),
               const SizedBox(height: 2),
               Row(children: [
-                const Icon(Icons.calendar_today_outlined, size: 13, color: AppColors.textSecondary),
+                const Icon(Icons.calendar_today_outlined, size: 13, color: AppColors.onBackgroundMuted),
                 const SizedBox(width: 5),
                 Flexible(
                   child: Text(
                     date,
-                    style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    style: const TextStyle(fontSize: 12, color: AppColors.onBackgroundMuted),
                   ),
                 ),
               ]),
@@ -344,7 +344,7 @@ class _TodayScreenState extends State<TodayScreen> {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: name == n.name ? AppColors.prayedMint : Colors.white,
+                        color: name == n.name ? Colors.white : Colors.white.withValues(alpha: 0.7),
                       )),
                 ]),
             ],
@@ -373,26 +373,26 @@ class _TodayScreenState extends State<TodayScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.cardBorder),
+        border: Border.all(color: Colors.transparent),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(q.category.toUpperCase(),
-              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.emerald, letterSpacing: 0.8)),
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.prayedMint, letterSpacing: 0.8)),
           const SizedBox(height: 6),
           if (q.arabic != null) ...[
             Text(q.arabic!,
                 textAlign: TextAlign.right,
                 textDirection: TextDirection.rtl,
-                style: const TextStyle(fontSize: 18, color: AppColors.textPrimary, height: 1.6)),
+                style: const TextStyle(fontSize: 18, color: AppColors.onCard, height: 1.6)),
             const SizedBox(height: 6),
           ],
-          Text(q.text, style: const TextStyle(fontSize: 14, color: AppColors.textPrimary, height: 1.4)),
+          Text(q.text, style: const TextStyle(fontSize: 14, color: AppColors.onCard, height: 1.4)),
           const SizedBox(height: 6),
-          Text(q.source, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+          Text(q.source, style: const TextStyle(fontSize: 11, color: AppColors.onCardFaint)),
         ],
       ),
     );
@@ -407,7 +407,7 @@ class _TodayScreenState extends State<TodayScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(_showYesterday ? t('Dünün takibi', 'Yesterday\'s tracking') : t('Bugünün takibi', 'Today\'s tracking'),
-                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.onBackground)),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
               decoration: BoxDecoration(color: AppColors.emeraldContainer, borderRadius: BorderRadius.circular(8)),
@@ -418,7 +418,7 @@ class _TodayScreenState extends State<TodayScreen> {
         ),
         const SizedBox(height: 2),
         Text(t('Niyetinle başla; küçük bir işaret sürdürülebilirliği güçlendirir.', 'Start with your intention; a small mark helps you keep going.'),
-            style: TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.3)),
+            style: TextStyle(fontSize: 12, color: AppColors.onBackgroundMuted, height: 1.3)),
         const SizedBox(height: 8),
         Row(children: [
           for (var i = 0; i < prayerKeys.length; i++) ...[
@@ -436,7 +436,7 @@ class _TodayScreenState extends State<TodayScreen> {
         ]),
         const SizedBox(height: 6),
         Text(_canExcuse ? t('Vakite dokundukça Kıldı → Kılmadı → Muaf → Bekliyor sırasıyla ilerler.', 'Each tap cycles Prayed → Missed → Excused → Pending.') : t('Vakite dokundukça Kıldı → Kılmadı → Bekliyor sırasıyla ilerler.', 'Each tap cycles Prayed → Missed → Pending.'),
-            style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+            style: const TextStyle(fontSize: 11, color: AppColors.onBackgroundMuted)),
       ],
     );
   }
@@ -448,13 +448,13 @@ class _TodayScreenState extends State<TodayScreen> {
     final (statusText, statusColor) = !arrived
         ? (t('Vakti henüz girmedi', 'Not time yet'), Colors.white.withValues(alpha: 0.65))
         : switch (status) {
-            PrayerStatus.prayed => (t('✓ Kılındı', '✓ Prayed'), AppColors.prayedMint),
+            PrayerStatus.prayed => (t('✓ Kılındı', '✓ Prayed'), Colors.white),
             PrayerStatus.missed => (t('✕ Kılınmadı', '✕ Missed'), AppColors.missedCoral),
             PrayerStatus.excused => (t('— Muaf', '— Excused'), const Color(0xFFE5E7EB)),
             PrayerStatus.none => (t('Dokunarak işaretle', 'Tap to mark'), Colors.white.withValues(alpha: 0.75)),
           };
     return Material(
-      color: arrived ? AppColors.emerald : AppColors.emerald.withValues(alpha: 0.82),
+      color: arrived ? AppColors.emerald : AppColors.emerald.withValues(alpha: 0.7),
       borderRadius: BorderRadius.circular(16),
       elevation: 1,
       child: InkWell(

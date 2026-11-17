@@ -242,10 +242,16 @@ Deno.serve(async (req) => {
     if (!saRaw) { await finish(false); return Response.json({ skipped: "FCM_SERVICE_ACCOUNT yok" }); }
     const sa = JSON.parse(saRaw);
 
-    const [{ data: pool }, { data: members, error: memErr }] = await Promise.all([
+    const [{ data: pool, error: poolErr }, { data: members, error: memErr }] = await Promise.all([
       db.from("pools").select("owner_id").eq("id", ev.pool_id).single(),
       db.from("pool_members").select("user_id, role_title, icon, gender").eq("pool_id", ev.pool_id),
     ]);
+    // Havuz okunamazsa reis bilinmez, akrabalık hitabı yanlış çıkar: gönderilmez, tekrar denenir (fail-closed)
+    if (poolErr) {
+      console.error("push: havuz okunamadı", poolErr.message);
+      await finish(false);
+      return Response.json({ error: poolErr.message, retry: true }, { status: 500 });
+    }
     // Üye listesi okunamazsa "gönderilecek kimse yok" sanılmasın: tekrar denensin (fail-closed)
     if (memErr) { await finish(false); return Response.json({ error: memErr.message, retry: true }, { status: 500 }); }
     const sender = (members ?? []).find((m) => m.user_id === ev.sender_id);

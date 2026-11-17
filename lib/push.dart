@@ -7,7 +7,6 @@ import 'package:flutter/services.dart' show PlatformException;
 
 import 'data.dart';
 import 'lang.dart';
-import 'pro.dart';
 import 'settings.dart';
 
 /// Uygulama kapalıyken de aile bildirimleri (Firebase Cloud Messaging).
@@ -20,14 +19,14 @@ class Push {
   // Firebase istemci ayarları (google-services.json karşılığı). Gizli değildir; APK'nın içinde de bulunur.
   // Güvenlik Firebase tarafında API kısıtlamalarıyla, veri güvenliği Supabase RLS ile sağlanır.
   static const _options = FirebaseOptions(
-    apiKey: 'AIzaSyAN2lEI-gh97nI9RMp1gkRpthTBsUHn4sQ',
+    apiKey: 'AIzaSyCgPOgKQPDXhtK2Y-xZkLW3oPHAD0_HPiQ',
     // Demo ayrı paket (com.bilkil53.aile_ile_namaz.demo) → Firebase'de ayrı uygulama kimliği
     appId: String.fromEnvironment('CHANNEL') == 'demo'
-        ? '1:736837751684:android:25af1ccf0bebf50645c3d1'
-        : '1:736837751684:android:dc1c39574b3dcbd945c3d1',
-    messagingSenderId: '736837751684',
-    projectId: 'aile-ile-namaz-d437f',
-    storageBucket: 'aile-ile-namaz-d437f.firebasestorage.app',
+        ? '1:318839766364:android:9bc0e71ce66fcc212a5599'
+        : '1:318839766364:android:485277e25d857b0f2a5599',
+    messagingSenderId: '318839766364',
+    projectId: 'aile-ile-namaz-app',
+    storageBucket: 'aile-ile-namaz-app.firebasestorage.app',
   );
 
   /// Son hatanın ayrıntısı (Ayarlar'da dokununca gösterilir; destek için).
@@ -47,6 +46,9 @@ class Push {
   static bool ok = false;
   static String? _token;
   static StreamSubscription<String>? _refreshSub;
+
+  /// Çıkışta başlatılan, henüz bitmemiş cihaz adresi iptali (zaman aşımı onu durdurmaz).
+  static Future<void>? _deleting;
 
   static Future<void>? _initF;
 
@@ -98,16 +100,22 @@ class Push {
     await init();
     if (!_ready) return;
     if (isGuest) return _set(false, t('Giriş yapılmadı', 'Not signed in'));
-    if (Pro.isDemo) {
-      await unregister();
-      return _set(false, t('Ücretsiz sürümde kapalı', 'Off in the free version'));
-    }
+    // Ücretsizde de kayıtlı kalır: katılım ve Pro isteği bildirimleri herkese gider (sunucu namaz/kaza/dua
+    // bildirimlerini Pro kilidi açıksa ücretsiz kişiye göndermez; filtre sunucuda push_allowed_recipients).
     if (!AppSettings.familyAlerts) {
       await unregister();
       return _set(false, t('Aile bildirimleri kapalı', 'Family notifications are off'));
     }
     try {
       final fm = FirebaseMessaging.instance;
+      // Önceki hesabın çıkışında başlayan adres iptali geç biterse yeni hesabın adresini de iptal
+      // ederdi: yeni adres istenmeden önce o iptalin bitmesi beklenir (en fazla 10 sn)
+      final del = _deleting;
+      if (del != null) {
+        try {
+          await del.timeout(const Duration(seconds: 10));
+        } catch (_) {}
+      }
       await fm.setAutoInitEnabled(true);
       String? tok;
       for (var i = 0; i < 3 && tok == null; i++) {
@@ -159,12 +167,28 @@ class Push {
   }
 
   /// Çıkış yaparken / aile bildirimleri kapatılınca bu cihaza bildirim gitmesin.
-  static Future<void> unregister() async {
+  /// [signOut]: çıkışta cihaz adresi (token) de iptal edilir; sunucudaki satır silinemediyse bile
+  /// (internet yok) eski adrese giden bildirim telefona ulaşmaz, sunucu geçersiz adresi kendisi siler.
+  /// Hiçbir hata çıkışı engellemez.
+  static Future<void> unregister({bool signOut = false}) async {
     await init();
     if (!_ready || isGuest) return;
+    const wait = Duration(seconds: 6);
     try {
-      final t = _token ?? await FirebaseMessaging.instance.getToken();
-      if (t != null) await supa.from('devices').delete().eq('user_id', myId).eq('fcm_token', t);
+      final t = _token ?? await FirebaseMessaging.instance.getToken().timeout(wait);
+      if (t != null) await supa.from('devices').delete().eq('user_id', myId).eq('fcm_token', t).timeout(wait);
+    } catch (_) {}
+    if (!signOut) return;
+    try {
+      // Yenilenen adres çıkış bitmeden bu hesaba yeniden kaydedilmesin (register tekrar dinler)
+      await _refreshSub?.cancel();
+      _refreshSub = null;
+      final del = _deleting = FirebaseMessaging.instance.deleteToken();
+      unawaited(del.whenComplete(() {
+        if (identical(_deleting, del)) _deleting = null;
+      }).catchError((_) {}));
+      _token = null;
+      await del.timeout(wait);
     } catch (_) {}
   }
 }

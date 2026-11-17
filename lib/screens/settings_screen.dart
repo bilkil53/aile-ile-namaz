@@ -341,7 +341,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
     if (!mounted) return;
     Navigator.of(context).popUntil((r) => r.isFirst);
-    await Push.unregister();
+    await Push.unregister(signOut: true);
     await Repo.signOut();
   }
 
@@ -517,6 +517,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               value: value,
               activeThumbColor: AppColors.emerald,
               activeTrackColor: AppColors.prayedMint,
+              inactiveThumbColor: Colors.white.withValues(alpha: 0.85),
+              inactiveTrackColor: Colors.white.withValues(alpha: 0.12),
+              trackOutlineColor: WidgetStateProperty.resolveWith((st) => st.contains(WidgetState.selected) ? Colors.transparent : Colors.white.withValues(alpha: 0.7)),
               onChanged: (v) async {
                 await AppSettings.setNotify(key, v);
                 setState(() {});
@@ -541,6 +544,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onChanged: onChanged,
             activeThumbColor: AppColors.emerald,
             activeTrackColor: AppColors.prayedMint,
+            inactiveThumbColor: Colors.white.withValues(alpha: 0.85),
+              inactiveTrackColor: Colors.white.withValues(alpha: 0.12),
+              trackOutlineColor: WidgetStateProperty.resolveWith((st) => st.contains(WidgetState.selected) ? Colors.transparent : Colors.white.withValues(alpha: 0.7)),
           ),
         ]),
       );
@@ -642,7 +648,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: warn ? AppColors.goldContainer : AppColors.prayedMint)),
+                      color: warn ? AppColors.goldContainer : Colors.white)),
             ),
           ]),
         );
@@ -759,7 +765,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ]),
               const SizedBox(height: 10),
               if (guest)
-                Text(syncText, style: const TextStyle(fontSize: 13, color: AppColors.prayedMint, fontWeight: FontWeight.w600))
+                Text(syncText, style: const TextStyle(fontSize: 13, color: Colors.white, fontWeight: FontWeight.w600))
               else
                 _dataBox(email),
               const SizedBox(height: 6),
@@ -791,7 +797,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             : Padding(
                                 padding: const EdgeInsets.only(top: 6),
                                 child: Text('📩 Pro istedi: ${reqs.keys.map((id) => Pro.requestNames[id] ?? 'Aile ferdin').join(', ')}',
-                                    style: const TextStyle(fontSize: 13, color: AppColors.gold, fontWeight: FontWeight.bold)),
+                                    style: const TextStyle(fontSize: 13, color: AppColors.goldContainer, fontWeight: FontWeight.bold)),
                               ),
                       ),
                       // Pro'dayken (deneme, aile ya da alınmış) tekrar "Pro'ya geç" gösterilmez
@@ -830,7 +836,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ? null
                       : (LocationHelper.permissionDenied ? LocationHelper.openSettings : _gps),
                   child: Text(LocationHelper.permissionDenied ? t('İzin ver', 'Allow') : (_gpsBusy ? '…' : t('Yenile', 'Refresh')),
-                      style: const TextStyle(color: AppColors.prayedMint, fontWeight: FontWeight.bold)),
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                 ),
               ]),
               _divider(),
@@ -856,13 +862,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       decoration: BoxDecoration(
                         color: hasUpdate ? AppColors.goldContainer : Colors.white.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: hasUpdate ? AppColors.gold : AppColors.prayedMint),
+                        border: Border.all(color: hasUpdate ? AppColors.gold : Colors.white),
                       ),
                       child: Text(hasUpdate ? t('Güncelleme var!', 'Update available!') : t('✓ Güncel', '✓ Up to date'),
                           style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: hasUpdate ? const Color(0xFF78350F) : AppColors.prayedMint)),
+                              color: hasUpdate ? const Color(0xFF78350F) : Colors.white)),
                     ),
                   ]),
                 ),
@@ -911,7 +917,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Expanded(
                         child: Text(t('Ücretsiz sürümde bildirimler kapalı · Pro ile açılır', 'Notifications are off in the free version · open with Pro'),
                             style: TextStyle(color: Colors.white70, fontSize: 13))),
-                    TextButton(onPressed: () => showProCodeDialog(context), child: Text(t('Pro\'ya geç', 'Get Pro'))),
+                    TextButton(
+                        onPressed: () => showProCodeDialog(context),
+                        child: Text(t('Pro\'ya geç', 'Get Pro'), style: const TextStyle(color: Colors.white))),
                   ]),
                 ),
               ])
@@ -1017,9 +1025,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 18),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.card,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.black12),
+                  border: Border.all(color: Colors.transparent),
                 ),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(16),
@@ -1027,19 +1035,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     child: Row(children: [
-                      Icon(Icons.download, color: AppColors.textSecondary, size: 20),
+                      Icon(Icons.download, color: AppColors.onCard, size: 20),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           Text(t('Verilerimi indir', 'Download my data'),
-                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.onCard)),
                           Text(t('Namaz kayıtların, kaza sayıların ve aile üyeliklerin tek dosyada', 'Your prayer records, kaza counts and memberships in one file'),
-                              style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                              style: TextStyle(fontSize: 11, color: AppColors.onCardMuted)),
                         ]),
                       ),
                       _exporting
                           ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                          : Icon(Icons.chevron_right, color: AppColors.textSecondary),
+                          : Icon(Icons.chevron_right, color: AppColors.onCardMuted),
                     ]),
                   ),
                 ),
@@ -1047,9 +1055,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 10),
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.card,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppColors.missed.withValues(alpha: 0.5)),
+                  border: Border.all(color: AppColors.missedCoral.withValues(alpha: 0.5)),
                 ),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(16),
@@ -1057,17 +1065,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     child: Row(children: [
-                      const Icon(Icons.delete_forever, color: AppColors.missed, size: 20),
+                      const Icon(Icons.delete_forever, color: AppColors.missedCoral, size: 20),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           Text(t('Hesabımı ve verilerimi sil', 'Delete my account and data'),
-                              style: TextStyle(fontSize: 14, color: AppColors.missed, fontWeight: FontWeight.bold)),
+                              style: TextStyle(fontSize: 14, color: AppColors.missedCoral, fontWeight: FontWeight.bold)),
                           Text(t('Tüm kayıtların kalıcı olarak silinir', 'All your records are permanently deleted'),
-                              style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                              style: TextStyle(fontSize: 11, color: AppColors.onCardMuted)),
                         ]),
                       ),
-                      Icon(Icons.chevron_right, color: AppColors.missed.withValues(alpha: 0.7)),
+                      Icon(Icons.chevron_right, color: AppColors.missedCoral.withValues(alpha: 0.7)),
                     ]),
                   ),
                 ),

@@ -235,7 +235,7 @@ class _KazaScreenState extends State<KazaScreen> {
   @override
   Widget build(BuildContext context) {
     final demo = Pro.isDemo;
-    if (_loading && !demo) return const Center(child: CircularProgressIndicator());
+    if (_loading && !demo) return const Center(child: CircularProgressIndicator(color: AppColors.onBackground));
     var owed = 0, done = 0;
     for (final (t, _, _, _) in _types) {
       final (o, c) = _of(t);
@@ -262,7 +262,7 @@ class _KazaScreenState extends State<KazaScreen> {
               Row(children: [
                 Expanded(child: _tile(t('Kalan Kaza Borcu', 'Kaza Remaining'), _n(remaining), AppColors.goldContainer, const Color(0xFF78350F))),
                 const SizedBox(width: 10),
-                Expanded(child: _tile(t('Kılınan Kaza', 'Kaza Completed'), _n(done), AppColors.prayedMint, AppColors.emeraldDark)),
+                Expanded(child: _tile(t('Kılınan Kaza', 'Kaza Completed'), _n(done), AppColors.prayedMint, AppColors.emerald)),
               ]),
               const SizedBox(height: 12),
               ClipRRect(
@@ -284,13 +284,13 @@ class _KazaScreenState extends State<KazaScreen> {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: AppColors.white,
+                color: AppColors.card,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppColors.cardBorder),
+                border: Border.all(color: Colors.transparent),
               ),
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(t('👨‍👩‍👧 Aile Fertleri Kaza Durumu (Detaysız)', '👨‍👩‍👧 Family Kaza Status (Summary only)'),
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.onCard)),
                 const SizedBox(height: 8),
                 for (final m in _family)
                   Padding(
@@ -298,7 +298,7 @@ class _KazaScreenState extends State<KazaScreen> {
                     child: Row(children: [
                       MemberIcon(m.icon, size: 20),
                       const SizedBox(width: 8),
-                      Expanded(child: Text(_me == null ? m.shownName : kinLabel(viewer: _me!, target: m, reis: _reis), style: const TextStyle(fontWeight: FontWeight.w600))),
+                      Expanded(child: Text(_me == null ? m.shownName : kinLabel(viewer: _me!, target: m, reis: _reis), style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.onCard))),
                       Builder(builder: (_) {
                         final k = _familyKaza[m.userId];
                         final left = k == null ? 0 : (k[0] > k[1] ? k[0] - k[1] : 0);
@@ -307,7 +307,7 @@ class _KazaScreenState extends State<KazaScreen> {
                           style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: left == 0 ? AppColors.emerald : AppColors.gold),
+                              color: left == 0 ? AppColors.prayedMint : const Color(0xFFFCD34D)),
                         );
                       }),
                     ]),
@@ -317,18 +317,18 @@ class _KazaScreenState extends State<KazaScreen> {
           ],
           const SizedBox(height: 10),
           Row(children: [
-            Icon(Icons.lock_outline, size: 14, color: AppColors.textMuted),
+            Icon(Icons.lock_outline, size: 14, color: AppColors.onBackgroundMuted),
             SizedBox(width: 6),
             Expanded(
               child: Text(t('Hangi vakti kaza ettiğin sadece sende görünür; ailen yalnızca toplamı görür.', 'Which prayers you missed is visible only to you; your family only sees the total.'),
-                  style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                  style: TextStyle(fontSize: 11, color: AppColors.onBackgroundMuted)),
             ),
           ]),
           const SizedBox(height: 10),
           OutlinedButton.icon(
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.emerald,
-              side: const BorderSide(color: AppColors.emerald),
+              foregroundColor: AppColors.onBackground,
+              side: const BorderSide(color: AppColors.onBackgroundMuted),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: _bulkAdd,
@@ -365,9 +365,9 @@ class _KazaScreenState extends State<KazaScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: AppColors.card,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.cardBorder),
+        border: Border.all(color: Colors.transparent),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(children: [
@@ -375,38 +375,38 @@ class _KazaScreenState extends State<KazaScreen> {
             width: 42,
             height: 42,
             alignment: Alignment.center,
-            decoration: BoxDecoration(color: AppColors.emeraldContainer, borderRadius: BorderRadius.circular(12)),
-            child: PrayerIcon(type, size: 22, color: AppColors.emerald),
+            decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
+            child: PrayerIcon(type, size: 22, color: AppColors.onCard),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-              Text(t('$rekat | Kılınan: ${_n(done)}', '$rekat | Done: ${_n(done)}'), style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.onCard)),
+              Text(t('$rekat | Kılınan: ${_n(done)}', '$rekat | Done: ${_n(done)}'), style: const TextStyle(fontSize: 12, color: AppColors.onCardMuted)),
             ]),
           ),
           IconButton(
             tooltip: t('Borcu azalt', 'Decrease'),
-            visualDensity: VisualDensity.compact,
+            style: IconButton.styleFrom(backgroundColor: Colors.white.withValues(alpha: 0.15), disabledBackgroundColor: Colors.white.withValues(alpha: 0.08)),
             onPressed: (Pro.isDemo || owed > done) ? () => _set(type, owed - 1, done) : null,
-            icon: const Icon(Icons.remove_circle_outline, color: AppColors.emerald),
+            icon: const Icon(Icons.remove, color: Colors.white),
           ),
           Column(children: [
-            Text(_n(left), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
-            Text(t('Borç', 'Left'), style: const TextStyle(fontSize: 10, color: AppColors.textMuted)),
+            Text(_n(left), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.onCard)),
+            Text(t('Borç', 'Left'), style: const TextStyle(fontSize: 10, color: AppColors.onCardFaint)),
           ]),
           IconButton(
             tooltip: t('Borç ekle', 'Add'),
-            visualDensity: VisualDensity.compact,
+            style: IconButton.styleFrom(backgroundColor: Colors.white.withValues(alpha: 0.15)),
             onPressed: () => _set(type, owed + 1, done),
-            icon: const Icon(Icons.add_circle_outline, color: AppColors.emerald),
+            icon: const Icon(Icons.add, color: Colors.white),
           ),
         ]),
         const SizedBox(height: 8),
         left > 0
             ? FilledButton.icon(
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.emerald,
+                  backgroundColor: Colors.white, foregroundColor: AppColors.emerald,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 onPressed: () => _set(type, owed, done + 1, announce: true),
@@ -416,9 +416,9 @@ class _KazaScreenState extends State<KazaScreen> {
             : Container(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 alignment: Alignment.center,
-                decoration: BoxDecoration(color: AppColors.emeraldContainer, borderRadius: BorderRadius.circular(12)),
+                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12)),
                 child: Text(t('Kaza Borcu Yok (Elhamdülillah) 🤲', 'No Kaza Left (Alhamdulillah) 🤲'),
-                    style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.emerald)),
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.onCardMuted)),
               ),
       ]),
     );
