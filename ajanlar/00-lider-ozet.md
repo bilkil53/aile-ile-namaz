@@ -12,12 +12,12 @@
 - Sohbet uzayınca: kullanıcı `/compact` yazar (aynı sohbette devam). Yeni oturum özeti CLAUDE.md sayesinde kendiliğinden okur. "Özeti güncelle" denince bu dosya güncellenip doğrudan main'e push edilir (tek güncel kaynak main; iş dalına push edilmez).
 
 ## Durum (17 Kasım 2026)
-- main v1.2 yayında: demo kodu main'e taşındı (açık zemin dahil). Ana sürüm main'de değişmedi.
+- main v1.3 yayında (cba6d35, etiket v1.3): içerik v1.2 ile aynı; main testinin Yayınla adımı ekran testinden önce çalıştığı için stabil sürüm test bitmeden çıktı.
 - Demo v11.13 (ön sürüm, ce56ca8): tam test yeşil (run 44035540134): analiz, birim testleri, sunucu güvenlik, APK, demo ön sürüm yayını, ekran testi, Test Lab. Testsiz hak sayacı 0.
-- Main için tam test henüz çalışmadı; demo → main geçişi kullanıcı onayı bekliyor (main yayını stabil sürümü çıkarır).
+- Main tam testi (run 44039187900, cba6d35): analiz, birim, sunucu güvenlik ve APK adımları geçti; emülatör ekran testi kırmızı (giriş yapılmış test: "Invalid login credentials"). Test Lab adımına geçilmedi. Hata test hesabı girişiyle ilgili, v1.2'deki kırmızılıkla aynı neden (kayıtla doğrulandı).
 - Gerçek sunucuya demodaki değişiklikler uygulandı (47, 48, Pro havuz sahibi, 49 hata raporu yalnız girişli); güvenlik testi geçti. Bildirim işlevi demo ile aynı kod.
 - Bildirim ve Google girişi yeni Firebase projesine geçti; eski Google istemci kimliğinin gerçek sunucudan silinmesine karar verildi. Kodda eski projeye iz yok.
-- main'deki son derleme (852dcab, v1.2) yalnız giriş yapılmış ekran testinde kırmızı: test hesabı gerçek sunucuda girişe izin vermiyor (hesap yok ya da parola farklı). Neden doğrulanmadı; kayıtlarda kök neden incelenmedi. Yayın etkilenmedi.
+- Test hesabı gerçek sunucuda girişe izin vermiyor (hesap yok ya da parola farklı). Yayın, bu kırmızılığa rağmen çıktı; etkilenen kullanıcı yok (uygulama kullanıcıları etkilenmez, yalnız test otomasyonu).
 - Token göstergesi işi iptal edildi.
 - `check/destek-log` dalı (hızlı kontrol yeşil, demo bekliyor): destek adresi kişisel adresten ayrı uygulama adresine taşındı (uygulama + gizlilik/hesap silme sayfaları); kör noktadaki 7 boş `catch`'e `Log.warn`; Ayarlar → Hata kaydı (telefonda son 50 hata, kişi isterse kimliksiz `crash_reports`'a gönderir, otomatik gönderim yok).
 
@@ -29,7 +29,7 @@
 5. Play Console'daki geliştirici e-postasını yeni destek adresine çevirmek; hesap silme talepleri artık o kutuya gelir.
 
 ## Sıradaki işler
-1. Demo → main için onay; onaydan sonra main'de tam testi çalıştırmak (testler yeşil olursa main'e geçiş).
+1. Test hesabı düzeltilince main tam testini yeniden çalıştırmak; yeşilse demo → main için onay (main'e push yeni stabil sürüm çıkarır).
 2. `check/destek-log` → demo → telefonda deneme → onayla main (v11.13 main'e geçtikten sonra).
 3. Telefon denemesi sonrası eski FCM kayıtlarını ve eski dalları temizlemek (onaylı).
 4. Küçük işler ve temizlik (ayrıntı proje belgesinde).
