@@ -119,18 +119,8 @@ class _KarneScreenState extends State<KarneScreen> {
   }
 
   /// Muaf günler hesaba katılmaz: başarı = kılınan / (toplam − muaf).
-  (int prayed, int total) _score(Iterable<DateTime> days, [String? key]) {
-    var p = 0, t = 0;
-    for (final d in days) {
-      for (final k in key == null ? prayerKeys : [key]) {
-        final s = _st(d, k);
-        if (s == PrayerStatus.excused) continue;
-        t++;
-        if (s == PrayerStatus.prayed) p++;
-      }
-    }
-    return (p, t);
-  }
+  /// İlk kayıt gününden önceki günler ve bugünün işaretsiz vakitleri sayılmaz (bkz. [karneScore]).
+  (int prayed, int total) _score(Iterable<DateTime> days, [String? key]) => karneScore(_data, days, key: key);
 
   (String, Color) _grade(int pct) => pct >= 90
       ? (t('Pekiyi', 'Excellent'), AppColors.prayedMint)
@@ -178,9 +168,15 @@ class _KarneScreenState extends State<KarneScreen> {
     final pct = tot == 0 ? 0 : (p * 100 / tot).round();
     final (grade, gradeColor) = _grade(pct);
     final perPrayer = {for (final k in prayerKeys) k: _score(days, k)};
+    // Kaydı olmayan (misafir, yeni hesap) kullanıcıya not ve "en çok aksatan" gösterilmez.
+    final first = karneFirstMarkedDay(_data);
+    final hasData = first != null;
+    final today0 = DateTime.now();
+    final activeDays = hasData ? DateTime(today0.year, today0.month, today0.day).difference(DateTime.parse(first!)).inDays + 1 : 0;
     String? weakest;
     var weakPct = 101;
     for (final k in prayerKeys) {
+      if (activeDays < 7) break; // en az 7 günlük kayıt olmadan ipucu verilmez
       final (pp, tt) = perPrayer[k]!;
       if (tt == 0) continue;
       final v = (pp * 100 / tt).round();
@@ -208,7 +204,7 @@ class _KarneScreenState extends State<KarneScreen> {
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(20)),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-              Text(_name.isNotEmpty ? t('$_name · Karnesi', "$_name's Report") : t('İbadet Karnesi', 'Worship Report'),
+              Text(_name.isNotEmpty && !isGuest ? t('$_name · Karnesi', "$_name's Report") : t('İbadet Karnesi', 'Worship Report'),
                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
               const SizedBox(height: 10),
               SegmentedButton<_Period>(
@@ -228,6 +224,15 @@ class _KarneScreenState extends State<KarneScreen> {
                 onSelectionChanged: (s) => setState(() => _period = s.first),
               ),
               const SizedBox(height: 14),
+              if (!hasData)
+                Text(
+                    isGuest
+                        ? t('Henüz kayıt yok. Giriş yapıp vakitleri işaretlemeye başlayınca karnen burada oluşur.',
+                            'No records yet. Sign in and start marking your prayers; your report will appear here.')
+                        : t('Henüz kayıt yok. Bugün sekmesinde vakitleri işaretlemeye başla; karnen burada oluşur.',
+                            'No records yet. Start marking your prayers on the Today tab; your report will appear here.'),
+                    style: TextStyle(fontSize: 14, height: 1.35, color: Colors.white.withValues(alpha: 0.9)))
+              else ...[
               Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
                 Text(t('%$pct', '$pct%'), style: const TextStyle(fontSize: 42, fontWeight: FontWeight.bold, color: Colors.white)),
                 const SizedBox(width: 10),
@@ -258,12 +263,13 @@ class _KarneScreenState extends State<KarneScreen> {
               const SizedBox(height: 6),
               Text(t('Muaf işaretlenen vakitler hesaba katılmaz.', 'Prayers marked as excused are not counted.'),
                   style: TextStyle(fontSize: 11, color: Colors.white.withValues(alpha: 0.75))),
+              ],
             ]),
           ),
           const SizedBox(height: 14),
 
-          // ---------- Vakit vakit karne ----------
-          _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          // ---------- Vakit vakit karne (kayıt yoksa gösterilmez) ----------
+          if (hasData) _card(Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(t('📋 Vakit Vakit Karne', '📋 Report by Prayer'), style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
             for (final k in prayerKeys)
