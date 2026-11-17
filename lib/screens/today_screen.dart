@@ -435,7 +435,7 @@ class _TodayScreenState extends State<TodayScreen> {
           ],
         ]),
         const SizedBox(height: 6),
-        Text(_canExcuse ? t('Vakite dokundukça Kıldı → Kılmadı → Muaf → Bekliyor sırasıyla ilerler.', 'Each tap cycles Prayed → Missed → Excused → Pending.') : t('Vakite dokundukça Kıldı → Kılmadı → Bekliyor sırasıyla ilerler.', 'Each tap cycles Prayed → Missed → Pending.'),
+        Text(isGuest ? t('Giriş yaptıktan sonra vakitleri işaretleyebilirsin.', 'You can mark prayers after you sign in.') : _canExcuse ? t('Vakite dokundukça Kıldı → Kılmadı → Muaf → Bekliyor sırasıyla ilerler.', 'Each tap cycles Prayed → Missed → Excused → Pending.') : t('Vakite dokundukça Kıldı → Kılmadı → Bekliyor sırasıyla ilerler.', 'Each tap cycles Prayed → Missed → Pending.'),
             style: const TextStyle(fontSize: 11, color: AppColors.onBackgroundMuted)),
       ],
     );
