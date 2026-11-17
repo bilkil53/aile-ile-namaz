@@ -25,6 +25,7 @@ import '../update_checker.dart';
 import '../pro.dart';
 import '../widgets/dini_gun_card.dart';
 import '../widgets/pro_lock.dart';
+import 'error_log_screen.dart';
 import 'notify_health_screen.dart';
 
 /// Ayarlar.
@@ -1011,6 +1012,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 );
               }),
               _tapRow(t('Öneri yaz', 'Send feedback'), Icons.mail_outline, _mail, sub: t('Mail uygulaması açılır', 'Opens your email app')),
+              _tapRow(t('Hata kaydı', 'Error log'), Icons.bug_report_outlined,
+                  () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ErrorLogScreen())),
+                  sub: t('Son hatalar · istersen gönder', 'Recent errors · send if you like'),
+                  trailing: const Icon(Icons.chevron_right, color: Colors.white)),
               _tapRow('GitHub', Icons.star_rounded, () => _open(_repo),
                   sub: t('Kaynak kod · Yıldız ver ⭐', 'Source code · Give a star ⭐'),
                   trailing: const Icon(Icons.open_in_new, color: Colors.white, size: 18)),
