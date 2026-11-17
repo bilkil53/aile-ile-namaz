@@ -41,7 +41,7 @@ class _QiblaCardState extends State<QiblaCard> {
       final m = _m;
       _m = m == null ? [e.x, e.y, e.z] : [m[0] * 0.8 + e.x * 0.2, m[1] * 0.8 + e.y * 0.2, m[2] * 0.8 + e.z * 0.2];
       final h = _azimuth(_g, _m!);
-      if (h != null && mounted) setState(() => _heading = h);
+      if (h != null && mounted) setState(() => _heading = (h + _declination(AppSettings.lat, AppSettings.lng) + 360) % 360);
     });
   }
 
@@ -50,6 +50,14 @@ class _QiblaCardState extends State<QiblaCard> {
     _magSub?.cancel();
     _accSub = null;
     _magSub = null;
+  }
+
+  /// Manyetik kuzey ile gerçek kuzey farkı (derece, doğuya pozitif). Sensör manyetik kuzeyi gösterir, kıble açısı
+  /// gerçek kuzeye göre hesaplanır; fark düzeltilmezse ok Türkiye'de ~6° kayar. Türkiye için yaklaşık değer
+  /// (2026, ±1,5°): İstanbul ≈ 6,0°, doğuya gittikçe artar. Türkiye dışında düzeltme yapılmaz.
+  static double _declination(double lat, double lng) {
+    if (lat < 34 || lat > 43 || lng < 25 || lng > 46) return 0;
+    return 5.9 + 0.2 * (lng - 29.2);
   }
 
   /// Android SensorManager.getRotationMatrix + getOrientation ile aynı hesap.
@@ -82,19 +90,22 @@ class _QiblaCardState extends State<QiblaCard> {
 
     // Material: ListTile dokunma efekti kartın üstünde görünsün (Container arka planı onu gizliyordu)
     return Material(
-      color: AppColors.white,
+      textStyle: const TextStyle(color: AppColors.onCard),
+      color: AppColors.card,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppColors.cardBorder),
+        side: const BorderSide(color: Colors.transparent),
       ),
       child: Column(
         children: [
           ListTile(
-            leading: const Icon(Icons.explore, color: AppColors.emerald),
-            title: Text(t('Kıble Pusulası', 'Qibla Compass'), style: TextStyle(fontWeight: FontWeight.bold)),
-            subtitle: Text(t('${AppSettings.cityName} için kıble: ${qibla.toStringAsFixed(0)}°', 'Qibla for ${AppSettings.cityName}: ${qibla.toStringAsFixed(0)}°')),
-            trailing: Icon(_open ? Icons.expand_less : Icons.expand_more),
+            iconColor: AppColors.onCard,
+            textColor: AppColors.onCard,
+            leading: const Icon(Icons.explore, color: AppColors.onCard),
+            title: Text(t('Kıble Pusulası', 'Qibla Compass'), style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.onCard)),
+            subtitle: Text(t('${AppSettings.cityName} için kıble: ${qibla.toStringAsFixed(0)}°', 'Qibla for ${AppSettings.cityName}: ${qibla.toStringAsFixed(0)}°'), style: const TextStyle(color: AppColors.onCardMuted)),
+            trailing: Icon(_open ? Icons.expand_less : Icons.expand_more, color: AppColors.onCard),
             onTap: () {
               setState(() => _open = !_open);
               _open ? _start() : _stop();
@@ -124,14 +135,14 @@ class _QiblaCardState extends State<QiblaCard> {
                             : (diff! > 0 ? t('Sağa dön (${diff.abs().toStringAsFixed(0)}°)', 'Turn right (${diff.abs().toStringAsFixed(0)}°)') : t('Sola dön (${diff.abs().toStringAsFixed(0)}°)', 'Turn left (${diff.abs().toStringAsFixed(0)}°)')),
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: aligned ? AppColors.emerald : AppColors.textSecondary,
+                      color: aligned ? AppColors.prayedMint : AppColors.onCardMuted,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     t('Telefonu yere paralel tut, metal ve mıknatıslardan uzak dur.', 'Hold the phone parallel to the ground, away from metal and magnets.'),
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+                    style: const TextStyle(fontSize: 11, color: AppColors.onCardFaint),
                   ),
                 ],
               ),

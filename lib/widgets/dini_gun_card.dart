@@ -81,9 +81,9 @@ class _DiniGunCardState extends State<DiniGunCard> {
         _toast(t('Aileye gönderildi 🤲', 'Sent to your family 🤲'));
       }
     } catch (e) {
-      _toast(e.toString().contains('rate_limited')
+      _toast(duaSendError(e) ?? (e.toString().contains('rate_limited')
           ? t('Çok sık gönderdin. Biraz bekleyip tekrar dene.', 'You sent too often. Wait a little and try again.')
-          : t('Gönderilemedi. Biraz sonra tekrar dene.', 'Could not send. Try again a bit later.'));
+          : t('Gönderilemedi. Biraz sonra tekrar dene.', 'Could not send. Try again a bit later.')));
     } finally {
       if (mounted) setState(() => _sendingKey = null);
     }
@@ -170,7 +170,7 @@ class _DiniGunCardState extends State<DiniGunCard> {
                 Text(t('${g.name}nız mübarek olsun', '${g.name} Mubarak'),
                     style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                 Text(t('Bayramın $dayNo. günü · ${g.days} gün sürer', 'Day $dayNo of Eid · lasts ${g.days} days'),
-                    style: const TextStyle(fontSize: 12, color: AppColors.prayedMint)),
+                    style: const TextStyle(fontSize: 12, color: Colors.white)),
               ]),
             ),
           ]),
@@ -217,9 +217,9 @@ class _DiniGunCardState extends State<DiniGunCard> {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.cardBorder),
+          border: Border.all(color: Colors.transparent),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -227,26 +227,26 @@ class _DiniGunCardState extends State<DiniGunCard> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(g.name,
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.onCard)),
             ),
             const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(999)),
-              child: Text(when, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white)),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(999)),
+              child: Text(when, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.emerald)),
             ),
           ]),
           const SizedBox(height: 8),
           Text(t('Anlamı ve önemi', 'Meaning and significance'),
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.onCard)),
           const SizedBox(height: 2),
-          Text(g.meaning, style: const TextStyle(fontSize: 12, height: 1.45, color: AppColors.textSecondary)),
+          Text(g.meaning, style: const TextStyle(fontSize: 12, height: 1.45, color: AppColors.onCardMuted)),
           InkWell(
             onTap: _openDiyanet,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Text(t('Tarih Diyanet takvimine göredir · Ayrıntılı bilgi: diyanet.gov.tr', 'Date follows the Diyanet calendar · More: diyanet.gov.tr'),
-                  style: TextStyle(fontSize: 11, color: AppColors.emerald, decoration: TextDecoration.underline)),
+                  style: TextStyle(fontSize: 11, color: AppColors.prayedMint, decoration: TextDecoration.underline)),
             ),
           ),
           if (share) _shareRow(g),
@@ -262,9 +262,9 @@ class _DiniGunCardState extends State<DiniGunCard> {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.card,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.cardBorder),
+          border: Border.all(color: Colors.transparent),
         ),
         child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(g.emoji, style: const TextStyle(fontSize: 22)),
@@ -272,9 +272,9 @@ class _DiniGunCardState extends State<DiniGunCard> {
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(title,
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.onCard)),
               const SizedBox(height: 2),
-              Text(g.meaning, style: const TextStyle(fontSize: 12, height: 1.45, color: AppColors.textSecondary)),
+              Text(g.meaning, style: const TextStyle(fontSize: 12, height: 1.45, color: AppColors.onCardMuted)),
               _shareRow(g),
             ]),
           ),

@@ -1,0 +1,80 @@
+name: Eskileri temizle (son 2 sürüm kalır)
+
+# Her ayın 1'inde 04:17'de (İstanbul) kendiliğinden çalışır ve siler; elle de başlatılabilir.
+# Elle başlatınca kutu boş bırakılırsa yalnızca liste gösterilir, SIL yazılırsa silinir. Kalıcıdır, geri alınamaz:
+#  - Yayınlar (APK dosyalarıyla): yalnızca bu hattın ürettiği biçimdeki yayınlar (v1.N ve demo v11.N) ele alınır;
+#    taslak (draft) ve başka adlı yayınlara dokunulmaz. Her kanalda en yeni 2 kalır; GitHub'ın "en son sürüm"
+#    (latest) olarak gösterdiği yayın hiçbir durumda silinmez.
+#  - Etiketler: yalnızca silinen yayınların etiketleri ve yayını olmayan eski r<N> ve v1.0.N etiketleri.
+#  - Dallar: check/son dışındaki check/* kontrol dalları. main, demo, dev ve check/son'a dokunulmaz.
+#  - Çalışma kayıtları: en yeni 20 kalır. Derleme çıktıları: 7 günden eskiler.
+# Herhangi bir API okuması başarısız olursa hiçbir şey silinmez (eksik listeyle silme planı kurulmaz).
+on:
+  schedule:
+    - cron: '17 1 1 * *'
+  workflow_dispatch:
+    inputs:
+      onay:
+        description: 'Kalıcı silme, geri alınamaz. Onaylamak için SIL yazın. Boş bırakılırsa yalnızca liste gösterilir.'
+        required: false
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: release-numbering
+  cancel-in-progress: false
+
+jobs:
+  temizle:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Listele ve (onay varsa) sil
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ONAY: ${{ github.event_name == 'schedule' && 'SIL' || inputs.onay }}
+        run: |
+          set -euo pipefail
+          R="repos/$GITHUB_REPOSITORY"
+          # grep eşleşme bulamazsa (çıkış 1) hata sayılmaz; gerçek hata (2) işi durdurur
+          g() { grep "$@" || [ $? -eq 1 ]; }
+          gh api "$R/releases?per_page=100" --paginate --jq '.[] | "\(.id) \(.tag_name) \(.draft)"' > hepsi.txt
+          LATEST=$(gh api "$R/releases/latest" --jq .tag_name)
+          [ -n "$LATEST" ] || { echo "::error::En son sürüm okunamadı; hiçbir şey silinmedi."; exit 1; }
+          awk '$3=="false"{print $1" "$2}' hepsi.txt > yayin.txt
+          V='^v1\.[0-9]+$'; D='^v11\.[0-9]+$'
+          sirala() { awk '{print $2}' yayin.txt | g -E "$1" | awk -F. '{print $2" "$0}' | sort -rn | awk '{print $2}'; }
+          { sirala "$V" | head -2; sirala "$D" | head -2; echo "$LATEST"; } | sort -u > kalan.txt
+          awk '{print $2}' yayin.txt | g -E "$V|$D" | g -vxFf kalan.txt > sil_yayin.txt
+          gh api "$R/git/matching-refs/tags/" --paginate --jq '.[].ref | ltrimstr("refs/tags/")' > etiketler.txt
+          awk '{print $2}' hepsi.txt > yayin_etiketleri.txt
+          { cat sil_yayin.txt; g -E '^(r[0-9]+|v1\.0\.[0-9]+(-demo)?)$' etiketler.txt | g -vxFf yayin_etiketleri.txt; } | sort -u > sil_etiket.txt
+          gh api "$R/git/matching-refs/heads/check/" --paginate --jq '.[].ref | ltrimstr("refs/heads/")' > dallar.txt
+          g -E '^check/' dallar.txt | g -vx 'check/son' > sil_dal.txt
+          gh api "$R/actions/runs?per_page=100" --paginate \
+            --jq '.workflow_runs[] | select(.status=="completed") | "\(.created_at) \(.id)"' > kayitlar.txt
+          sort -r kayitlar.txt | awk 'NR>20{print $2}' | g -vx "$GITHUB_RUN_ID" > sil_kayit.txt
+          SINIR=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          gh api "$R/actions/artifacts?per_page=100" --paginate \
+            --jq ".artifacts[] | select(.created_at < \"$SINIR\") | .id" > sil_cikti.txt
+          echo "En son sürüm (korunur): $LATEST"
+          echo "KALACAK sürümler:"; cat kalan.txt
+          echo "SİLİNECEK yayınlar ($(wc -l < sil_yayin.txt)):"; cat sil_yayin.txt
+          echo "SİLİNECEK etiketler ($(wc -l < sil_etiket.txt)):"; cat sil_etiket.txt
+          echo "SİLİNECEK dallar ($(wc -l < sil_dal.txt)):"; cat sil_dal.txt
+          echo "SİLİNECEK çalışma kaydı: $(wc -l < sil_kayit.txt) (en yeni 20 kalır)"
+          echo "SİLİNECEK derleme çıktısı: $(wc -l < sil_cikti.txt) (7 günden eski)"
+          if [ "$ONAY" != "SIL" ]; then echo "::notice::Onay yok (SIL yazılmadı): yalnızca liste gösterildi, hiçbir şey silinmedi."; exit 0; fi
+          hata=0
+          sil() { if gh api -X DELETE "$1" > /dev/null; then echo "silindi: $2"; else echo "::warning::silinemedi: $2"; hata=$((hata+1)); fi; }
+          while read -r tag; do
+            id=$(awk -v t="$tag" '$2==t{print $1}' yayin.txt)
+            sil "$R/releases/$id" "yayın $tag"
+          done < sil_yayin.txt
+          while read -r tag; do sil "$R/git/refs/tags/$tag" "etiket $tag"; done < sil_etiket.txt
+          while read -r b; do sil "$R/git/refs/heads/$b" "dal $b"; done < sil_dal.txt
+          while read -r id; do sil "$R/actions/artifacts/$id" "çıktı $id" > /dev/null; done < sil_cikti.txt
+          while read -r id; do sil "$R/actions/runs/$id" "kayıt $id" > /dev/null; done < sil_kayit.txt
+          echo "Kalan yayınlar:"; gh api "$R/releases?per_page=100" --jq '.[].tag_name'
+          if [ "$hata" -gt 0 ]; then echo "::error::$hata öğe silinemedi (yukarıdaki uyarılara bakın)."; exit 1; fi

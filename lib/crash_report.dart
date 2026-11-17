@@ -18,7 +18,8 @@ import 'ui_test_mode.dart';
 /// 1) Uygulama içinde beklenmedik hata olursa kullanıcıya sebebiyle birlikte pencere çıkar.
 /// 2) Uygulama ekrandayken tamamen kapanırsa (bellek doldu, çöktü, dondu) Android 11+ sebebi kaydeder;
 ///    bir sonraki açılışta pencere ile gösterilir.
-/// Pencerede kişi isterse "Raporu gönder" (anonim kayıt Supabase `crash_reports` tablosuna) ya da
+/// Pencerede kişi isterse "Raporu gönder" (girişli kullanıcıdan kimliksiz kayıt Supabase `crash_reports`
+/// tablosuna; misafirde yalnızca mail yolu çalışır) ya da
 /// "Mail ile gönder" der; "Kapat" derse hiçbir şey gitmez. Pencere çıkmayan durumlarda (internet
 /// kesintisi, arka plandayken kapanma) da hiçbir şey gönderilmez.
 /// Gönderilecek metin önce e-posta, oturum anahtarı, kimlik, telefon, gizli parametre, veritabanı satır
@@ -236,6 +237,8 @@ class CrashReport {
   static Future<bool> _send(String text, StackTrace? stack, {required bool fatal, int? ramMb, String? rawStack}) async {
     try {
       if (_sentThisRun >= 5 || kUiTest) return false; // CI ekran testindeki hatalar canlı tabloya gitmesin
+      // Sunucu misafirden (anon) rapor kabul etmez: boşuna istek atılmaz, "Mail ile" önerilir
+      if (Supabase.instance.client.auth.currentUser == null) return false;
       _sentThisRun++;
       var st = scrubSensitive(rawStack ?? stack?.toString() ?? '');
       if (st.length > 7500) st = st.substring(0, 7500);

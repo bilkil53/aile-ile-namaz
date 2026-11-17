@@ -1,51 +1,81 @@
 {
   "project_info": {
-    "project_number": "736837751684",
-    "project_id": "aile-ile-namaz-d437f",
-    "storage_bucket": "aile-ile-namaz-d437f.firebasestorage.app"
+    "project_number": "318839766364",
+    "project_id": "aile-ile-namaz-app",
+    "storage_bucket": "aile-ile-namaz-app.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:736837751684:android:dc1c39574b3dcbd945c3d1",
+        "mobilesdk_app_id": "1:318839766364:android:485277e25d857b0f2a5599",
         "android_client_info": {
           "package_name": "com.bilkil53.aile_ile_namaz"
         }
       },
-      "oauth_client": [],
-      "api_key": [
+      "oauth_client": [
         {
-          "current_key": "AIzaSyAN2lEI-gh97nI9RMp1gkRpthTBsUHn4sQ"
+          "client_id": "318839766364-rn16d8ubginp6hhtqhlg729mh4b6nd9g.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bilkil53.aile_ile_namaz",
+            "certificate_hash": "e3f2b7465261dde5369b8cc34e7ed8de45142058"
+          }
         },
         {
-          "current_key": "AIzaSyBm3uVMo7YDYG9blkgBEKiuAVjpcuyhewU"
+          "client_id": "318839766364-a6jmhvudnandjnhd7iv6ahvk0qlp5c5q.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCgPOgKQPDXhtK2Y-xZkLW3oPHAD0_HPiQ"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "318839766364-a6jmhvudnandjnhd7iv6ahvk0qlp5c5q.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:736837751684:android:25af1ccf0bebf50645c3d1",
+        "mobilesdk_app_id": "1:318839766364:android:9bc0e71ce66fcc212a5599",
         "android_client_info": {
           "package_name": "com.bilkil53.aile_ile_namaz.demo"
         }
       },
-      "oauth_client": [],
-      "api_key": [
+      "oauth_client": [
         {
-          "current_key": "AIzaSyAN2lEI-gh97nI9RMp1gkRpthTBsUHn4sQ"
+          "client_id": "318839766364-1gkj8necmd7upcvbc7nkhahkc96v8cme.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bilkil53.aile_ile_namaz.demo",
+            "certificate_hash": "e3f2b7465261dde5369b8cc34e7ed8de45142058"
+          }
         },
         {
-          "current_key": "AIzaSyBm3uVMo7YDYG9blkgBEKiuAVjpcuyhewU"
+          "client_id": "318839766364-a6jmhvudnandjnhd7iv6ahvk0qlp5c5q.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCgPOgKQPDXhtK2Y-xZkLW3oPHAD0_HPiQ"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "318839766364-a6jmhvudnandjnhd7iv6ahvk0qlp5c5q.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

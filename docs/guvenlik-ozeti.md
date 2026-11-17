@@ -29,7 +29,7 @@ Son kontrol: 09.11.2026, canlı veritabanından okundu. Şema geçmişinin tamam
 | `join_requests` | SELECT | İsteyen kişi ve havuz sahibi görür. Yazma yalnızca RPC ile. |
 | `pool_events` | SELECT, INSERT — yalnızca `pool_id`, `sender_id`, `event_type`, `message`, `prayer`, `target_id` sütunlarına (migration 31; `id`, `created_at`, `push_*` istemciden yazılamaz, tarih geriye atılıp hız sınırı atlatılamaz). UPDATE/DELETE yetkisi yok | Okuma: havuz üyesi; hedefli dua yalnızca hedef ve gönderen tarafından görülür. Ekleme: kendi adına, yalnızca PRAYED/MISSED/KAZA/DUA. MEMBER_*, PRO_* olayları yalnızca RPC'den gelir; ALL_PRAYED ("5 vaktin hepsini kıldı") yalnızca `daily_prayers` tetikleyicisinden, kişi ve gün başına bir kez (migration 37). Tetikleyiciler: hız sınırı (dua dakikada 1, saatte 3, günde 10; aynı vakit günde 2) ve bildirim kuyruğu. |
 | `devices` | SELECT, INSERT, UPDATE, DELETE | Yalnızca kendi cihaz kayıtları (FCM jetonu). |
-| `crash_reports` | Yalnızca INSERT (anon + authenticated) | Okunamaz, değiştirilemez; 30 günde silinir. |
+| `crash_reports` | Yalnızca INSERT (authenticated; misafir yazamaz) | Okunamaz, değiştirilemez; 30 günde silinir. |
 | `join_attempts` | Yok | Politika yok; yalnızca RPC yazar (katılma denemesi sınırı: saatte 20). |
 
 ## 3. RPC'ler (çağıran rol: authenticated)
@@ -70,7 +70,7 @@ Son kontrol: 09.11.2026, canlı veritabanından okundu. Şema geçmişinin tamam
 
 - **Bildirim fonksiyonu (`push-family`) anahtar ister:** anahtar Vault'ta üretilir (repoda ve sohbette yoktur); tetikleyici ve tekrar deneme görevi `x-push-secret` başlığıyla gönderir, fonksiyon anahtarı yalnızca `service_role` ile `push_hook_secret()`'tan okur. Anahtarsız ya da yanlış anahtarlı çağrı 401 (fail-closed; canlıda doğrulandı). Fonksiyon `verify_jwt=false` ile dağıtılmalıdır (tetikleyici JWT göndermez).
 - **Telefon başına tek hesap:** `devices` tetikleyicisi aynı `fcm_token`'ı başka hesaplardan siler (aynı telefonda iki ailenin bildirimi karışmaz).
-- **Hata raporları anonim:** `crash_reports.user_id` kaldırıldı; istemci yalnızca veri sütunlarına yazabilir, `created_at` sunucuda atanır (30 günlük silme atlatılamaz); saatte 300 rapor üst sınırı.
+- **Hata raporları anonim:** `crash_reports.user_id` kaldırıldı; istemci yalnızca veri sütunlarına yazabilir, `created_at` sunucuda atanır (30 günlük silme atlatılamaz); yalnızca giriş yapmış kullanıcı yazabilir (misafir yazamaz, değişiklik 49); saatte 60 rapor üst sınırı.
 - **İç fonksiyonlar:** `pool_max_members` (search_path boş), `handle_new_user`, `refresh_kaza_summary`, `gen_invite_code` API rollerine kapalı.
 - **Veri azaltma:** `profiles.email`, `daily_prayers.note`, `daily_prayers.updated_at` kaldırıldı; e-posta yalnızca Supabase Auth'ta durur.
 - **İstemci (r80/r81):** telefondaki kişisel veriler tek hesaba bağlı (hesap değişince/çıkışta silinir), KVKK onayı hesap başına.
