@@ -7,5 +7,29 @@
     "superpowers@synced": false,
     "claude-code-setup@synced": false,
     "cowork-plugin-management@synced": false
+  },
+  "permissions": {
+    "deny": [
+      "mcp__Claude_Docs",
+      "Skill(anthropic-skills:pptx)",
+      "Skill(anthropic-skills:docx)",
+      "Skill(anthropic-skills:xlsx)",
+      "Skill(anthropic-skills:pdf)",
+      "Skill(anthropic-skills:docs)",
+      "Skill(anthropic-skills:google-workspace)",
+      "Skill(anthropic-skills:built-in-browser)",
+      "Skill(anthropic-skills:chrome-browser)",
+      "Skill(anthropic-skills:computer-use)",
+      "Skill(anthropic-skills:deep-research)",
+      "Skill(anthropic-skills:morning)",
+      "Skill(anthropic-skills:import-memory)",
+      "Skill(anthropic-skills:skill-creator)",
+      "Skill(plugin-authoring)",
+      "Skill(session-start-hook)",
+      "Skill(dataviz)",
+      "Skill(artifact-design)",
+      "Skill(artifact-diagramming)",
+      "Skill(artifact-capabilities)"
+    ]
   }
 }
