@@ -53,6 +53,7 @@
 9. Yönetim uygulaması için GitHub secret'ları (YONETIM_SUPABASE_URL, YONETIM_SUPABASE_ANON_KEY) eklemek; demo hesapla yenileme bildirimi denemesi için hesap seçmek.
 
 ## Sıradaki işler
+HATIRLAT (kullanıcı istedi, 17 Kasım 2026): Kullanıcıya sor: (a) Play sürümünden uygulama içi güncelleme kodu çıkarılsın mı (Play politikası; öneri: evet, Play çıkışı işlerine ekle)? (b) GitHub APK'sında Pro hiç satılmasın mı, tanıdıklara elle mi açılsın (öneri: satılmasın)? Not: GitHub Sponsors yalnız bağış; Pro satışı yalnız Play Billing; Play ve GitHub APK imzası farklı, birbirini güncellemez.
 000. Workflow değişikliğini (`4b79b27`) önce demoya al, tam test yeşilse main'e geçir; kullanıcıdan hangi yol istendiği sorulacak.
 000. Pro lisans işi: demo bildirim denemesi → `admin_app` CI sonucu → güvenlik testine yönetici işlevleri → testler yeşilse main + gerçek sunucu (ayrı onay).
 000. (PR'lar 17 Kasım'da açıldı, bkz. Durum) Dependabot PR'ları: demo tam testi yeşilse #2 ve #5'i main'e almak, sonra dördünü tek tek. Eski not: Dependabot ilk PR'ları (pazartesi) açılınca: testleri yeşil mi bak, özetle, kullanıcıya sor, onayla birleştir. Birleştirme demo → test → main akışına uyar. Ayrıca gerçek sunucuda `test_*` ve `expire_pro_test` işlevleri girişli herkese açık: Play'den önce kaldırılacak (kullanıcıyla konuşuldu, henüz yapılmadı).
