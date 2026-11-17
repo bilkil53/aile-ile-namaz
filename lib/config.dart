@@ -30,5 +30,5 @@ class AppConfig {
       : 'io.supabase.aileilenamaz://login-callback/';
 
   /// Öneri ve hata bildirimlerinin gideceği adres (kullanıcı mail uygulamasıyla gönderir).
-  static const supportEmail = '';
+  static const supportEmail = 'aileilenamaz@gmail.com';
 }
