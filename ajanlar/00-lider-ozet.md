@@ -22,19 +22,20 @@
 - Karne düzeltmesi (kaydı olmayana "en çok aksattığın vakit" ve %0 not çıkıyordu; artık ilk kayıt gününden sayılır, bugünün işaretsiz vakitleri sayılmaz, misafirde "Henüz kayıt yok", Aile Başarısı misafirde "–", Bugün ipucu misafire giriş gerektiğini söyler; test/karne_score_test.dart): ilk üç çalışma (demo 44044402429, main 44044406248, demo 44044883798) gereksiz `!` analiz uyarısı yüzünden kırmızı çıktı, yayın çıkmadı. Düzeltmeyle demo 3a832f2 TAM YEŞİL (run 44047751755: analiz, birim, demo sunucu güvenlik, APK, demo ön sürüm v11.14, GitHub emülatör ekran testi giriş yapılmış akış dahil, Test Lab). main 73d6366'ya aynı değişiklikler uygulandı (main ve demo kodu/test/workflow birebir aynı); main çalışması 44051122792: analiz, birim, gerçek sunucu güvenlik, APK, R8, test kodu kontrolü geçti, v1.4 yayınlandı; GitHub emülatörde misafir akışı TR+EN geçti, giriş yapılmış ekran testi "Invalid login credentials" ile kırmızı (test hesabı sorunu, Karne ile ilgisiz); bu yüzden Test Lab adımı atlandı (main'de Test Lab hiç koşmadı).
 - Küçük işler ajanı eklendi: `.claude/agents/kucuk-isler.md` (Haiku; okuma/arama/düzenleme/kabuk; commit, push, workflow, supabase, yayın ve gerçek veritabanına dokunmaz). CLAUDE.md'ye devir kuralı yazıldı; ajan listesi oturum açılırken yüklendiği için yeni oturumda görünür.
 - Testsiz demo sayacı kuralı tamamen silindi (ci/demo-testsiz.txt ve workflow koşulları; demo fd8d62a, main 7cc2253). Yeni akış: işler önce demoya, tüm testler yeşilse main.
-- `check/destek-log` dalı (hızlı kontrol yeşil, demo bekliyor): destek adresi kişisel adresten ayrı uygulama adresine taşındı (uygulama + gizlilik/hesap silme sayfaları); kör noktadaki 7 boş `catch`'e `Log.warn`; Ayarlar → Hata kaydı (telefonda son 50 hata, kişi isterse kimliksiz `crash_reports`'a gönderir, otomatik gönderim yok).
+- `check/destek-log` işi (hızlı kontrol yeşil) güncel demonun üstüne 3 commit olarak alındı (çakışmasız) ve demoya gönderildi (5fba53f; main'e dokunulmadı): destek adresi kişisel adresten ayrı uygulama adresine taşındı (uygulama + gizlilik/hesap silme sayfaları); kör noktadaki 7 boş `catch`'e `Log.warn`; Ayarlar → Hata kaydı (telefonda son 50 hata, kişi isterse kimliksiz `crash_reports`'a gönderir, otomatik gönderim yok). Demo tam testi çalışıyor (run 44064903939), sonucu doğrulanmadı; yerelde Flutter yok, test yalnız CI'da.
+- Kullanıcı eklenti/bağlayıcı temizliği için `/plugin` ile kapatma yapacak; `.claude/settings.json`'da 5 eklenti zaten kapalı.
 
 ## Kullanıcıdan beklenen
 1. Demo v11.14'ü telefonda denemek (uygulama içi güncelleme; misafirde Karne'de "Henüz kayıt yok" görünmeli, kayıtlıda not ve ipucu doğru olmalı). Main'e geçiş onayı alındı ve yapıldı.
 2. Üç telefona aynı gün v1.2 kurmak; Google girişi ve bildirimi denemek (v1.1'de kalan bildirim almaz, Google girişi yapamaz).
 3. Ekran testi için test hesabını gerçek sunucuda yeniden açmak ya da GitHub'daki test hesabı ayarlarını güncellemek.
-4. Eski Firebase projesini (Firebase konsolunda) silmek isteyip istemediğine karar vermek.
+4. Eski Firebase projesini Firebase konsolunda silmek (silme kararı verildi; önce yeni projeyle bildirim ve Google girişi telefonda doğrulanmalı). Ben konsola erişemem.
 5. Play Console'daki geliştirici e-postasını yeni destek adresine çevirmek; hesap silme talepleri artık o kutuya gelir.
 
 ## Sıradaki işler
 0. Test hesabı düzeltilince main ekran testini ve Test Lab'ı yeniden çalıştırmak (workflow_dispatch, main); şu an v1.4 Test Lab'dan geçmeden yayında.
 1. Test hesabı düzeltilince main tam testini yeniden çalıştırmak; yeşilse demo → main için onay (main'e push yeni stabil sürüm çıkarır).
-2. `check/destek-log` → demo → telefonda deneme → onayla main (v11.13 main'e geçtikten sonra).
+2. Demo (destek-log) testi yeşilse telefonda deneme → onayla main. Eski `check/destek-log` dalı iş demoya alındığı için silinebilir (onaylı).
 3. Telefon denemesi sonrası eski FCM kayıtlarını ve eski dalları temizlemek (onaylı).
 4. Küçük işler ve temizlik (ayrıntı proje belgesinde).
 5. Ertelenen bulgular (düşük): family_screen (1628 satır) ve settings_screen (1092 satır) bölünmesi, family_screen testi; kalan 69 `catch (_)` hatayı kaydetmiyor (çoğu bilerek).
