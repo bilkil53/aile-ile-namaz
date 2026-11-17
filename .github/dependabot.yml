@@ -1,0 +1,18 @@
+# Bağımlılık güncelleme önerileri (Dependabot yalnızca varsayılan daldaki (main) bu dosyayı okur).
+# Mevcut taramalara (gitleaks, analiz, testler) dokunmaz; yalnızca güncelleme PR'ı açar. Kendiliğinden birleştirmez.
+version: 2
+updates:
+  - package-ecosystem: pub
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels: [bağımlılık]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels: [bağımlılık]
