@@ -565,7 +565,9 @@ class Repo {
       if (_stopSync || myId != uid) return; // arada çıkış yapıldı: başka hesabın önbelleğine yazma
       final (o, c) = cloud[type] ?? (0, 0);
       await LocalStore.saveKaza(type, o, c);
-    } catch (_) {}
+    } catch (e) {
+      Log.warn('kaza', e);
+    }
   }
 
   /// Kaza gönderimleri sırayla yapılır (aynı anda iki gönderim olmaz): hızlı art arda değişiklikte

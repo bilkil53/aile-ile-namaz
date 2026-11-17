@@ -7,6 +7,7 @@ import 'package:flutter/services.dart' show PlatformException;
 
 import 'data.dart';
 import 'lang.dart';
+import 'log.dart';
 import 'settings.dart';
 
 /// Uygulama kapalıyken de aile bildirimleri (Firebase Cloud Messaging).
@@ -177,7 +178,9 @@ class Push {
     try {
       final t = _token ?? await FirebaseMessaging.instance.getToken().timeout(wait);
       if (t != null) await supa.from('devices').delete().eq('user_id', myId).eq('fcm_token', t).timeout(wait);
-    } catch (_) {}
+    } catch (e) {
+      Log.warn('bildirim', e);
+    }
     if (!signOut) return;
     try {
       // Yenilenen adres çıkış bitmeden bu hesaba yeniden kaydedilmesin (register tekrar dinler)
@@ -189,6 +192,8 @@ class Push {
       }).catchError((_) {}));
       _token = null;
       await del.timeout(wait);
-    } catch (_) {}
+    } catch (e) {
+      Log.warn('bildirim', e);
+    }
   }
 }
