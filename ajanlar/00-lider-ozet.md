@@ -41,7 +41,7 @@
 8. Demo'daki eski test hesabı için Supabase'de oturumları kapatmak (önceki sıfırlama linkinde oturum bilgisi paylaşıldı, token 1 saatte geçersiz olur) ve hesabı demo'da bırakmak ya da silmek.
 
 ## Sıradaki işler
-00. Etiket düzeltmesi (sonra): `v1.4`→`1eb6c7a`, `v1.5`→`c652bf0`, `v11.16`→`69f9964` eski commit'e işaret ediyor (adres eski geçmişte). Yazma 403 ile reddediliyor. Yol: geçici iş akışı (GITHUB_TOKEN ile) ya da kullanıcının kendi bilgisayarında `git push --force origin <sha>:refs/tags/<etiket>`. Yapılınca `v11.17` (`2b7fa00`) zaten doğru. Temizlik #2 çalıştı: `v1.3`, `v11.14`, `v11.15` silindi.
+00. Etiketler `v1.4`, `v1.5`, `v11.16` şimdilik olduğu gibi kalır (karar: sonra bakılacak, silinip yeniden oluşturulabilir). Eski commit'lere işaret ediyorlar (adres eski geçmişte). Yazma 403 ile reddediliyor; yol: geçici iş akışı ya da kullanıcının kendi bilgisayarında `git push --force origin <sha>:refs/tags/<etiket>`. Doğru commit'ler: `1eb6c7a` (v1.4), `c652bf0` (v1.5), `69f9964` (v11.16). `v11.17` (`2b7fa00`) zaten doğru. Temizlik #2 çalıştı: `v1.3`, `v11.14`, `v11.15` silindi.
 0. Main çalışması 44092955273'ün sonucunu kontrol etmek. Giriş testi kırmızıysa GitHub secret'larındaki yeni hesap bilgilerini doğrulamak; geçerse Test Lab'ı çalıştırmak (main'de Test Lab henüz hiç koşmadı).
 1. Main'de sonuç yeşil ve telefon denemesi tamamlanınca bekleyen işleri kapatmak.
 2. Demo (destek-log) testi yeşilse telefonda deneme → onayla main. Eski `check/destek-log` dalı iş demoya alındığı için silinebilir (onaylı); remote silme 403 ile reddedildi, GitHub'dan elle silinmesi ya da silme izni gerekiyor.
