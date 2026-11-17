@@ -30,12 +30,12 @@
 2. Üç telefona aynı gün v1.2 kurmak; Google girişi ve bildirimi denemek (v1.1'de kalan bildirim almaz, Google girişi yapamaz).
 3. Ekran testi için test hesabını gerçek sunucuda yeniden açmak ya da GitHub'daki test hesabı ayarlarını güncellemek.
 4. Eski Firebase projesini Firebase konsolunda silmek (silme kararı verildi; önce yeni projeyle bildirim ve Google girişi telefonda doğrulanmalı). Ben konsola erişemem.
-5. Play Console'daki geliştirici e-postasını yeni destek adresine çevirmek; hesap silme talepleri artık o kutuya gelir.
+5. (Kullanıcı kararı: Play Console'a şimdilik dokunulmuyor, geliştirici e-postası eski kalır.) Play Console'daki geliştirici e-postasını yeni destek adresine çevirmek; hesap silme talepleri artık o kutuya gelir.
 
 ## Sıradaki işler
 0. Test hesabı düzeltilince main ekran testini ve Test Lab'ı yeniden çalıştırmak (workflow_dispatch, main); şu an v1.4 Test Lab'dan geçmeden yayında.
 1. Test hesabı düzeltilince main tam testini yeniden çalıştırmak; yeşilse demo → main için onay (main'e push yeni stabil sürüm çıkarır).
-2. Demo (destek-log) testi yeşilse telefonda deneme → onayla main. Eski `check/destek-log` dalı iş demoya alındığı için silinebilir (onaylı).
+2. Demo (destek-log) testi yeşilse telefonda deneme → onayla main. Eski `check/destek-log` dalı iş demoya alındığı için silinebilir (onaylı); remote silme 403 ile reddedildi, GitHub'dan elle silinmesi ya da silme izni gerekiyor.
 3. Telefon denemesi sonrası eski FCM kayıtlarını ve eski dalları temizlemek (onaylı).
 4. Küçük işler ve temizlik (ayrıntı proje belgesinde).
 5. Ertelenen bulgular (düşük): family_screen (1628 satır) ve settings_screen (1092 satır) bölünmesi, family_screen testi; kalan 69 `catch (_)` hatayı kaydetmiyor (çoğu bilerek).
