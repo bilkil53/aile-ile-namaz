@@ -17,7 +17,7 @@
 - Main tam testi (run 44039187900, cba6d35): analiz, birim, sunucu güvenlik ve APK adımları geçti; emülatör ekran testi kırmızı (giriş yapılmış test: "Invalid login credentials"). Test Lab adımına geçilmedi. Hata test hesabı girişiyle ilgili, v1.2'deki kırmızılıkla aynı neden (kayıtla doğrulandı).
 - Gerçek sunucuya demodaki değişiklikler uygulandı (47, 48, Pro havuz sahibi, 49 hata raporu yalnız girişli); güvenlik testi geçti. Bildirim işlevi demo ile aynı kod.
 - Bildirim ve Google girişi yeni Firebase projesine geçti; eski Google istemci kimliğinin gerçek sunucudan silinmesine karar verildi. Kodda eski projeye iz yok.
-- Test hesabı gerçek sunucuda girişe izin vermiyor (hesap yok ya da parola farklı). Yayın, bu kırmızılığa rağmen çıktı; etkilenen kullanıcı yok (uygulama kullanıcıları etkilenmez, yalnız test otomasyonu).
+- Test hesabı gerçek sunucuda girişe izin vermiyor (hesap yok ya da parola farklı). Yayın, bu kırmızılığa rağmen çıktı; kullanıcıya etkisi doğrulanmadı.
 - Token göstergesi işi iptal edildi.
 - `check/destek-log` dalı (hızlı kontrol yeşil, demo bekliyor): destek adresi kişisel adresten ayrı uygulama adresine taşındı (uygulama + gizlilik/hesap silme sayfaları); kör noktadaki 7 boş `catch`'e `Log.warn`; Ayarlar → Hata kaydı (telefonda son 50 hata, kişi isterse kimliksiz `crash_reports`'a gönderir, otomatik gönderim yok).
 
