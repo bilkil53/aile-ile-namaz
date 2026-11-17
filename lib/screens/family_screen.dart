@@ -1225,6 +1225,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                   if (data[m.userId]?[k] == PrayerStatus.prayed) 1
             ].length;
             final pct = total == 0 ? 0 : (done * 100 / total).round();
+            final hide = _demo || isGuest; // ücretsizde ve misafirde sayı gösterilmez (kayıt yok)
             return Container(
               margin: const EdgeInsets.only(top: 6, bottom: 4),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -1236,13 +1237,13 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 Expanded(
                   child: Text(
                       _showYesterday
-                          ? t('Dün Aile Başarısı: ${_demo ? '–' : done} / ${_demo ? '–' : total} Vakit',
-                              "Yesterday's Family Success: ${_demo ? '–' : done} / ${_demo ? '–' : total} prayers")
-                          : t('Bugün Aile Başarısı: ${_demo ? '–' : done} / ${_demo ? '–' : total} Vakit',
-                              "Today's Family Success: ${_demo ? '–' : done} / ${_demo ? '–' : total} prayers"),
+                          ? t('Dün Aile Başarısı: ${hide ? '–' : done} / ${hide ? '–' : total} Vakit',
+                              "Yesterday's Family Success: ${hide ? '–' : done} / ${hide ? '–' : total} prayers")
+                          : t('Bugün Aile Başarısı: ${hide ? '–' : done} / ${hide ? '–' : total} Vakit',
+                              "Today's Family Success: ${hide ? '–' : done} / ${hide ? '–' : total} prayers"),
                       style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
                 ),
-                Text(_demo ? t('%–', '–%') : t('%$pct', '$pct%'),
+                Text(hide ? t('%–', '–%') : t('%$pct', '$pct%'),
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
               ]),
             );
