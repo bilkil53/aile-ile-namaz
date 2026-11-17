@@ -4,6 +4,45 @@ import 'dini_gunler.dart';
 import 'lang.dart';
 import 'models.dart';
 
+String _dayKey(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
+
+/// Kullanıcının ilk işaretlediği gün (yyyy-MM-dd); hiç kaydı yoksa null (ör. misafir, yeni hesap).
+String? karneFirstMarkedDay(Map<String, Map<String, PrayerStatus>> data) {
+  String? first;
+  data.forEach((day, m) {
+    if (m.values.every((s) => s == PrayerStatus.none)) return;
+    if (first == null || day.compareTo(first!) < 0) first = day;
+  });
+  return first;
+}
+
+/// Karne puanı (kılınan, toplam). Sayılmayanlar: ilk kayıt gününden önceki günler (kullanıcı henüz
+/// kullanmıyordu), muaf vakitler ve bugünün henüz işaretlenmemiş vakitleri (gün bitmedi).
+/// Geçmiş günlerde işaretsiz vakit "kılınmadı" sayılır.
+(int prayed, int total) karneScore(
+  Map<String, Map<String, PrayerStatus>> data,
+  Iterable<DateTime> days, {
+  String? key,
+  DateTime? now,
+}) {
+  final first = karneFirstMarkedDay(data);
+  if (first == null) return (0, 0);
+  final today = _dayKey(now ?? DateTime.now());
+  var p = 0, t = 0;
+  for (final d in days) {
+    final dk = _dayKey(d);
+    if (dk.compareTo(first) < 0 || dk.compareTo(today) > 0) continue;
+    for (final k in key == null ? prayerKeys : [key]) {
+      final s = data[dk]?[k] ?? PrayerStatus.none;
+      if (s == PrayerStatus.excused) continue;
+      if (s == PrayerStatus.none && dk == today) continue;
+      t++;
+      if (s == PrayerStatus.prayed) p++;
+    }
+  }
+  return (p, t);
+}
+
 /// Karne rozeti. [tiers] varsa seviyeli rozettir (Bronz / Gümüş / Altın / Elmas).
 class KarneBadge {
   final String id, emoji, title, desc;
@@ -110,18 +149,9 @@ class KarneBadges {
     return false;
   }
 
-  (int prayed, int total) _score(DateTime from, DateTime to) {
-    var p = 0, t = 0;
-    for (var d = from; !d.isAfter(to); d = d.add(const Duration(days: 1))) {
-      for (final k in prayerKeys) {
-        final s = _st(d, k);
-        if (s == PrayerStatus.excused) continue;
-        t++;
-        if (s == PrayerStatus.prayed) p++;
-      }
-    }
-    return (p, t);
-  }
+  (int prayed, int total) _score(DateTime from, DateTime to) => karneScore(data, [
+        for (var d = from; !d.isAfter(to); d = d.add(const Duration(days: 1))) d
+      ], now: today);
 
   DateTime? _latest(String key) {
     final list = DiniGunler.events.where((e) => e.gun.key == key && !e.date.isAfter(today)).toList();

@@ -4,7 +4,7 @@
 
 **Giriş ve gezinti**
 - Açılışta **Hoş Geldiniz** penceresi: **Google ile Hızlı Giriş Yap** veya **Giriş Yapmadan Devam Et**.
-- Gezinti modunda bütün ekranlar denenebilir; yapılanlar sadece bellekte tutulur, uygulama kapanınca silinir. Giriş yapılırsa o oturumdakiler buluta kaydedilir.
+- Gezinti modunda ekranlar yalnızca gezilir; vakit işaretlemek ve kaza kaydı için giriş gerekir.
 
 **Bugün**
 - Konum her açılışta otomatik alınır. Diyanet vakitleri, sıradaki vakit geri sayımı, günün ayeti/hadisi, kıble pusulası.
