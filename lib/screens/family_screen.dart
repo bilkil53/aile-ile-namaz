@@ -12,6 +12,7 @@ import '../content/family_message.dart';
 import '../data.dart';
 import '../lang.dart';
 import '../local_store.dart';
+import '../log.dart';
 import '../member_icon.dart';
 import '../models.dart';
 import '../pro.dart';
@@ -360,7 +361,9 @@ class _FamilyScreenState extends State<FamilyScreen> {
         };
         _myName = s['myName'] as String? ?? '';
       });
-    } catch (_) {}
+    } catch (e) {
+      Log.warn('aile', e);
+    }
   }
 
   // ---------- Gezinti (misafir) modu: yalnızca bakmak için, kayıt yapılmaz ----------
