@@ -13,7 +13,7 @@
 
 ## Durum (17 Kasım 2026, öğleden sonra)
 - Demo `5fba53f` tam yeşil (run 44075033754): analiz, birim, sunucu güvenlik, APK, demo ön sürüm, giriş yapılmış ekran testi (TR+EN) ve Google Test Lab geçti.
-- Demo → main birleşimi `4665259` main'e alındı (hata kaydı, destek adresi uygulama adresine taşındı; main'de kişisel e-posta kalmadı, kod ve sayfalar üzerinden doğrulandı, telefonda henüz bakılmadı). Ana iş akışı çalışması 44092955273 başladı; sonucu henüz doğrulanmadı. Yayın ekran testinden önce çıkar.
+- Demo → main birleşimi `4665259` main'e alındı (hata kaydı, destek adresi uygulama adresine taşındı; main'de kişisel e-posta kalmadı, kod ve sayfalar üzerinden doğrulandı, telefonda henüz bakılmadı). Ana iş akışı çalışması 44092955273 TAM YEŞİL (v1.5): analiz, birim, gerçek sunucu güvenlik, APK, giriş yapılmış ekran testi ve Google Test Lab geçti (eski "Invalid login credentials" kırmızılığı bu çalışmada yok).
 - Demo'daki eski test hesabı silinemedi (veritabanı kısıtı; ayrıntı özel nottadır). Kullanıcı yeni test hesabını GitHub secret'larına ekledi; giriş testinin buna göre geçtiği doğrulanmadı.
 - Eski repo için yerel klon silindi. GitHub'daki eski reponun arşivlenmesi ya da silinmesi kullanıcı kararı.
 - Madde 00 sadeleştirildi; ayrıntı yerel özel nottadır ve commit edilmez. Eski ayrıntı herkese açık geçmişte duruyor, geçmiş temizliği için onay bekleniyor.
@@ -28,10 +28,12 @@
 - Küçük işler ajanı eklendi: `.claude/agents/kucuk-isler.md` (Haiku; okuma/arama/düzenleme/kabuk; commit, push, workflow, supabase, yayın ve gerçek veritabanına dokunmaz). CLAUDE.md'ye devir kuralı yazıldı; ajan listesi oturum açılırken yüklendiği için yeni oturumda görünür.
 - Testsiz demo sayacı kuralı tamamen silindi (ci/demo-testsiz.txt ve workflow koşulları; demo fd8d62a, main 7cc2253). Yeni akış: işler önce demoya, tüm testler yeşilse main.
 - `check/destek-log` işi (hızlı kontrol yeşil) güncel demonun üstüne 3 commit olarak alındı (çakışmasız) ve demoya gönderildi (5fba53f; main'e dokunulmadı): destek adresi kişisel adresten ayrı uygulama adresine taşındı (uygulama + gizlilik/hesap silme sayfaları); kör noktadaki 7 boş `catch`'e `Log.warn`; Ayarlar → Hata kaydı (telefonda son 50 hata, kişi isterse kimliksiz `crash_reports`'a gönderir, otomatik gönderim yok). Demo tam testi hâlâ çalışıyor (run 44064903939, 17 Kasım 10:26'da başladı; sonuç henüz yok, doğrulanmadı); yerelde Flutter yok, test yalnız CI'da.
+- Karne puanı kuralı değişti (kullanıcı isteği: hafta 7 gün, ay 30 gün, hepsi 5 vakitten): dönem her zaman tam gün x 5 vakit (hafta 35, ay 150), bugünün 5 vakti baştan paydada, işaretsizler kılınmadı sayılır, muaf düşer, hiç kaydı olmayanda 0/0. Önceki "ilk kayıt gününden önce ve bugünün işaretsizleri sayılmaz" kuralı kalktı (test/karne_score_test.dart yenilendi). Demo `2214197` (v11.18) TAM YEŞİL (run 44108513651). Main'e henüz alınmadı, telefonda denenmedi. Yan etki: yeni kullanıcının ilk haftası düşük not gösterir; "İstikrar Yıldızı" rozeti (haftalık %80) aynı hesabı kullanır.
+- CLAUDE.md'ye /sondurum kuralı eklendi (önce özet, özetteki kontroller, rapor eksiksiz); iş dalında `483727f`, main'e henüz alınmadı.
 - Kullanıcı eklenti/bağlayıcı temizliği için `/plugin` ile kapatma yapacak; `.claude/settings.json`'da 5 eklenti zaten kapalı.
 
 ## Kullanıcıdan beklenen
-1. Demo v11.14'ü telefonda denemek (uygulama içi güncelleme; misafirde Karne'de "Henüz kayıt yok" görünmeli, kayıtlıda not ve ipucu doğru olmalı). Main'e geçiş onayı alındı ve yapıldı.
+1. Demo v11.18'i telefonda denemek (uygulama içi güncelleme): Karne'de hafta ve 30 gün seçeneğinde her vakitte payda 7 ve 30, toplam 35 ve 150 görünmeli; misafirde "Henüz kayıt yok". Onaylarsa main'e geçilir.
 2. Üç telefona aynı gün v1.2 kurmak; Google girişi ve bildirimi denemek (v1.1'de kalan bildirim almaz, Google girişi yapamaz).
 3. Ekran testi için test hesabını gerçek sunucuda yeniden açmak ya da GitHub'daki test hesabı ayarlarını güncellemek.
 4. Eski Firebase projesini Firebase konsolunda silmek (silme kararı verildi; önce yeni projeyle bildirim ve Google girişi telefonda doğrulanmalı). Ben konsola erişemem.
@@ -42,7 +44,7 @@
 
 ## Sıradaki işler
 00. Etiketler `v1.4`, `v1.5`, `v11.16` şimdilik olduğu gibi kalır (karar: sonra bakılacak, silinip yeniden oluşturulabilir). Eski commit'lere işaret ediyorlar (adres eski geçmişte). Yazma 403 ile reddediliyor; yol: geçici iş akışı ya da kullanıcının kendi bilgisayarında `git push --force origin <sha>:refs/tags/<etiket>`. Doğru commit'ler: `1eb6c7a` (v1.4), `c652bf0` (v1.5), `69f9964` (v11.16). `v11.17` (`2b7fa00`) zaten doğru. Temizlik #2 çalıştı: `v1.3`, `v11.14`, `v11.15` silindi.
-0. Main çalışması 44092955273'ün sonucunu kontrol etmek. Giriş testi kırmızıysa GitHub secret'larındaki yeni hesap bilgilerini doğrulamak; geçerse Test Lab'ı çalıştırmak (main'de Test Lab henüz hiç koşmadı).
+0. Karne kuralı (demo v11.18) telefonda onaylanınca main'e almak; ayrıca CLAUDE.md /sondurum kuralını main'e almak. Main çalışması 44092955273 yeşil bitti (Test Lab dahil), bu madde kapandı.
 1. Main'de sonuç yeşil ve telefon denemesi tamamlanınca bekleyen işleri kapatmak.
 2. Demo (destek-log) testi yeşilse telefonda deneme → onayla main. Eski `check/destek-log` dalı iş demoya alındığı için silinebilir (onaylı); remote silme 403 ile reddedildi, GitHub'dan elle silinmesi ya da silme izni gerekiyor.
 3. Telefon denemesi sonrası eski FCM kayıtlarını ve eski dalları temizlemek (onaylı).
