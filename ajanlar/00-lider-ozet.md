@@ -11,20 +11,21 @@
 - Gerçek veritabanına yazma, işlev yükleme, silme: ayrı onay ve önce geri alınan deneme.
 - Sohbet uzayınca: kullanıcı `/compact` yazar (aynı sohbette devam). Yeni oturum özeti CLAUDE.md sayesinde kendiliğinden okur. "Özeti güncelle" denince bu dosya güncellenip doğrudan main'e push edilir (tek güncel kaynak main; iş dalına push edilmez).
 
-## Durum (16 Kasım 2026)
-- Demo v11.3 yayında, iki telefon v11.3. Bildirim denemesi geçti (iki telefona 2 sn).
-- Zemin çam yeşili çok koyu bulundu: `check/zemin-acik` dalında bir ton açık (#1A7561), demoya çıkmadı, derleme/test yapılmadı.
-- main v1.0 henüz çıkmadı; demodaki sunucu değişiklikleri gerçek ortama taşınacak.
+## Durum (17 Kasım 2026)
+- main v1.2 yayında: demo kodu main'e taşındı (açık zemin dahil). Demo v11.12 (ön sürüm).
+- Gerçek sunucuya demodaki değişiklikler uygulandı (47, 48, Pro havuz sahibi, 49 hata raporu yalnız girişli); güvenlik testi geçti. Bildirim işlevi demo ile aynı kod.
+- Bildirim ve Google girişi yeni Firebase projesine geçti; eski Google istemci kimliğinin gerçek sunucudan silinmesine karar verildi. Kodda eski projeye iz yok.
+- v1.2 derlemesinde yalnız giriş yapılmış ekran testi kırmızı: test hesabı gerçek sunucuda girişe izin vermiyor (hesap yok ya da parola farklı). Yayın etkilenmedi.
+- Token göstergesi işi iptal edildi.
 
 ## Kullanıcıdan beklenen
-1. Web istemci sırrının yenilenip yenilenmediğini söylemek.
-2. Açık zemin rengini demoda telefonda görüp onaylamak.
+1. Üç telefona aynı gün v1.2 kurmak; Google girişi ve bildirimi denemek (v1.1'de kalan bildirim almaz, Google girişi yapamaz).
+2. Ekran testi için test hesabını gerçek sunucuda yeniden açmak ya da GitHub'daki test hesabı ayarlarını güncellemek.
+3. Eski Firebase projesini (Firebase konsolunda) silmek isteyip istemediğine karar vermek.
 
 ## Sıradaki işler
-1. `check/zemin-acik` demoya (v11.4) + paralel testler.
-2. main v1.0 (onaylı, adım adım, üç telefon aynı gün).
-3. Küçük işler ve temizlik (ayrıntı proje belgesinde).
-4. Code sekmesinde sabit token göstergesi (mod) kur.
+1. Telefon denemesi sonrası eski FCM kayıtlarını ve eski dalları temizlemek (onaylı).
+2. Küçük işler ve temizlik (ayrıntı proje belgesinde).
 
 ## Sonra kontrol edilecek: mobil uygulama yayın öncesi 20 madde (kullanıcı notu, 16 Kasım 2026)
 1 Kullanıcı izinleri · 2 Gizlilik politikası · 3 Hesap silme · 4 Veri güvenliği · 5 Kayıt ve giriş · 6 E-posta doğrulama · 7 Şifre sıfırlama · 8 Onboarding · 9 Ana kullanıcı akışı · 10 Verilerin kaydı · 11 Ödeme ve abonelik · 12 Satın alımları yükleme · 13 Yükleniyor ekranları · 14 Boş ekranlar · 15 Hata ekranları · 16 İnternet bağlantısı · 17 Bildirimler · 18 Analytics ve çökme raporu · 19 Farklı cihazlar · 20 Gerçek kullanıcı testi.
