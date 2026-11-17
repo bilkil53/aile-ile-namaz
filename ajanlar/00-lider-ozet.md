@@ -33,7 +33,7 @@
 5. Play Console'daki geliştirici e-postasını yeni destek adresine çevirmek; hesap silme talepleri artık o kutuya gelir.
 
 ## Sıradaki işler
-00. (17 Kasım, demo sunucu) Test hesabı silinemiyor: `pools.owner_id` → `profiles(id)` yabancı anahtarında silme kuralı yok (NO ACTION). Bu hesabın 1 havuzu var, auth silme ve profil silme bu yüzden hata veriyor. Düzeltme seçenekleri (onay bekliyor): havuz satırını silmek, ya da yabancı anahtarı ON DELETE CASCADE/SET NULL yapmak. Parola güncelleme hatası da aynı dönemde; önce bu tekrar denenecek. Gerçek sunucuda da aynı kısıt olup olmadığı kontrol edilmedi.
+00. (17 Kasım) Demo test hesabı silinemiyor, veritabanı kısıtı nedeniyle. Düzeltme onay bekliyor. Ayrıntı özel nottadır.
 0. Test hesabı düzeltilince main ekran testini ve Test Lab'ı yeniden çalıştırmak (workflow_dispatch, main); şu an v1.4 Test Lab'dan geçmeden yayında.
 1. Test hesabı düzeltilince main tam testini yeniden çalıştırmak; yeşilse demo → main için onay (main'e push yeni stabil sürüm çıkarır).
 2. Demo (destek-log) testi yeşilse telefonda deneme → onayla main. Eski `check/destek-log` dalı iş demoya alındığı için silinebilir (onaylı).

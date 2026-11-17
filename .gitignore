@@ -33,3 +33,6 @@ client_secret*.json
 *serviceaccount*.json
 *-firebase-adminsdk-*.json
 ANDROID_KEYSTORE*.txt
+
+# Özel notlar, commit edilmez
+ajanlar/ozel-notlar.md
