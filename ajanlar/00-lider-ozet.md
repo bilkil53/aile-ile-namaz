@@ -19,19 +19,19 @@
 - Bildirim ve Google girişi yeni Firebase projesine geçti; eski Google istemci kimliğinin gerçek sunucudan silinmesine karar verildi. Kodda eski projeye iz yok.
 - Test hesabı gerçek sunucuda girişe izin vermiyor (hesap yok ya da parola farklı). Yayın, bu kırmızılığa rağmen çıktı; kullanıcıya etkisi doğrulanmadı.
 - Token göstergesi işi iptal edildi.
-- Karne düzeltmesi (kaydı olmayana "en çok aksattığın vakit" ve %0 not çıkıyordu; artık ilk kayıt gününden sayılır, bugünün işaretsiz vakitleri sayılmaz, misafirde "Henüz kayıt yok", Aile Başarısı misafirde "–", Bugün ipucu misafire giriş gerektiğini söyler; test/karne_score_test.dart): demo ve main'e gönderildi ama ilk üç çalışma (demo 44044402429, main 44044406248, demo 44044883798) gereksiz `!` analiz uyarısı yüzünden kırmızı çıktı, yayın çıkmadı. Düzeltme demo 3a832f2'de; çalışma 44047751755'te analiz, birim, sunucu güvenlik ve APK adımları yeşil, yayın/ekran testi/Test Lab sürüyor (doğrulanmadı). main'de 94b46c8 analizden geçmiyor; 3a832f2 henüz main'de yok.
-- Testsiz demo sayacı kuralı tamamen silindi (ci/demo-testsiz.txt ve workflow koşulları; demo fd8d62a). Main'e demo yeşil olunca taşınır; yeni akış: işler önce demoya, tüm testler yeşilse main.
+- Karne düzeltmesi (kaydı olmayana "en çok aksattığın vakit" ve %0 not çıkıyordu; artık ilk kayıt gününden sayılır, bugünün işaretsiz vakitleri sayılmaz, misafirde "Henüz kayıt yok", Aile Başarısı misafirde "–", Bugün ipucu misafire giriş gerektiğini söyler; test/karne_score_test.dart): ilk üç çalışma (demo 44044402429, main 44044406248, demo 44044883798) gereksiz `!` analiz uyarısı yüzünden kırmızı çıktı, yayın çıkmadı. Düzeltmeyle demo 3a832f2 TAM YEŞİL (run 44047751755: analiz, birim, demo sunucu güvenlik, APK, demo ön sürüm v11.14, GitHub emülatör ekran testi giriş yapılmış akış dahil, Test Lab). main 73d6366'ya aynı değişiklikler uygulandı (main ve demo kodu/test/workflow birebir aynı); main çalışması 44051122792 sürüyor: analiz, birim, gerçek sunucu güvenlik geçti, APK derleniyor; yayın v1.4, ekran testi ve Test Lab henüz doğrulanmadı (giriş yapılmış ekran testi test hesabı yüzünden kırmızı çıkabilir).
+- Testsiz demo sayacı kuralı tamamen silindi (ci/demo-testsiz.txt ve workflow koşulları; demo fd8d62a, main 7cc2253). Yeni akış: işler önce demoya, tüm testler yeşilse main.
 - `check/destek-log` dalı (hızlı kontrol yeşil, demo bekliyor): destek adresi kişisel adresten ayrı uygulama adresine taşındı (uygulama + gizlilik/hesap silme sayfaları); kör noktadaki 7 boş `catch`'e `Log.warn`; Ayarlar → Hata kaydı (telefonda son 50 hata, kişi isterse kimliksiz `crash_reports`'a gönderir, otomatik gönderim yok).
 
 ## Kullanıcıdan beklenen
-1. Demo'yu telefonda denemek: demo çalışması 44047751755 yeşil bitince yeni demo sürümü (Karne düzeltmesi dahil) uygulama içi güncellemeyle gelir; tüm testler yeşilse main'e geçilir (kullanıcı onayladı).
+1. Demo v11.14'ü telefonda denemek (uygulama içi güncelleme; misafirde Karne'de "Henüz kayıt yok" görünmeli, kayıtlıda not ve ipucu doğru olmalı). Main'e geçiş onayı alındı ve yapıldı.
 2. Üç telefona aynı gün v1.2 kurmak; Google girişi ve bildirimi denemek (v1.1'de kalan bildirim almaz, Google girişi yapamaz).
 3. Ekran testi için test hesabını gerçek sunucuda yeniden açmak ya da GitHub'daki test hesabı ayarlarını güncellemek.
 4. Eski Firebase projesini (Firebase konsolunda) silmek isteyip istemediğine karar vermek.
 5. Play Console'daki geliştirici e-postasını yeni destek adresine çevirmek; hesap silme talepleri artık o kutuya gelir.
 
 ## Sıradaki işler
-0. Demo 3a832f2 tüm testlerle yeşil olunca 3a832f2 ve fd8d62a'yı main'e uygulamak (kullanıcı onayladı) ve main testini izlemek. Kırmızıysa sebebi bulunur, main'e geçilmez.
+0. Main çalışması 44051122792'yi izlemek: yayın v1.4 ve ekran testleri sonucu; kırmızıysa sebebi bulunur (giriş yapılmış ekran testi için test hesabı düzeltilmeli).
 1. Test hesabı düzeltilince main tam testini yeniden çalıştırmak; yeşilse demo → main için onay (main'e push yeni stabil sürüm çıkarır).
 2. `check/destek-log` → demo → telefonda deneme → onayla main (v11.13 main'e geçtikten sonra).
 3. Telefon denemesi sonrası eski FCM kayıtlarını ve eski dalları temizlemek (onaylı).
