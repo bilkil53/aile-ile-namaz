@@ -76,6 +76,8 @@ jobs:
           grep -q getHistoricalProcessExitReasons "$f"
           # Uygulama simgesi (eski uygulamanın logosu: minare, hilal ve E harfi)
           cp -r android-config/res/. android/app/src/main/res/
+          # Demo kanalı: simgenin üstüne kırmızı "DEMO" şeridi (ayrı paket, stabilden ayırt edilsin)
+          if [ "$GITHUB_REF_NAME" = demo ]; then cp -r android-config/demo/. android/app/src/main/res/; fi
           test -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
           # Zamanlanmış bildirim alıcısı R8 küçültmesinde bozulmasın
           cp android-config/proguard-rules.pro android/app/proguard-rules.pro
