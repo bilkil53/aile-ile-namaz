@@ -30,6 +30,7 @@
 - `check/destek-log` işi (hızlı kontrol yeşil) güncel demonun üstüne 3 commit olarak alındı (çakışmasız) ve demoya gönderildi (5fba53f; main'e dokunulmadı): destek adresi kişisel adresten ayrı uygulama adresine taşındı (uygulama + gizlilik/hesap silme sayfaları); kör noktadaki 7 boş `catch`'e `Log.warn`; Ayarlar → Hata kaydı (telefonda son 50 hata, kişi isterse kimliksiz `crash_reports`'a gönderir, otomatik gönderim yok). Demo tam testi hâlâ çalışıyor (run 44064903939, 17 Kasım 10:26'da başladı; sonuç henüz yok, doğrulanmadı); yerelde Flutter yok, test yalnız CI'da.
 - Karne puanı kuralı değişti (kullanıcı isteği: hafta 7 gün, ay 30 gün, hepsi 5 vakitten): dönem her zaman tam gün x 5 vakit (hafta 35, ay 150), bugünün 5 vakti baştan paydada, işaretsizler kılınmadı sayılır, muaf düşer, hiç kaydı olmayanda 0/0. Önceki "ilk kayıt gününden önce ve bugünün işaretsizleri sayılmaz" kuralı kalktı (test/karne_score_test.dart yenilendi). Demo `2214197` (v11.18) TAM YEŞİL (run 44108513651). Main'e henüz alınmadı, telefonda denenmedi. Yan etki: yeni kullanıcının ilk haftası düşük not gösterir; "İstikrar Yıldızı" rozeti (haftalık %80) aynı hesabı kullanır.
 - CLAUDE.md'ye /sondurum kuralı eklendi (önce özet, özetteki kontroller, rapor eksiksiz); iş dalında `483727f`, main'e henüz alınmadı.
+- Güvenlik taraması eklendi (17 Kasım 2026, demo f49cbf8, main 0f05664, `[skip ci]` ile; uygulama koduna dokunulmadı): `.github/dependabot.yml` (haftalık pub ve Actions güncelleme PR'ı, kendiliğinden birleşmez) ve `dependency-scan.yml` (OSV ile pubspec.lock taraması, açık varsa kırmızı). Main'de elle çalıştırıldı, yeşil (141 paket, açık yok). Mevcut taramalara dokunulmadı.
 - Kullanıcı eklenti/bağlayıcı temizliği için `/plugin` ile kapatma yapacak; `.claude/settings.json`'da 5 eklenti zaten kapalı.
 
 ## Kullanıcıdan beklenen
@@ -43,6 +44,7 @@
 8. Demo'daki eski test hesabı için Supabase'de oturumları kapatmak (önceki sıfırlama linkinde oturum bilgisi paylaşıldı, token 1 saatte geçersiz olur) ve hesabı demo'da bırakmak ya da silmek.
 
 ## Sıradaki işler
+000. Dependabot ilk PR'ları (pazartesi) açılınca: testleri yeşil mi bak, özetle, kullanıcıya sor, onayla birleştir. Birleştirme demo → test → main akışına uyar. Ayrıca gerçek sunucuda `test_*` ve `expire_pro_test` işlevleri girişli herkese açık: Play'den önce kaldırılacak (kullanıcıyla konuşuldu, henüz yapılmadı).
 00. Etiketler `v1.4`, `v1.5`, `v11.16` şimdilik olduğu gibi kalır (karar: sonra bakılacak, silinip yeniden oluşturulabilir). Eski commit'lere işaret ediyorlar (adres eski geçmişte). Yazma 403 ile reddediliyor; yol: geçici iş akışı ya da kullanıcının kendi bilgisayarında `git push --force origin <sha>:refs/tags/<etiket>`. Doğru commit'ler: `1eb6c7a` (v1.4), `c652bf0` (v1.5), `69f9964` (v11.16). `v11.17` (`2b7fa00`) zaten doğru. Temizlik #2 çalıştı: `v1.3`, `v11.14`, `v11.15` silindi.
 0. Karne kuralı (demo v11.18) telefonda onaylanınca main'e almak; ayrıca CLAUDE.md /sondurum kuralını main'e almak. Main çalışması 44092955273 yeşil bitti (Test Lab dahil), bu madde kapandı.
 1. Main'de sonuç yeşil ve telefon denemesi tamamlanınca bekleyen işleri kapatmak.
