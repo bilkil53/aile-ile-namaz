@@ -233,6 +233,10 @@ class CrashReport {
     } catch (_) {}
   }
 
+  /// Ayarlar → Hata kaydı ekranından, kişi "Gönder"e basınca. Gittiyse true.
+  static Future<bool> sendLog(List<String> lines) =>
+      _send('Hata kaydı (${lines.length} kayıt)', null, fatal: false, rawStack: lines.join('\n'));
+
   /// Yalnızca kişi "Raporu gönder"e basınca çağrılır. Gittiyse true.
   static Future<bool> _send(String text, StackTrace? stack, {required bool fatal, int? ramMb, String? rawStack}) async {
     try {
