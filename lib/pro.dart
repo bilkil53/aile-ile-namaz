@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'data.dart';
 import 'lang.dart';
+import 'log.dart';
 import 'models.dart';
 import 'settings.dart';
 
@@ -105,7 +106,9 @@ class Pro {
     try {
       await supa.rpc('decline_pro_request', params: {'p_member': memberId}).timeout(const Duration(seconds: 8));
       requests.value = Map.of(requests.value)..remove(memberId);
-    } catch (_) {}
+    } catch (e) {
+      Log.warn('pro', e);
+    }
   }
 
   /// İsteyen: reis son isteğimi reddettiyse zamanı (yoksa null).
@@ -180,7 +183,9 @@ class Pro {
         } catch (_) {}
       }
       requests.value = m;
-    } catch (_) {}
+    } catch (e) {
+      Log.warn('pro', e);
+    }
   }
 
   static String fmt(DateTime d) =>
@@ -304,7 +309,9 @@ class Pro {
       await AppSettings.prefs.setString(_kSource, source ?? '');
       await AppSettings.prefs.setInt(_kTrial, trialUntil?.millisecondsSinceEpoch ?? 0);
       await _save(_dt(r['until']), force: oldSource != source);
-    } catch (_) {}
+    } catch (e) {
+      Log.warn('pro', e);
+    }
   }
 
   static Future<void> _save(DateTime? u, {bool force = false}) async {
