@@ -558,45 +558,9 @@ jobs:
             aile-ile-namaz-demo-armeabi-v7a.apk
             aile-ile-namaz-demo-x86_64.apk
 
-      - name: Sürüm notlarını hazırla (RELEASE_NOTES.md + teknik ayrıntılar)
-        if: github.ref == 'refs/heads/main'
-        env:
-          COMMIT_MSG: ${{ github.event.head_commit.message }}
-        run: |
-          V="v${{ env.APP_VERSION }}"
-          D="$(TZ=Europe/Istanbul date '+%d.%m.%Y %H:%M')"
-          echo "RELEASE_TITLE=$V — $D" >> "$GITHUB_ENV"
-          {
-            # İlk satır uygulama içi güncelleme penceresinde gösterilir
-            echo "$(head -n 1 RELEASE_NOTES.md)"
-            tail -n +2 RELEASE_NOTES.md
-            echo
-            echo "---"
-            echo "**Sürüm:** $V · derleme ${{ env.BUILD_NO }} · $D (İstanbul) · commit \`${GITHUB_SHA::7}\`"
-            echo
-            echo "**Bu güncellemedeki değişiklik:** $(printf '%s' "$COMMIT_MSG" | head -n 1)"
-          } > release_body.md
-
-      - name: Yayınla (uygulama içi güncelleme buradan okur)
-        if: github.ref == 'refs/heads/main'
-        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
-        with:
-          tag_name: v${{ env.APP_VERSION }}
-          target_commitish: ${{ github.sha }}
-          name: ${{ env.RELEASE_TITLE }}
-          body_path: release_body.md
-          prerelease: false
-          make_latest: true
-          files: |
-            aile-ile-namaz.apk
-            aile-ile-namaz-arm64-v8a.apk
-            aile-ile-namaz-armeabi-v7a.apk
-            aile-ile-namaz-x86_64.apk
-            aile-ile-namaz.aab
-
       # ── TEST ORTAMI 1: GitHub emülatörü ── gerçek uygulama bir Android emülatöründe açılır,
-      # misafir akışı parmakla dokunur gibi denenir. YAYINDAN SONRA çalışır: başarısızsa çalışma kırmızı olur,
-      # yayın yerinde kalır; sorun incelenip düzeltme yayını yapılır. (Zorunlu kontroller yayından önce.)
+      # misafir akışı parmakla dokunur gibi denenir. Demo'da yayından sonra çalışır (kırmızıysa yayın yerinde kalır,
+      # düzeltme yayını yapılır). Main'de yayından ÖNCE çalışır: kırmızıysa stabil yayın çıkmaz.
       - name: Emülatör için donanım hızlandırma (KVM)
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -628,13 +592,13 @@ jobs:
 
       # ── TEST ORTAMI 2: Google Firebase Test Lab ── yayınlanacak APK'nın kendisi Google'ın
       # 1 gerçek telefonunda ve 1 sanal telefonunda robotla gezilir. Kota sınırlı olduğu için
-      # yalnızca yayın dallarında (main, demo). Yayından sonra çalışır; geçmezse çalışma kırmızı olur.
+      # yalnızca yayın dallarında (main, demo). Demo'da yayından sonra, main'de yayından önce çalışır; geçmezse main'de yayın çıkmaz.
       - name: Test Lab anahtarı var mı
         if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo')
         env:
           KEY: ${{ secrets.FIREBASE_TESTLAB_KEY }}
         run: |
-          [ -n "$KEY" ] || { echo '::error::FIREBASE_TESTLAB_KEY yok: Google Test Lab testi yapılamadı (yayın yapıldı, test eksik).'; exit 1; }
+          [ -n "$KEY" ] || { echo '::error::FIREBASE_TESTLAB_KEY yok: Google Test Lab testi yapılamadı (main'de yayın yapılmadı, test eksik).'; exit 1; }
           echo 'Test Lab anahtarı hazır'
 
       - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
@@ -708,6 +672,44 @@ jobs:
             exit 1
           fi
           echo 'Google Test Lab: tüm telefonlarda geçti ✓'
+
+      # ── STABİL YAYIN (yalnız main) ── tüm testler (analiz, birim, sunucu güvenlik, APK kontrolleri,
+      # GitHub emülatör ekran testi, Google Test Lab) geçtikten SONRA yayınlanır; biri kırmızıysa yayın çıkmaz.
+      - name: Sürüm notlarını hazırla (RELEASE_NOTES.md + teknik ayrıntılar)
+        if: github.ref == 'refs/heads/main'
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          V="v${{ env.APP_VERSION }}"
+          D="$(TZ=Europe/Istanbul date '+%d.%m.%Y %H:%M')"
+          echo "RELEASE_TITLE=$V — $D" >> "$GITHUB_ENV"
+          {
+            # İlk satır uygulama içi güncelleme penceresinde gösterilir
+            echo "$(head -n 1 RELEASE_NOTES.md)"
+            tail -n +2 RELEASE_NOTES.md
+            echo
+            echo "---"
+            echo "**Sürüm:** $V · derleme ${{ env.BUILD_NO }} · $D (İstanbul) · commit \`${GITHUB_SHA::7}\`"
+            echo
+            echo "**Bu güncellemedeki değişiklik:** $(printf '%s' "$COMMIT_MSG" | head -n 1)"
+          } > release_body.md
+
+      - name: Yayınla (uygulama içi güncelleme buradan okur)
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
+        with:
+          tag_name: v${{ env.APP_VERSION }}
+          target_commitish: ${{ github.sha }}
+          name: ${{ env.RELEASE_TITLE }}
+          body_path: release_body.md
+          prerelease: false
+          make_latest: true
+          files: |
+            aile-ile-namaz.apk
+            aile-ile-namaz-arm64-v8a.apk
+            aile-ile-namaz-armeabi-v7a.apk
+            aile-ile-namaz-x86_64.apk
+            aile-ile-namaz.aab
 
       # Test Lab deposu her testte dolar: 7 günden eski test klasörleri (APK, video, ekran görüntüsü)
       # her yayından sonra silinir. Temizlik başarısız olursa yayın durmaz, yalnızca uyarı verilir.
