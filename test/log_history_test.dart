@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:aile_ile_namaz/log.dart';
 import 'package:aile_ile_namaz/settings.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,6 +21,16 @@ void main() {
     expect(h.first, endsWith('pro · hata ${Log.maxHistory + 4}'));
     expect(h.last, endsWith('kaza · hata 5'));
     expect(Log.last('pro'), endsWith('hata ${Log.maxHistory + 4}'));
+  });
+
+  test('internet hataları kayda yazılmaz', () async {
+    Log.warn('pro', const SocketException('Failed host lookup'));
+    Log.warn('pro', TimeoutException('zaman aşımı'));
+    Log.warn('pro', Exception('ClientException: Connection closed'));
+    expect(Log.history(), isEmpty);
+    expect(Log.last('pro'), isNull);
+    Log.warn('pro', 'gerçek hata');
+    expect(Log.history().length, 1);
   });
 
   test('temizle geçmişi boşaltır', () async {

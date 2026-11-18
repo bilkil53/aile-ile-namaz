@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 
 import 'privacy.dart';
@@ -11,8 +14,16 @@ class Log {
   static const _kHist = 'log.history';
   static const maxHistory = 50;
 
+  /// İnternet yok / zaman aşımı: hata sayılmaz, uygulama zaten çevrimdışı çalışır.
+  static bool isNetwork(Object e) {
+    final msg = e.toString();
+    return e is SocketException || e is TimeoutException || e is HttpException ||
+        msg.contains('SocketException') || msg.contains('Failed host lookup') || msg.contains('ClientException');
+  }
+
   static void warn(String tag, Object e) {
     debugPrint('[$tag] ${scrubSensitive(e.toString())}');
+    if (isNetwork(e)) return; // Hata kaydına yazılmaz
     try {
       final now = DateTime.now();
       final t = '${now.day.toString().padLeft(2, '0')}.${now.month.toString().padLeft(2, '0')} '
