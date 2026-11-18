@@ -58,8 +58,8 @@
 9. Yönetim uygulaması için GitHub secret'ları (YONETIM_SUPABASE_URL, YONETIM_SUPABASE_ANON_KEY) eklemek; demo hesapla yenileme bildirimi denemesi için hesap seçmek.
 
 ## Sıradaki işler
-HATIRLAT (kullanıcı istedi, 17 Kasım 2026): Kullanıcıya sor: (a) Play sürümünden uygulama içi güncelleme kodu çıkarılsın mı (Play politikası; öneri: evet, Play çıkışı işlerine ekle)? (b) GitHub APK'sında Pro hiç satılmasın mı, tanıdıklara elle mi açılsın (öneri: satılmasın)? Not: GitHub Sponsors yalnız bağış; Pro satışı yalnız Play Billing; Play ve GitHub APK imzası farklı, birbirini güncellemez.
-000. Demo `50f1f48` (tırnak düzeltmesi + `cab06d0` yayın sırası + `a8b4fec` temizlik kuralı) yeşil. Main'e alma: önce danışman (Fable) incelemesi, sonra kullanıcı onayı. Karar bekliyor: temizlik kuralıyla birlikte mi, yalnız tırnak düzeltmesi mi. Risk: temizlik main'e geçince haftalık siler (kuru çalışmada 42 çalışma kaydı, 8 yayın, 8 etiket v11.16-23, 1 dal `check/bagimlilik-dusuk`; kalacak v1.4, v1.5, v11.24, v11.25); Android APK'da main+demo birlikte 5 kayıtla sınırlı, main'in yeşil kanıt kaydı silinebilir.
+000. Demo `50f1f48` main'e alındı (`476d0da`, 18 Kasım; Opus incelemesi ONAY, Fable kredisi yoktu; temizlik kuralı dahil, kullanıcı kararı). Main tam testi sonucu bekleniyor; yeşilse v1.6. Not: temizlik ile derleme aynı sıra grubunda, bekleyen derleme iptal olabilir.
+000. Geçmiş temizliği (herkese açık eski ayrıntı): kullanıcı onayladı ama ertelendi. Yol: geçmiş yeniden yazılır + force push; main kuralı engelliyor, ben force push yapmam; komutlar kullanıcıya verilir, kendi bilgisayarında çalıştırır.
 000. Pro lisans işi: demo bildirim denemesi → `admin_app` CI sonucu → güvenlik testine yönetici işlevleri → testler yeşilse main + gerçek sunucu (ayrı onay).
 000. (PR'lar 17 Kasım'da açıldı, bkz. Durum) Dependabot PR'ları: demo tam testi yeşilse #2 ve #5'i main'e almak, sonra dördünü tek tek. Eski not: Dependabot ilk PR'ları (pazartesi) açılınca: testleri yeşil mi bak, özetle, kullanıcıya sor, onayla birleştir. Birleştirme demo → test → main akışına uyar. Ayrıca gerçek sunucuda `test_*` ve `expire_pro_test` işlevleri girişli herkese açık: Play'den önce kaldırılacak (kullanıcıyla konuşuldu, henüz yapılmadı).
 00. Etiketler `v1.4`, `v1.5`, `v11.16` şimdilik olduğu gibi kalır (karar: sonra bakılacak, silinip yeniden oluşturulabilir). Eski commit'lere işaret ediyorlar (adres eski geçmişte). Yazma 403 ile reddediliyor; yol: geçici iş akışı ya da kullanıcının kendi bilgisayarında `git push --force origin <sha>:refs/tags/<etiket>`. Doğru commit'ler: `1eb6c7a` (v1.4), `c652bf0` (v1.5), `69f9964` (v11.16). `v11.17` (`2b7fa00`) zaten doğru. Temizlik #2 çalıştı: `v1.3`, `v11.14`, `v11.15` silindi.
@@ -76,6 +76,7 @@ Kullanıcı isteyince uygulama bu listeye göre tek tek kontrol edilir.
 
 ## Play'e çıkarken yapılacaklar
 Pro planları ve fiyat (kullanıcı notu, 17 Kasım 2026): 3 aylık 153 ₺, yıllık 1453 ₺ → Play Billing ürünleri bu fiyatlarla açılır; yönetim uygulaması ve yenileme hatırlatması (geçiş 50) bu planlara göre çalışır.
+Notlar (kullanıcı istedi, 18 Kasım): (a) Play sürümünden uygulama içi güncelleme kodu çıkarılsın mı (Play politikası; öneri: evet). (b) GitHub APK'sında Pro satılmasın, tanıdıklara elle açılsın mı (öneri: satılmasın). GitHub Sponsors yalnız bağış; Pro satışı yalnız Play Billing; Play ve GitHub APK imzası farklı, birbirini güncellemez.
 AAB ve Play testleri; Play App Signing; Google giriş ekranını yayınla; Pro test işlevlerini kaldır; KVKK ve avukat; Play Integrity; Play Billing; AdMob; Supabase ücretli plan; Diyanet resmî vakitleri; Test Lab yetkisini daralt; Developer Device Platform'a geçiş (en geç Nisan 2027).
 
 ## /sondurum kontrolleri (bu proje)
