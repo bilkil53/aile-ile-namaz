@@ -16,9 +16,9 @@ String? karneFirstMarkedDay(Map<String, Map<String, PrayerStatus>> data) {
   return first;
 }
 
-/// Karne puanı (kılınan, toplam). Sayılmayanlar: ilk kayıt gününden önceki günler (kullanıcı henüz
-/// kullanmıyordu), muaf vakitler ve bugünün henüz işaretlenmemiş vakitleri (gün bitmedi).
-/// Geçmiş günlerde işaretsiz vakit "kılınmadı" sayılır.
+/// Karne puanı (kılınan, toplam). Dönemin her günü 5 vakit sayılır (hafta 7x5, ay 30x5);
+/// bugünün 5 vakti de baştan paydadadır, işaretlenmemiş vakit "kılınmadı" sayılır.
+/// Sayılmayanlar: muaf vakitler. Hiç kaydı olmayan kullanıcıda (misafir, yeni hesap) puan 0/0.
 (int prayed, int total) karneScore(
   Map<String, Map<String, PrayerStatus>> data,
   Iterable<DateTime> days, {
@@ -31,11 +31,10 @@ String? karneFirstMarkedDay(Map<String, Map<String, PrayerStatus>> data) {
   var p = 0, t = 0;
   for (final d in days) {
     final dk = _dayKey(d);
-    if (dk.compareTo(first) < 0 || dk.compareTo(today) > 0) continue;
+    if (dk.compareTo(today) > 0) continue;
     for (final k in key == null ? prayerKeys : [key]) {
       final s = data[dk]?[k] ?? PrayerStatus.none;
       if (s == PrayerStatus.excused) continue;
-      if (s == PrayerStatus.none && dk == today) continue;
       t++;
       if (s == PrayerStatus.prayed) p++;
     }
