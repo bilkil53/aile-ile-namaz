@@ -11,3 +11,4 @@
 - Token: büyük dosyayı baştan sona okuma, önce ara (grep) sonra ilgili satırları oku. Kullanıcı istemedikçe alt ajan açma, rapor/grafik/belge üretme.
 - Depo herkese açık: sır, anahtar, e-posta, kişi adı, kullanıcı kimliği yazma.
 - Güvenlik kontrolünde yalnız koda bakma: kullanıcı sormadan GitHub tarafını da tek listeyle öner ("sizde açık mı, şuradan kontrol edin"): Dependabot alerts/security updates, version updates, secret scanning + push protection, CodeQL, OSV taraması, main dal koruması, 2FA, Actions bildirimleri, Actions en az yetki, eylemleri SHA ile sabitleme. Bir testin/bildirimin nerede çalıştığını söylemeden önce workflow dosyasından doğrula.
+- Bir test/çalışma (GitHub Actions, Test Lab, zamanlanmış görev) başlatınca, yeniden çalıştırınca ya da sonucuna bakınca kullanıcıya takip bağlantısını her seferinde ver (ör. `https://github.com/<sahip>/<depo>/actions/runs/<id>`). (kullanıcı kararı, 18 Kasım 2026)
