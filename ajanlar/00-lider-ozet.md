@@ -83,6 +83,10 @@ Kullanıcı isteyince uygulama bu listeye göre tek tek kontrol edilir.
 ## Play'e çıkarken yapılacaklar
 Pro planları ve fiyat (kullanıcı notu, 17 Kasım 2026): 3 aylık 153 ₺, yıllık 1453 ₺ → Play Billing ürünleri bu fiyatlarla açılır; yönetim uygulaması ve yenileme hatırlatması (geçiş 50) bu planlara göre çalışır.
 Notlar (kullanıcı istedi, 18 Kasım): (a) Play sürümünden uygulama içi güncelleme kodu çıkarılsın mı (Play politikası; öneri: evet). (b) GitHub APK'sında Pro satılmasın, tanıdıklara elle açılsın mı (öneri: satılmasın). GitHub Sponsors yalnız bağış; Pro satışı yalnız Play Billing; Play ve GitHub APK imzası farklı, birbirini güncellemez.
+PLAY ÖNCESİ KULLANICIYA HATIRLAT (kullanıcı istedi, 18 Kasım):
+1. Lisans testçileri: Play Console → Ayarlar → Lisans testi'ne test Gmail'lerini ekle; uygulamayı dahili test kanalına yükle, testçilere davet bağlantısını gönder.
+2. Şahıs şirketi / vergi: mali müşavirle görüş. GVK 20/B mobil uygulama istisnası (bankada özel geliştirici hesabı, banka %15 keser, yıllık eşik altında beyanname yok; eşik her yıl değişir) yeterli mi, Google ödemesi bu hesaba nasıl yönlenir; eşik aşılırsa şahıs şirketi. Play Console ödeme profili + IBAN buna göre açılır.
+
 Play ödeme kararları (kullanıcı, 18 Kasım):
 - Pro yalnız Play'de ödemeyle açılır (Play sürümünde elle açma yok). Akış: uygulama Play ödeme ekranı → fiş (purchaseToken) → Supabase `verify-purchase` işlevi Google Play Developer API'ye doğrular → `pro_paid_until` yazılır + ödeme onaylanır (3 gün içinde, yoksa iade) → uygulama mevcut "Pro muyum?" işleviyle okur. Yenileme/iptal/iade: Google anlık bildirim (Pub/Sub) → `play-notify` işlevi. Açılışta satın alımları geri yükle. Uygulama hiçbir zaman Pro'ya kendisi karar vermez.
 - Test: Play Console "Lisans testi" listesine test Gmail'leri eklenir (adresler depoya yazılmaz), uygulama dahili test kanalına yüklenir; test ödemeleri ücretsiz, abonelik dakikalar içinde yenilenir.
