@@ -379,6 +379,39 @@ begin
   reset role;
   perform set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true);
 
+  -- 8b) Lisans yönetimi (50a): misafir çağıramaz, yönetici olmayan reddedilir, yönetici kullanır
+  delete from private.admins where user_id = u;
+  set local role anon;
+  begin perform public.admin_list_licenses(); fails := fails || 'anon_lisans_listesi_acik; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin perform public.admin_set_license(u, '3_ay'); fails := fails || 'anon_lisans_verebiliyor; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin perform public.admin_revoke_license(u); fails := fails || 'anon_lisans_silebiliyor; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  reset role;
+  perform set_config('request.jwt.claims', json_build_object('sub', u, 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin perform public.admin_list_licenses(); fails := fails || 'yonetici_olmayan_lisans_listesi; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin perform public.admin_set_license(u, '12_ay'); fails := fails || 'yonetici_olmayan_lisans_veriyor; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin perform public.admin_revoke_license(u); fails := fails || 'yonetici_olmayan_lisans_siliyor; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  begin perform 1 from private.admins; fails := fails || 'yonetici_listesi_okunuyor; ';
+  exception when insufficient_privilege then passed := passed + 1; end;
+  reset role;
+  insert into private.admins(user_id) values (u);
+  set local role authenticated;
+  begin
+    select count(*) into n from public.admin_list_licenses();
+    if n > 0 then passed := passed + 1; else fails := fails || 'yonetici_liste_bos; '; end if;
+    if public.admin_set_license(u, '3_ay') > now() then passed := passed + 1;
+    else fails := fails || 'yonetici_lisans_veremedi; '; end if;
+  exception when others then fails := fails || 'yonetici_islev_hata(' || sqlstate || '); ';
+  end;
+  reset role;
+  delete from private.admins where user_id = u;
+
   -- 9) Kaza kaydı olan hesap silinebilir (özet tetikleyicisi silmeyi bozmaz); en sonda, geri alınır
   insert into public.kaza_prayers(user_id, prayer_type, owed_count, completed_count) values (u, 'ASR', 2, 1)
     on conflict (user_id, prayer_type) do update set owed_count = excluded.owed_count + 1;
