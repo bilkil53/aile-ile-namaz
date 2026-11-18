@@ -49,6 +49,8 @@
 - Çalışma düzeni değişti (18 Kasım, kullanıcı kararı; main'de `f086de8`, `642b40f`): ana model `opus` (`.claude/settings.json`; açık oturum modelini kullanıcı `/model` ile değiştirir), danışman `fable`; testlerde aynı hata 2 kez çıkarsa tüm iş danışana verilir (main, gerçek veritabanı ve secret/ayar değişikliği yine kullanıcı onayıyla). Her test başlatınca 3 dk sonrası için `send_later` ile kontrol kurulur (yalnız oturum açıkken; CLAUDE.md'ye yazılmadı).
 - Temizlik kuralı (`cleanup-old.yml`): her workflow'un en yeni 5 kaydı kalır, haftalık (pazartesi 04:17 İstanbul). Demo `a8b4fec`, main'e alındı (v1.6; ilk haftalık çalışma pazartesi, sonucu görülmedi). Demo kuru çalışması yeşil (run 44247232054).
 
+- 18 Kasım öğleden sonra: kullanılmayan Docs aracı ve 19 skill `.claude/settings.json` deny listesiyle main'e alındı (`4ca4bb5`, `[skip ci]`, derleme tetiklenmedi; etkisi yeni oturumda doğrulanmadı). Eski `ccr-38651192-hclmj8` dalı artık gereksiz. Karar: uygulama açıkken gelen bildirimler de gösterilecek (ön plan işleyicisi, Pro lisans işine eklenir). Pro lisans hatırlatması 19 Kasım 09:00'a kuruldu.
+
 ## Kullanıcıdan beklenen
 1. v1.6'yı telefonda denemek (uygulama içi güncelleme): Karne'de hafta ve 30 gün seçeneğinde her vakitte payda 7 ve 30, toplam 35 ve 150; misafirde "Henüz kayıt yok".
 2. Üç telefona aynı gün v1.2 kurmak; Google girişi ve bildirimi denemek (v1.1'de kalan bildirim almaz, Google girişi yapamaz).
@@ -81,6 +83,13 @@ Kullanıcı isteyince uygulama bu listeye göre tek tek kontrol edilir.
 ## Play'e çıkarken yapılacaklar
 Pro planları ve fiyat (kullanıcı notu, 17 Kasım 2026): 3 aylık 153 ₺, yıllık 1453 ₺ → Play Billing ürünleri bu fiyatlarla açılır; yönetim uygulaması ve yenileme hatırlatması (geçiş 50) bu planlara göre çalışır.
 Notlar (kullanıcı istedi, 18 Kasım): (a) Play sürümünden uygulama içi güncelleme kodu çıkarılsın mı (Play politikası; öneri: evet). (b) GitHub APK'sında Pro satılmasın, tanıdıklara elle açılsın mı (öneri: satılmasın). GitHub Sponsors yalnız bağış; Pro satışı yalnız Play Billing; Play ve GitHub APK imzası farklı, birbirini güncellemez.
+Play ödeme kararları (kullanıcı, 18 Kasım):
+- Pro yalnız Play'de ödemeyle açılır (Play sürümünde elle açma yok). Akış: uygulama Play ödeme ekranı → fiş (purchaseToken) → Supabase `verify-purchase` işlevi Google Play Developer API'ye doğrular → `pro_paid_until` yazılır + ödeme onaylanır (3 gün içinde, yoksa iade) → uygulama mevcut "Pro muyum?" işleviyle okur. Yenileme/iptal/iade: Google anlık bildirim (Pub/Sub) → `play-notify` işlevi. Açılışta satın alımları geri yükle. Uygulama hiçbir zaman Pro'ya kendisi karar vermez.
+- Test: Play Console "Lisans testi" listesine test Gmail'leri eklenir (adresler depoya yazılmaz), uygulama dahili test kanalına yüklenir; test ödemeleri ücretsiz, abonelik dakikalar içinde yenilenir.
+- Yönetim uygulaması: para ayrıntıları detaylı gösterilecek (kaynak Play/elle, plan, durum, ödeme tarihi, brüt, Google kesintisi tahmini, net; kesin net Play aylık raporundan).
+- Satın alma ekranında aile havuzu ücreti ayrı ve "5 kişiye kadar" diye açık yazılacak.
+- Ödeme: Play Console ödeme profili + IBAN; Google aboneliklerde %15 keser, aylık öder. Vergi için mali müşavir (GVK 20/B mobil uygulama istisnası şahıs şirketi gerektirmeyebilir; doğrulanmadı).
+- YEDEK YOK: Supabase ücretsiz planda günlük yedek yok, bir hafta istek gelmezse proje duraklar. Ücretli plana (aynı proje, adres/anahtar/veri aynı kalır) Play satışından önce geçilecek; o zamana kadar önemli değişiklikten önce elle yedek alınmalı.
 AAB ve Play testleri; Play App Signing; Google giriş ekranını yayınla; Pro test işlevlerini kaldır; KVKK ve avukat; Play Integrity; Play Billing; AdMob; Supabase ücretli plan; Diyanet resmî vakitleri; Test Lab yetkisini daralt; Developer Device Platform'a geçiş (en geç Nisan 2027).
 
 ## /sondurum kontrolleri (bu proje)
