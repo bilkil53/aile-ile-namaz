@@ -48,10 +48,10 @@ class Notifications {
     try {
       await init();
       await _plugin.show(
-        1000 + (id % 100000),
-        title,
-        body,
-        NotificationDetails(
+        id: 1000 + (id % 100000),
+        title: title,
+        body: body,
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             _familyChannel.channelId,
             _familyChannel.channelName,
@@ -74,10 +74,10 @@ class Notifications {
     try {
       await init();
       await _plugin.show(
-        id,
-        title,
-        body,
-        NotificationDetails(
+        id: id,
+        title: title,
+        body: body,
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             'ozel_hatirlatma',
             t('Özel hatırlatmalar', 'Personal reminders'),
@@ -100,7 +100,7 @@ class Notifications {
     tzdata.initializeTimeZones();
     tz.setLocalLocation(tz.getLocation('Europe/Istanbul'));
     await _plugin.initialize(
-      const InitializationSettings(
+      settings: const InitializationSettings(
         android: AndroidInitializationSettings('@mipmap/ic_launcher'),
       ),
     );
@@ -139,10 +139,10 @@ class Notifications {
     try {
       await init();
       await _plugin.show(
-        9999,
-        t('🔔 Test bildirimi', '🔔 Test notification'),
-        t('Bildirimler bu telefonda çalışıyor ✓', 'Notifications work on this phone ✓'),
-        NotificationDetails(
+        id: 9999,
+        title: t('🔔 Test bildirimi', '🔔 Test notification'),
+        body: t('Bildirimler bu telefonda çalışıyor ✓', 'Notifications work on this phone ✓'),
+        notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             _familyChannel.channelId,
             _familyChannel.channelName,
@@ -301,7 +301,7 @@ class Notifications {
       final keep = {for (final p in plan) p.$1};
       final pending = await _plugin.pendingNotificationRequests();
       for (final r in pending) {
-        if (isManagedId(r.id) && !keep.contains(r.id)) await _plugin.cancel(r.id);
+        if (isManagedId(r.id) && !keep.contains(r.id)) await _plugin.cancel(id: r.id);
       }
     } catch (e) {
       Log.warn('eski hatırlatma temizliği', e);
@@ -323,14 +323,13 @@ class Notifications {
       styleInformation: BigTextStyleInformation(body, contentTitle: title),
     );
     return _plugin.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(at, tz.local),
-      NotificationDetails(android: details),
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: tz.TZDateTime.from(at, tz.local),
+      notificationDetails: NotificationDetails(android: details),
       // Tam zamanında: izin varsa kesin alarm, yoksa Android'in esnek zamanlaması
       androidScheduleMode: _exact ? AndroidScheduleMode.exactAllowWhileIdle : AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 }
