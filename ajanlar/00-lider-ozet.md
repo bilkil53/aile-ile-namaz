@@ -12,7 +12,7 @@
 - Gerçek veritabanına yazma, işlev yükleme, silme: ayrı onay ve önce geri alınan deneme.
 - Sohbet uzayınca: kullanıcı `/compact` yazar (aynı sohbette devam). Yeni oturum özeti CLAUDE.md sayesinde kendiliğinden okur. "Özeti güncelle" denince bu dosya güncellenip doğrudan main'e push edilir (tek güncel kaynak main; iş dalına push edilmez).
 
-## Durum (18 Kasım 2026, öğle)
+## Durum (18 Kasım 2026, akşam)
 - MAIN v1.6 YAYINDA (`476d0da`, etiket v1.6, 18 Kasım): demo `50f1f48` birleşimi (Karne kuralı hafta 35/ay 150, yayın testlerden sonra, tırnak düzeltmesi, temizlik kuralı, flutter_lints 6 + setup-java 6.3, demo simgesi, README→docs/TEKNIK.md). İnceleme Opus ile ONAY (Fable kredisi bitmişti). Çalışma 44258150357 TAM YEŞİL: analiz, birim, gerçek sunucu güvenlik, APK, R8, test kodu, emülatör (misafir + giriş yapılmış, TR+EN), Google Test Lab (main'de ilk kez), sonra stabil yayın. OSV yeşil. Telefonda henüz denenmedi. Main kodu demo ile aynı (CLAUDE.md, .claude, özet main'de kaldı).
 - CLAUDE.md kuralı (`8a03b89`, main): skill çağrılınca, sohbet boş olsa da, tüm adımlar ve projenin o skill kuralları eksiksiz uygulanır.
 - Demo `5fba53f` tam yeşil (run 44075033754): analiz, birim, sunucu güvenlik, APK, demo ön sürüm, giriş yapılmış ekran testi (TR+EN) ve Google Test Lab geçti.
@@ -52,6 +52,9 @@
 - Temizlik kuralı (`cleanup-old.yml`): her workflow'un en yeni 5 kaydı kalır, haftalık (pazartesi 04:17 İstanbul). Demo `a8b4fec`, main'e alındı (v1.6; ilk haftalık çalışma pazartesi, sonucu görülmedi). Demo kuru çalışması yeşil (run 44247232054).
 
 - 18 Kasım öğleden sonra: kullanılmayan Docs aracı ve 19 skill `.claude/settings.json` deny listesiyle main'e alındı (`4ca4bb5`, `[skip ci]`, derleme tetiklenmedi; etkisi yeni oturumda doğrulanmadı). Eski `ccr-38651192-hclmj8` dalı artık gereksiz. Karar: uygulama açıkken gelen bildirimler de gösterilecek (ön plan işleyicisi, Pro lisans işine eklenir). Pro lisans hatırlatması 19 Kasım 09:00'a kuruldu.
+- 18 Kasım akşam (Türkiye saati): Pro lisans işi + internet hatası düzeltmesi demoya alındı (`13fd91f`): güvenlik testine lisans yönetimi kontrolleri (misafir/yönetici olmayan reddedilir, yönetici kullanır; demoda ayrıca 9/9 geçti), uygulama açıkken yalnız Pro yenileme hatırlatması gösterilir (aile olayları canlı bağlantıyla zaten geliyor, çift olmasın), internet/zaman aşımı hataları Hata kaydına yazılmaz (`Log.isNetwork`). Demo tam test TAM YEŞİL (run 44328352539: ekran testi + Test Lab), sunucu güvenlik yeşil (44328352593). Telefonda denenmedi. Main'e alınmadı.
+- Dependabot (18 Kasım akşam): #2 ve #5 yorumla kapatıldı. Kullanıcı kararı: sürüm güncellemelerinde uygulama koduna dokunulmaz, demoya TEK TEK alınır. Kilit elle düzeltildi (test_api 0.7.12, listen yok). Hızlı kontrol yeşil: sensors_plus 7 (`check/sensors-7`), in_app_update 5 (`check/in-app-update-5`, ab58670), geolocator 14 (`check/geolocator-14`, 4737226). sensors_plus 7 demoya alındı (`e290616`), tam test sürüyordu (sonuç görülmedi). flutter_local_notifications 20 (#4) kod değişikliği gerektiriyor → ERTELENDİ, 18'de kalır (`check/bildirim-20` yalnız bilgi, alınmaz).
+- CLAUDE.md: teste gönderince takip bağlantısı verilir (başka oturumun kuralı kaldı, çift satır silindi `50b0a90`). Saatler kullanıcıya Türkiye saatiyle yazılır.
 
 ## Kullanıcıdan beklenen
 1. (TAMAM, 18 Kasım kullanıcı onayı) v1.6 telefonda denendi. Yeni bulgu: Karne geç yükleniyor → Sıradaki işlerde.
@@ -61,15 +64,16 @@
 6. (TAMAM, 18 Kasım) Öneri yaz denendi.
 7. (KAPANDI, 18 Kasım kullanıcı kararı) Eski repo maddesi kapatıldı.
 8. Demo'daki eski test hesabı (gmail, 15 Kasım açılmış, 2 açık oturum; kullanıcı doğruladı) KALDIRILACAK (kullanıcı kararı, 18 Kasım): önce oturumlar kapatılır, sonra hesap silinir; önceki silme denemesi veritabanı kısıtına takılmıştı, kısıt önce bulunmalı. Demo veritabanına yazma: onayla.
+10. Demo ön sürümünü (13fd91f ve sonrası) telefonda denemek: Pro yenileme bildirimi uygulama açıkken, Hata kaydında internet hatası çıkmaması, Kıble pusulası (sensors_plus 7).
 9. (Secret'lar eklendi, 18 Kasım) Yönetim APK'sı çıkınca telefona kurup iki yönetici hesabından biriyle giriş yapmak, lisans listesini görmek; demo hesapla yenileme bildirimi denemesi için hesap seçmek.
 
 ## Sıradaki işler
 000. (KAPANDI) Demo `50f1f48` main'e alındı, v1.6 tam yeşil yayında (run 44258150357). Not: temizlik ile derleme aynı sıra grubunda, bekleyen derleme iptal olabilir; ilk haftalık temizlikten sonra kayıtlara bak.
 000. Geçmiş temizliği (herkese açık eski ayrıntı): kullanıcı onayladı ama ertelendi. Yol: geçmiş yeniden yazılır + force push; main kuralı engelliyor, ben force push yapmam; komutlar kullanıcıya verilir, kendi bilgisayarında çalıştırır.
-000. Pro lisans işi (dal `claude/intelligent-hopper-nbvicf`; yönetim uygulaması özel depoda): bildirim ve yönetim uygulaması analizi tamam → güvenlik testine yönetici işlevleri (yönetici olmayan reddedilmeli) → demo tam test → main + gerçek sunucu (ayrı onay). Ayrıca karar: uygulama açıkken gelen bildirimler gösterilsin mi (ön plan işleyicisi).
+000. Pro lisans işi: demo `13fd91f` tam yeşil (güvenlik testi + ön plan yenileme bildirimi dahil) → telefonda deneme → main (onay) + gerçek sunucuya 50b ve push-family (ayrı onay).
 000. Yönetim APK'sı: özel depoda çalışma 44314294959 (2. deneme, secret'lı) başlatıldı; analiz geçti, APK adımı sonuçlanmadan bu özet yazıldı → sonucu ve `yonetim-apk` çıktısını kontrol et. Gerçek sunucuda geçiş 50a uygulu, 50b (yenileme + kron) push-family yüklenince.
 000. Projeye özel kapatma (`ccr-38651192-hclmj8`, `29339a6`): main'e alınmadı; dal eski noktadan, alınacaksa yalnız `.claude/settings.json` deny listesi taşınmalı. Kullanıcıya açıklandı, karar bekliyor.
-000. Dependabot: #2 (setup-java) ve #5 (flutter_lints) içerikleri v1.6 ile main'e girdi; iki PR kapatılabilir (kapatılmadı). Kalan dördü (#3,#4,#6,#7) tek tek demoda. Ayrıca gerçek sunucuda `test_*` ve `expire_pro_test` işlevleri girişli herkese açık: Play'den önce kaldırılacak (henüz yapılmadı).
+000. Dependabot tek tek demoda: sensors_plus 7 (`e290616`) sonucu bak → yeşilse in_app_update 5 → geolocator 14. Her biri tam yeşil olunca sıradaki. Telefonda kıble, güncelleme ve konum denenmeli. #4 bildirim 20 ertelendi. Gerçek sunucudaki `test_*`/`expire_pro_test` kaldırma işi Play öncesi hatırlatmalara taşındı.
 00. Etiketler `v1.4`, `v1.5`, `v11.16` şimdilik olduğu gibi kalır (karar: sonra bakılacak, silinip yeniden oluşturulabilir). Eski commit'lere işaret ediyorlar (adres eski geçmişte). Yazma 403 ile reddediliyor; yol: geçici iş akışı ya da kullanıcının kendi bilgisayarında `git push --force origin <sha>:refs/tags/<etiket>`. Doğru commit'ler: `1eb6c7a` (v1.4), `c652bf0` (v1.5), `69f9964` (v11.16). `v11.17` (`2b7fa00`) zaten doğru. Temizlik #2 çalıştı: `v1.3`, `v11.14`, `v11.15` silindi.
 0. (KAPANDI) Karne kuralı ve CLAUDE.md kuralları main'de (v1.6).
 0. Karne ekranı geç yükleniyor (kullanıcı bildirimi, 18 Kasım v1.6): nedeni araştırılacak (sorgu sayısı/ağ/hesaplama).
@@ -89,6 +93,7 @@ Notlar (kullanıcı istedi, 18 Kasım): (a) Play sürümünden uygulama içi gü
 Play Console geliştirici e-postası (kullanıcı kararı 18 Kasım: Play öncesine alındı): yeni destek adresine çevrilecek; hesap silme talepleri o kutuya gelir.
 PLAY ÖNCESİ KULLANICIYA HATIRLAT (kullanıcı istedi, 18 Kasım):
 1. Lisans testçileri: Play Console → Ayarlar → Lisans testi'ne test Gmail'lerini ekle; uygulamayı dahili test kanalına yükle, testçilere davet bağlantısını gönder.
+3. Gerçek sunucudaki `test_*` ve `expire_pro_test` işlevlerini kaldır (girişli herkese açık; önce demoda geçiş + test).
 2. Şahıs şirketi / vergi: mali müşavirle görüş. GVK 20/B mobil uygulama istisnası (bankada özel geliştirici hesabı, banka %15 keser, yıllık eşik altında beyanname yok; eşik her yıl değişir) yeterli mi, Google ödemesi bu hesaba nasıl yönlenir; eşik aşılırsa şahıs şirketi. Play Console ödeme profili + IBAN buna göre açılır.
 
 Play ödeme kararları (kullanıcı, 18 Kasım):
