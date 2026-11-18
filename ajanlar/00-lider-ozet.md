@@ -62,12 +62,13 @@
 6. Telefonda misafir olarak Ayarlar → Öneri yaz'ı denemek (main'de uygulama adresine gitmeli).
 7. GitHub'daki eski repo için arşivleme ya da silme kararı (yerel klon silindi).
 8. Demo'daki eski test hesabı için Supabase'de oturumları kapatmak (önceki sıfırlama linkinde oturum bilgisi paylaşıldı, token 1 saatte geçersiz olur) ve hesabı demo'da bırakmak ya da silmek.
-9. Özel yönetim deposunda (gerçek sunucu değerleriyle) (`aile-ile-namaz-yonetim`, Settings → Secrets and variables → Actions) `YONETIM_SUPABASE_URL` ve `YONETIM_SUPABASE_ANON_KEY` eklemek, sonra çalışmayı yeniden başlatmak (APK çıktısı için); demo hesapla yenileme bildirimi denemesi için hesap seçmek.
+9. (Secret'lar eklendi, 18 Kasım) Yönetim APK'sı çıkınca telefona kurup iki yönetici hesabından biriyle giriş yapmak, lisans listesini görmek; demo hesapla yenileme bildirimi denemesi için hesap seçmek.
 
 ## Sıradaki işler
 000. (KAPANDI) Demo `50f1f48` main'e alındı, v1.6 tam yeşil yayında (run 44258150357). Not: temizlik ile derleme aynı sıra grubunda, bekleyen derleme iptal olabilir; ilk haftalık temizlikten sonra kayıtlara bak.
 000. Geçmiş temizliği (herkese açık eski ayrıntı): kullanıcı onayladı ama ertelendi. Yol: geçmiş yeniden yazılır + force push; main kuralı engelliyor, ben force push yapmam; komutlar kullanıcıya verilir, kendi bilgisayarında çalıştırır.
 000. Pro lisans işi (dal `claude/intelligent-hopper-nbvicf`; yönetim uygulaması özel depoda): bildirim ve yönetim uygulaması analizi tamam → güvenlik testine yönetici işlevleri (yönetici olmayan reddedilmeli) → demo tam test → main + gerçek sunucu (ayrı onay). Ayrıca karar: uygulama açıkken gelen bildirimler gösterilsin mi (ön plan işleyicisi).
+000. Yönetim APK'sı: özel depoda çalışma 44314294959 (2. deneme, secret'lı) başlatıldı; analiz geçti, APK adımı sonuçlanmadan bu özet yazıldı → sonucu ve `yonetim-apk` çıktısını kontrol et. Gerçek sunucuda geçiş 50a uygulu, 50b (yenileme + kron) push-family yüklenince.
 000. Projeye özel kapatma (`ccr-38651192-hclmj8`, `29339a6`): main'e alınmadı; dal eski noktadan, alınacaksa yalnız `.claude/settings.json` deny listesi taşınmalı. Kullanıcıya açıklandı, karar bekliyor.
 000. Dependabot: #2 (setup-java) ve #5 (flutter_lints) içerikleri v1.6 ile main'e girdi; iki PR kapatılabilir (kapatılmadı). Kalan dördü (#3,#4,#6,#7) tek tek demoda. Ayrıca gerçek sunucuda `test_*` ve `expire_pro_test` işlevleri girişli herkese açık: Play'den önce kaldırılacak (henüz yapılmadı).
 00. Etiketler `v1.4`, `v1.5`, `v11.16` şimdilik olduğu gibi kalır (karar: sonra bakılacak, silinip yeniden oluşturulabilir). Eski commit'lere işaret ediyorlar (adres eski geçmişte). Yazma 403 ile reddediliyor; yol: geçici iş akışı ya da kullanıcının kendi bilgisayarında `git push --force origin <sha>:refs/tags/<etiket>`. Doğru commit'ler: `1eb6c7a` (v1.4), `c652bf0` (v1.5), `69f9964` (v11.16). `v11.17` (`2b7fa00`) zaten doğru. Temizlik #2 çalıştı: `v1.3`, `v11.14`, `v11.15` silindi.
