@@ -2,6 +2,7 @@
 
 - Her oturumda önce `ajanlar/00-lider-ozet.md` dosyasını oku ve oradan devam et.
 - Cevaplar Türkçe ve kısa. Onaylar anketle sorulur.
+- Skill çağrılınca (sohbet boş olsa da) skill dosyasının tüm adımlarını ve bu projenin o skill için kurallarını (ör. özetteki "/sondurum kontrolleri") eksiksiz uygula; adım atlama, kısaltma.
 - Kod işlerinde karpathy-guidelines ve ponytail, cevaplarda caveman üslubu. Sohbet uzayınca kullanıcıya `/compact` öner.
 - Danışmanı (advisor) yalnızca main yayını, gerçek veritabanına yazma, işlev yükleme, büyük mimari karar ya da kullanıcı "danış" derse çağır. Soru, açıklama ve küçük işlerde çağırma.
 - Zorlanınca (aynı hata 2 kez, yaklaşım tutmuyor, emin değilsin): 1) advisor çağır (danışman = Fable, `model: "fable"`). 2) Hâlâ çözülmediyse kullanıcıya sor. İlk basamak için kullanıcıya sorma.
