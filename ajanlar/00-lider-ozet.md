@@ -96,6 +96,7 @@ Play Console geliştirici e-postası (kullanıcı kararı 18 Kasım: Play önces
 PLAY ÖNCESİ KULLANICIYA HATIRLAT (kullanıcı istedi, 18 Kasım):
 1. Lisans testçileri: Play Console → Ayarlar → Lisans testi'ne test Gmail'lerini ekle; uygulamayı dahili test kanalına yükle, testçilere davet bağlantısını gönder.
 3. Gerçek sunucudaki `test_*` ve `expire_pro_test` işlevlerini kaldır (girişli herkese açık; önce demoda geçiş + test).
+4. Reklam ve analiz (kullanıcı isteği, 18 Kasım): reklam için Google AdMob, kullanım analizi için Google Analytics (Firebase). Play öncesi: AdMob hesabı + uygulama/reklam birimleri, Play veri güvenliği formu ve gizlilik politikasına reklam/analiz verisi eklenir, KVKK/rıza ekranı (reklam kimliği için onay), çocuk/aile hedefleme politikası kontrolü; Pro'da reklam gösterilmez (öneri).
 2. Şahıs şirketi / vergi: mali müşavirle görüş. GVK 20/B mobil uygulama istisnası (bankada özel geliştirici hesabı, banka %15 keser, yıllık eşik altında beyanname yok; eşik her yıl değişir) yeterli mi, Google ödemesi bu hesaba nasıl yönlenir; eşik aşılırsa şahıs şirketi. Play Console ödeme profili + IBAN buna göre açılır.
 
 Play ödeme kararları (kullanıcı, 18 Kasım):
