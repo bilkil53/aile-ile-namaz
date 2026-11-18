@@ -54,12 +54,11 @@
 - 18 Kasım öğleden sonra: kullanılmayan Docs aracı ve 19 skill `.claude/settings.json` deny listesiyle main'e alındı (`4ca4bb5`, `[skip ci]`, derleme tetiklenmedi; etkisi yeni oturumda doğrulanmadı). Eski `ccr-38651192-hclmj8` dalı artık gereksiz. Karar: uygulama açıkken gelen bildirimler de gösterilecek (ön plan işleyicisi, Pro lisans işine eklenir). Pro lisans hatırlatması 19 Kasım 09:00'a kuruldu.
 
 ## Kullanıcıdan beklenen
-1. v1.6'yı telefonda denemek (uygulama içi güncelleme): Karne'de hafta ve 30 gün seçeneğinde her vakitte payda 7 ve 30, toplam 35 ve 150; misafirde "Henüz kayıt yok".
+1. (TAMAM, 18 Kasım kullanıcı onayı) v1.6 telefonda denendi. Yeni bulgu: Karne geç yükleniyor → Sıradaki işlerde.
 2. Üç telefona aynı gün v1.2 kurmak; Google girişi ve bildirimi denemek (v1.1'de kalan bildirim almaz, Google girişi yapamaz).
 3. Ekran testi için test hesabını gerçek sunucuda yeniden açmak ya da GitHub'daki test hesabı ayarlarını güncellemek.
-4. Eski Firebase projesini Firebase konsolunda silmek (silme kararı verildi; önce yeni projeyle bildirim ve Google girişi telefonda doğrulanmalı). Ben konsola erişemem.
-5. (Kullanıcı kararı: Play Console'a şimdilik dokunulmuyor, geliştirici e-postası eski kalır.) Play Console'daki geliştirici e-postasını yeni destek adresine çevirmek; hesap silme talepleri artık o kutuya gelir.
-6. Telefonda misafir olarak Ayarlar → Öneri yaz'ı denemek (main'de uygulama adresine gitmeli).
+4. (TAMAM, 18 Kasım kullanıcı 'OK') Eski Firebase projesi maddesi kapandı.
+6. (TAMAM, 18 Kasım) Öneri yaz denendi.
 7. GitHub'daki eski repo için arşivleme ya da silme kararı (yerel klon silindi).
 8. Demo'daki eski test hesabı için Supabase'de oturumları kapatmak (önceki sıfırlama linkinde oturum bilgisi paylaşıldı, token 1 saatte geçersiz olur) ve hesabı demo'da bırakmak ya da silmek.
 9. (Secret'lar eklendi, 18 Kasım) Yönetim APK'sı çıkınca telefona kurup iki yönetici hesabından biriyle giriş yapmak, lisans listesini görmek; demo hesapla yenileme bildirimi denemesi için hesap seçmek.
@@ -73,6 +72,7 @@
 000. Dependabot: #2 (setup-java) ve #5 (flutter_lints) içerikleri v1.6 ile main'e girdi; iki PR kapatılabilir (kapatılmadı). Kalan dördü (#3,#4,#6,#7) tek tek demoda. Ayrıca gerçek sunucuda `test_*` ve `expire_pro_test` işlevleri girişli herkese açık: Play'den önce kaldırılacak (henüz yapılmadı).
 00. Etiketler `v1.4`, `v1.5`, `v11.16` şimdilik olduğu gibi kalır (karar: sonra bakılacak, silinip yeniden oluşturulabilir). Eski commit'lere işaret ediyorlar (adres eski geçmişte). Yazma 403 ile reddediliyor; yol: geçici iş akışı ya da kullanıcının kendi bilgisayarında `git push --force origin <sha>:refs/tags/<etiket>`. Doğru commit'ler: `1eb6c7a` (v1.4), `c652bf0` (v1.5), `69f9964` (v11.16). `v11.17` (`2b7fa00`) zaten doğru. Temizlik #2 çalıştı: `v1.3`, `v11.14`, `v11.15` silindi.
 0. (KAPANDI) Karne kuralı ve CLAUDE.md kuralları main'de (v1.6).
+0. Karne ekranı geç yükleniyor (kullanıcı bildirimi, 18 Kasım v1.6): nedeni araştırılacak (sorgu sayısı/ağ/hesaplama).
 1. Main'de sonuç yeşil ve telefon denemesi tamamlanınca bekleyen işleri kapatmak.
 2. Demo (destek-log) testi yeşilse telefonda deneme → onayla main. Eski `check/destek-log` dalı iş demoya alındığı için silinebilir (onaylı); remote silme 403 ile reddedildi, GitHub'dan elle silinmesi ya da silme izni gerekiyor.
 3. Telefon denemesi sonrası eski FCM kayıtlarını ve eski dalları temizlemek (onaylı).
@@ -86,6 +86,7 @@ Kullanıcı isteyince uygulama bu listeye göre tek tek kontrol edilir.
 ## Play'e çıkarken yapılacaklar
 Pro planları ve fiyat (kullanıcı notu, 17 Kasım 2026): 3 aylık 153 ₺, yıllık 1453 ₺ → Play Billing ürünleri bu fiyatlarla açılır; yönetim uygulaması ve yenileme hatırlatması (geçiş 50) bu planlara göre çalışır.
 Notlar (kullanıcı istedi, 18 Kasım): (a) Play sürümünden uygulama içi güncelleme kodu çıkarılsın mı (Play politikası; öneri: evet). (b) GitHub APK'sında Pro satılmasın, tanıdıklara elle açılsın mı (öneri: satılmasın). GitHub Sponsors yalnız bağış; Pro satışı yalnız Play Billing; Play ve GitHub APK imzası farklı, birbirini güncellemez.
+Play Console geliştirici e-postası (kullanıcı kararı 18 Kasım: Play öncesine alındı): yeni destek adresine çevrilecek; hesap silme talepleri o kutuya gelir.
 PLAY ÖNCESİ KULLANICIYA HATIRLAT (kullanıcı istedi, 18 Kasım):
 1. Lisans testçileri: Play Console → Ayarlar → Lisans testi'ne test Gmail'lerini ekle; uygulamayı dahili test kanalına yükle, testçilere davet bağlantısını gönder.
 2. Şahıs şirketi / vergi: mali müşavirle görüş. GVK 20/B mobil uygulama istisnası (bankada özel geliştirici hesabı, banka %15 keser, yıllık eşik altında beyanname yok; eşik her yıl değişir) yeterli mi, Google ödemesi bu hesaba nasıl yönlenir; eşik aşılırsa şahıs şirketi. Play Console ödeme profili + IBAN buna göre açılır.
