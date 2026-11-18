@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -11,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'config.dart';
 import 'lang.dart';
+import 'log.dart';
 import 'privacy.dart';
 import 'ui_test_mode.dart';
 
@@ -132,8 +132,7 @@ class CrashReport {
   /// Kullanıcıya anlaşılır sebep. İnternet kesintisi gibi zararsız durumlarda popup açılmaz (null).
   static String? _reasonOf(Object e, int ramMb) {
     final msg = e.toString();
-    if (e is SocketException || e is TimeoutException || e is HttpException ||
-        msg.contains('SocketException') || msg.contains('Failed host lookup') || msg.contains('ClientException')) {
+    if (Log.isNetwork(e)) {
       return null; // internet yok: uygulama zaten çevrimdışı çalışıyor
     }
     if (msg.contains('OutOfMemory') || ramMb > 700) {
