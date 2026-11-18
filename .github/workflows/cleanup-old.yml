@@ -1,17 +1,17 @@
 name: Eskileri temizle (son 2 sürüm kalır)
 
-# Her ayın 1'inde 04:17'de (İstanbul) kendiliğinden çalışır ve siler; elle de başlatılabilir.
+# Her pazartesi 04:17'de (İstanbul) kendiliğinden çalışır ve siler; elle de başlatılabilir.
 # Elle başlatınca kutu boş bırakılırsa yalnızca liste gösterilir, SIL yazılırsa silinir. Kalıcıdır, geri alınamaz:
 #  - Yayınlar (APK dosyalarıyla): yalnızca bu hattın ürettiği biçimdeki yayınlar (v1.N ve demo v11.N) ele alınır;
 #    taslak (draft) ve başka adlı yayınlara dokunulmaz. Her kanalda en yeni 2 kalır; GitHub'ın "en son sürüm"
 #    (latest) olarak gösterdiği yayın hiçbir durumda silinmez.
 #  - Etiketler: yalnızca silinen yayınların etiketleri ve yayını olmayan eski r<N> ve v1.0.N etiketleri.
 #  - Dallar: check/son dışındaki check/* kontrol dalları. main, demo, dev ve check/son'a dokunulmaz.
-#  - Çalışma kayıtları: en yeni 20 kalır. Derleme çıktıları: 7 günden eskiler.
+#  - Çalışma kayıtları: her workflow'un en yeni 5 kaydı kalır (tamamlananlar; çalışan kayda dokunulmaz). Derleme çıktıları: 7 günden eskiler.
 # Herhangi bir API okuması başarısız olursa hiçbir şey silinmez (eksik listeyle silme planı kurulmaz).
 on:
   schedule:
-    - cron: '17 1 1 * *'
+    - cron: '17 1 * * 1'
   workflow_dispatch:
     inputs:
       onay:
@@ -53,8 +53,9 @@ jobs:
           gh api "$R/git/matching-refs/heads/check/" --paginate --jq '.[].ref | ltrimstr("refs/heads/")' > dallar.txt
           g -E '^check/' dallar.txt | g -vx 'check/son' > sil_dal.txt
           gh api "$R/actions/runs?per_page=100" --paginate \
-            --jq '.workflow_runs[] | select(.status=="completed") | "\(.created_at) \(.id)"' > kayitlar.txt
-          sort -r kayitlar.txt | awk 'NR>20{print $2}' | g -vx "$GITHUB_RUN_ID" > sil_kayit.txt
+            --jq '.workflow_runs[] | select(.status=="completed") | "\(.workflow_id) \(.created_at) \(.id)"' > kayitlar.txt
+          # her workflow için en yeni 5 kalır, kalanı silinir (kendi çalışmamız hariç)
+          sort -k1,1 -k2,2r kayitlar.txt | awk '{n[$1]++; if(n[$1]>5) print $3}' | g -vx "$GITHUB_RUN_ID" > sil_kayit.txt
           SINIR=$(date -u -d '7 days ago' +%Y-%m-%dT%H:%M:%SZ)
           gh api "$R/actions/artifacts?per_page=100" --paginate \
             --jq ".artifacts[] | select(.created_at < \"$SINIR\") | .id" > sil_cikti.txt
@@ -63,7 +64,7 @@ jobs:
           echo "SİLİNECEK yayınlar ($(wc -l < sil_yayin.txt)):"; cat sil_yayin.txt
           echo "SİLİNECEK etiketler ($(wc -l < sil_etiket.txt)):"; cat sil_etiket.txt
           echo "SİLİNECEK dallar ($(wc -l < sil_dal.txt)):"; cat sil_dal.txt
-          echo "SİLİNECEK çalışma kaydı: $(wc -l < sil_kayit.txt) (en yeni 20 kalır)"
+          echo "SİLİNECEK çalışma kaydı: $(wc -l < sil_kayit.txt) (her workflow'dan en yeni 5 kalır)"
           echo "SİLİNECEK derleme çıktısı: $(wc -l < sil_cikti.txt) (7 günden eski)"
           if [ "$ONAY" != "SIL" ]; then echo "::notice::Onay yok (SIL yazılmadı): yalnızca liste gösterildi, hiçbir şey silinmedi."; exit 0; fi
           hata=0
