@@ -56,11 +56,11 @@
 ## Kullanıcıdan beklenen
 1. (TAMAM, 18 Kasım kullanıcı onayı) v1.6 telefonda denendi. Yeni bulgu: Karne geç yükleniyor → Sıradaki işlerde.
 2. Üç telefona aynı gün v1.2 kurmak; Google girişi ve bildirimi denemek (v1.1'de kalan bildirim almaz, Google girişi yapamaz).
-3. Ekran testi için test hesabını gerçek sunucuda yeniden açmak ya da GitHub'daki test hesabı ayarlarını güncellemek.
+3. (KAPANDI, 18 Kasım) Test hesabı gerçek sunucuda çalışıyor (v1.6 main testinde giriş yapılmış ekran testi geçti).
 4. (TAMAM, 18 Kasım kullanıcı 'OK') Eski Firebase projesi maddesi kapandı.
 6. (TAMAM, 18 Kasım) Öneri yaz denendi.
-7. GitHub'daki eski repo için arşivleme ya da silme kararı (yerel klon silindi).
-8. Demo'daki eski test hesabı için Supabase'de oturumları kapatmak (önceki sıfırlama linkinde oturum bilgisi paylaşıldı, token 1 saatte geçersiz olur) ve hesabı demo'da bırakmak ya da silmek.
+7. (KAPANDI, 18 Kasım kullanıcı kararı) Eski repo maddesi kapatıldı.
+8. Demo'daki eski test hesabı (gmail, 15 Kasım açılmış, 2 açık oturum; kullanıcı doğruladı) KALDIRILACAK (kullanıcı kararı, 18 Kasım): önce oturumlar kapatılır, sonra hesap silinir; önceki silme denemesi veritabanı kısıtına takılmıştı, kısıt önce bulunmalı. Demo veritabanına yazma: onayla.
 9. (Secret'lar eklendi, 18 Kasım) Yönetim APK'sı çıkınca telefona kurup iki yönetici hesabından biriyle giriş yapmak, lisans listesini görmek; demo hesapla yenileme bildirimi denemesi için hesap seçmek.
 
 ## Sıradaki işler
