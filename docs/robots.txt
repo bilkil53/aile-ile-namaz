@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bilkil53.github.io/aile-ile-namaz/sitemap.xml

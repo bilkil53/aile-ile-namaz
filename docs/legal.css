@@ -1,0 +1,23 @@
+@font-face { font-family: "Roboto"; font-style: normal; font-weight: 100 900; font-display: swap; src: url(fonts/roboto-latin-ext.woff2) format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Roboto"; font-style: normal; font-weight: 100 900; font-display: swap; src: url(fonts/roboto-latin.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+:root { --emerald: #0e5a4a; --emerald-deep: #042a21; --soft: #e2efea; --bg: #f7faf8; --text: #142421; --text-2: #5b6e67; --border: #e2ebe6; --mint: #86efac; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.65; }
+.top { background: var(--emerald-deep); color: #fff; }
+.top .in { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-block: 16px; flex-wrap: wrap; }
+.top a { color: #fff; text-decoration: none; font-weight: 700; }
+.top nav { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.92rem; }
+.top nav a { color: rgba(255,255,255,0.8); font-weight: 500; }
+.in { max-width: 780px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { padding-block: 40px 64px; }
+h1 { color: var(--emerald); font-size: clamp(1.8rem, 5vw, 2.4rem); line-height: 1.15; margin: 0 0 8px; }
+h2 { font-size: 1.2rem; margin: 32px 0 8px; }
+.meta { color: var(--text-2); font-size: 0.92rem; margin: 0 0 24px; }
+.box { background: var(--soft); border-radius: 16px; padding: 14px 18px; margin: 20px 0; }
+a { color: var(--emerald); }
+li { margin-bottom: 6px; }
+table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.tw { overflow-x: auto; }
+footer { border-top: 1px solid var(--border); color: var(--text-2); font-size: 0.9rem; }
+footer .in { padding-block: 24px 40px; display: flex; gap: 16px; flex-wrap: wrap; }

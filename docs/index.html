@@ -3,19 +3,98 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Aile İle Namaz: ailenle birlikte namaz takibi. Diyanet uyumlu vakitler, aile havuzu, kaza takibi ve karne.">
-<title>Aile İle Namaz</title>
+<title>Aile İle Namaz – Ailecek Namaz Takibi, Namaz Vakitleri ve Kaza Takibi</title>
+<meta name="description" content="Aile İle Namaz: ailenle birlikte 5 vakit namaz takibi. Diyanet yöntemiyle namaz vakitleri, aile havuzu, kaza namazı takibi, karne, rozetler ve kıble pusulası. Ücretsiz Android uygulaması.">
+<meta name="keywords" content="namaz takip, aile namaz uygulaması, namaz vakitleri, kaza namazı takibi, kıble pusulası, ezan vakti hatırlatma, namaz karnesi">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta name="author" content="Aile İle Namaz">
+<meta name="theme-color" content="#074336">
+<meta name="geo.region" content="TR">
+<meta name="geo.placename" content="Türkiye">
+<meta http-equiv="content-language" content="tr">
+<link rel="canonical" href="">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="og.png">
+<link rel="sitemap" type="application/xml" href="sitemap.xml">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="tr_TR">
+<meta property="og:site_name" content="Aile İle Namaz">
+<meta property="og:title" content="Aile İle Namaz – Namazı ailecek takip edin">
+<meta property="og:description" content="5 vakit namaz takibi, aile havuzu, kaza takibi, karne ve kıble pusulası. Ücretsiz Android uygulaması.">
+<meta property="og:url" content="">
+<meta property="og:image" content="og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Aile İle Namaz uygulaması: aile havuzu ve namaz vakitleri">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Aile İle Namaz – Namazı ailecek takip edin">
+<meta name="twitter:description" content="5 vakit namaz takibi, aile havuzu, kaza takibi, karne ve kıble pusulası.">
+<meta name="twitter:image" content="og.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "#website",
+      "url": "",
+      "name": "Aile İle Namaz",
+      "inLanguage": "tr-TR",
+      "publisher": { "@id": "#org" }
+    },
+    {
+      "@type": "Organization",
+      "@id": "#org",
+      "name": "Aile İle Namaz",
+      "url": "",
+      "logo": "og.png",
+      "areaServed": { "@type": "Country", "name": "Türkiye" }
+    },
+    {
+      "@type": "MobileApplication",
+      "@id": "#app",
+      "name": "Aile İle Namaz",
+      "operatingSystem": "Android",
+      "applicationCategory": "LifestyleApplication",
+      "inLanguage": ["tr", "en"],
+      "countriesSupported": "TR",
+      "url": "",
+      "downloadUrl": "https://github.com/bilkil53/aile-ile-namaz/releases/latest",
+      "image": "og.png",
+      "description": "Ailenle birlikte 5 vakit namaz takibi: Diyanet yöntemiyle namaz vakitleri, en çok 5 kişilik aile havuzu, kaza namazı takibi, karne ve rozetler, kıble pusulası, vakit ve mübarek gün hatırlatmaları.",
+      "featureList": ["5 vakit namaz takibi", "Diyanet yöntemiyle namaz vakitleri", "Aile havuzu (en çok 5 kişi)", "Kaza namazı takibi", "Karne, seri ve rozetler", "Kıble pusulası", "Vakit, Cuma ve mübarek gün hatırlatmaları", "İnternetsiz çalışma"],
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "TRY" },
+      "publisher": { "@id": "#org" }
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "#sss",
+      "mainEntity": [
+        { "@type": "Question", "name": "Aile İle Namaz nedir?", "acceptedAnswer": { "@type": "Answer", "text": "Aile İle Namaz, 5 vakit namazı ailecek takip etmek için hazırlanmış ücretsiz bir Android uygulamasıdır. Namazını işaretlersin, aile havuzundaki kişiler anında görür; kaza namazı takibi, karne ve kıble pusulası da vardır." } },
+        { "@type": "Question", "name": "Uygulama ücretli mi?", "acceptedAnswer": { "@type": "Answer", "text": "Bireysel kullanım ücretsizdir. Aile Pro isteğe bağlıdır; aile reisinin Pro alması, havuzdaki herkesi (en çok 5 kişi) Pro yapar. Satın alma Google Play üzerinden yapılacaktır." } },
+        { "@type": "Question", "name": "Namaz vakitleri nasıl hesaplanıyor?", "acceptedAnswer": { "@type": "Answer", "text": "Vakitler bulunduğun konuma göre Diyanet İşleri Başkanlığı hesaplama yöntemiyle alınır. Aylık vakitler telefona kaydedildiği için internet olmadan da hatırlatmalar çalışır." } },
+        { "@type": "Question", "name": "Aile havuzuna kaç kişi katılabilir?", "acceptedAnswer": { "@type": "Answer", "text": "Bir aile havuzunda en çok 5 kişi olur. Havuzu kuran kişi davet kodunu paylaşır, diğerleri bu kodla katılır." } },
+        { "@type": "Question", "name": "Ailem kaza borcumu görebilir mi?", "acceptedAnswer": { "@type": "Answer", "text": "Hayır, ayrıntıyı göremez. Kaza bölümü mahremiyet korumalıdır; aile üyeleri yalnızca özet durumu görür." } },
+        { "@type": "Question", "name": "Giriş yapmadan kullanabilir miyim?", "acceptedAnswer": { "@type": "Answer", "text": "Evet, gezinti modunda tüm ekranlara bakabilirsin. Gezinti yalnızca bakmak içindir; işaretleme, kayıt ve aile havuzu için Google ile giriş gerekir." } },
+        { "@type": "Question", "name": "Verilerim nerede saklanıyor?", "acceptedAnswer": { "@type": "Answer", "text": "Veriler Avrupa Birliği'ndeki (Almanya, Frankfurt) sunucularda şifreli bağlantıyla saklanır, satılmaz ve reklam amacıyla kullanılmaz. Namaz kayıtları özel nitelikli veri sayıldığı için açık rızan alınır." } },
+        { "@type": "Question", "name": "Hesabımı nasıl silerim?", "acceptedAnswer": { "@type": "Answer", "text": "Uygulamada Ayarlar bölümünden hesabını ve verilerini silebilirsin. Uygulamaya erişimin yoksa web sitesindeki Hesap silme sayfasındaki adımları izleyebilirsin." } },
+        { "@type": "Question", "name": "iPhone sürümü var mı?", "acceptedAnswer": { "@type": "Answer", "text": "Şimdilik yalnızca Android sürümü vardır. Uygulama GitHub üzerinden dağıtılıyor, Google Play sürümü hazırlanıyor." } }
+      ]
+    }
+  ]
+}
+</script>
 <style>
 @font-face { font-family: "Roboto"; font-style: normal; font-weight: 100 900; font-display: swap; src: url(fonts/roboto-latin-ext.woff2) format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
 @font-face { font-family: "Roboto"; font-style: normal; font-weight: 100 900; font-display: swap; src: url(fonts/roboto-latin.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
 @font-face { font-family: "Material Symbols Rounded"; font-style: normal; font-weight: 500; font-display: block; src: url(fonts/material-symbols.woff2) format("woff2"); }
-/* Layout: animated day-sky hero (sun travels the five prayer times, family marks fill in), then
-   content bands that rise in on scroll. App palette (lib/theme.dart), single light theme like the app. */
+/* Layout: dark emerald world over an animated geometric + particle background; live phone in the hero,
+   a pinned scroll story that drives a second phone, then light "sheets" (features, choices, KVKK, FAQ) that slide over it. */
 :root {
   color-scheme: light;
   --emerald: #0e5a4a;
   --emerald-dark: #074336;
-  --emerald-deep: #04281f;
+  --emerald-deep: #042a21;
   --emerald-light: #166b58;
   --emerald-soft: #e2efea;
   --bg: #f7faf8;
@@ -31,448 +110,754 @@
   --sky: #0369a1; --sky-soft: #e0f2fe;
   --orange: #ea580c; --orange-soft: #ffedd5;
   --purple: #7e22ce; --purple-soft: #f3e8ff;
+  --red: #dc2626;
   --font: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 * { box-sizing: border-box; }
-body { background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.55; overflow-x: hidden; }
-.in { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-h1, h2, h3 { margin: 0; line-height: 1.15; text-wrap: balance; }
+html { scroll-behavior: smooth; }
+body { background: var(--emerald-deep); color: var(--text); font-family: var(--font); line-height: 1.55; overflow-x: hidden; }
+.in { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { margin: 0; line-height: 1.12; text-wrap: balance; }
 p { margin: 0; }
 a { color: var(--emerald); font-weight: 500; }
-a:focus-visible, .btn:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; border-radius: 10px; }
+a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; border-radius: 10px; }
 .ms { font-family: "Material Symbols Rounded"; font-weight: normal; font-style: normal; font-size: 24px; line-height: 1; display: inline-block; white-space: nowrap; direction: ltr; -webkit-font-smoothing: antialiased; font-feature-settings: "liga"; overflow: hidden; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-/* ---------- Hero sky ---------- */
-.sky { position: relative; isolation: isolate; color: #fff; background: var(--emerald); overflow: hidden;
-  margin-top: calc(-1 * env(safe-area-inset-top, 0px)); padding-top: env(safe-area-inset-top, 0px); }
-.sky .layer { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
-.sky .dawn { background: radial-gradient(120% 70% at var(--sx, 10%) 100%, rgba(251,191,36,0.45), transparent 60%); opacity: var(--dawn, 0.6); transition: opacity 0.4s linear; }
-.sky .day { background: linear-gradient(180deg, var(--emerald-light), var(--emerald)); opacity: var(--day, 0.5); }
-.sky .night { background: linear-gradient(180deg, var(--emerald-deep), var(--emerald-dark)); opacity: var(--night, 0); }
-.stars { opacity: var(--night, 0); }
-.stars i { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff; animation: twinkle 3s ease-in-out infinite; }
-@keyframes twinkle { 50% { opacity: 0.25; } }
+/* ---------- Animated background ---------- */
+#bg { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.pattern { position: fixed; inset: -200px; z-index: 0; pointer-events: none; opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%2386efac' stroke-width='1.4'%3E%3Cpath d='M60 18 72 48 102 60 72 72 60 102 48 72 18 60 48 48Z'/%3E%3Cpath d='M30 30 60 42 90 30 78 60 90 90 60 78 30 90 42 60Z'/%3E%3Ccircle cx='60' cy='60' r='9'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 120px 120px; animation: drift 60s linear infinite; }
+@keyframes drift { to { transform: translate(120px, 120px) rotate(0.001deg); } }
+.glow { position: fixed; z-index: 0; pointer-events: none; border-radius: 50%; filter: blur(70px); opacity: 0.45; }
+.glow.a { width: 520px; height: 520px; background: #166b58; left: -140px; top: -120px; animation: blob 18s ease-in-out infinite; }
+.glow.b { width: 420px; height: 420px; background: rgba(251,191,36,0.35); right: -120px; top: 30vh; animation: blob 22s ease-in-out infinite reverse; }
+@keyframes blob { 33% { transform: translate(80px, 60px) scale(1.15); } 66% { transform: translate(-40px, 120px) scale(0.9); } }
+.page { position: relative; z-index: 1; }
 
-.bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 16px; flex-wrap: wrap; }
-.brand { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; font-weight: 700; font-size: 1.1rem; }
-.brand .ms { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.14); display: grid; place-items: center; }
-.bar nav { display: flex; gap: 4px; flex-wrap: wrap; }
-.bar nav a { color: rgba(255,255,255,0.85); text-decoration: none; font-size: 0.95rem; padding: 6px 12px; border-radius: 999px; transition: background 0.2s; }
-.bar nav a:hover { background: rgba(255,255,255,0.14); color: #fff; }
+/* ---------- Top bar ---------- */
+.progress { position: fixed; left: 0; top: 0; height: 3px; width: 100%; z-index: 60; background: linear-gradient(90deg, var(--mint), var(--sun)); transform-origin: 0 50%; transform: scaleX(var(--p, 0)); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 55; background: rgba(4,42,33,0.85); }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50; transition: background 0.3s, box-shadow 0.3s; }
+.top.solid { background: rgba(4,42,33,0.78); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 6px 24px -12px rgba(0,0,0,0.6); }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 14px; }
+.brand { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; font-weight: 700; font-size: 1.08rem; }
+.brand .logo { width: 40px; height: 40px; border-radius: 13px; background: linear-gradient(135deg, var(--emerald-light), var(--emerald)); display: grid; place-items: center; box-shadow: 0 0 0 1px rgba(134,239,172,0.25), 0 6px 16px -6px rgba(134,239,172,0.5); animation: breathe 4s ease-in-out infinite; }
+@keyframes breathe { 50% { box-shadow: 0 0 0 1px rgba(134,239,172,0.4), 0 6px 24px -4px rgba(134,239,172,0.8); } }
+.bar nav { display: flex; gap: 2px; }
+.bar nav a { color: rgba(255,255,255,0.82); text-decoration: none; font-size: 0.94rem; padding: 7px 12px; border-radius: 999px; position: relative; transition: color 0.2s, background 0.2s; }
+.bar nav a:hover { color: #fff; background: rgba(255,255,255,0.1); }
+.menu-btn { display: none; background: rgba(255,255,255,0.12); border: 0; color: #fff; width: 42px; height: 42px; border-radius: 12px; cursor: pointer; }
 
-.hero { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 40px; align-items: center; padding-block: 28px 8px; }
+/* ---------- Hero ---------- */
+.hero { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 40px; align-items: center; padding-block: 36px 72px; color: #fff; min-height: min(780px, 92vh); }
 .hero > * { min-width: 0; }
-.hero h1 { font-size: clamp(2.3rem, 6vw, 3.8rem); font-weight: 900; letter-spacing: -0.025em; }
-.hero h1 .now { color: var(--mint); display: inline-block; }
-.hero h1 .now.swap { animation: swap 0.5s ease-out; }
-@keyframes swap { from { transform: translateY(0.35em); opacity: 0.2; } to { transform: none; opacity: 1; } }
-.lead { margin-top: 16px; font-size: 1.15rem; color: rgba(255,255,255,0.86); max-width: 38ch; }
-.cta { margin-top: 26px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-.btn { position: relative; display: inline-flex; align-items: center; gap: 10px; border-radius: 22px; padding: 13px 22px 13px 16px; font-weight: 700; text-decoration: none; font-size: 1rem; transition: transform 0.2s, box-shadow 0.2s; overflow: hidden; }
+.pill { display: inline-flex; align-items: center; gap: 10px; background: rgba(134,239,172,0.12); border: 1px solid rgba(134,239,172,0.3); color: var(--mint); border-radius: 999px; padding: 7px 14px 7px 10px; font-size: 0.88rem; font-weight: 500; }
+.pill .live { width: 9px; height: 9px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 0 0 rgba(134,239,172,0.7); animation: ping 1.8s ease-out infinite; }
+@keyframes ping { 70% { box-shadow: 0 0 0 10px rgba(134,239,172,0); } 100% { box-shadow: 0 0 0 0 rgba(134,239,172,0); } }
+.hero h1 { margin-top: 20px; font-size: clamp(2.6rem, 7vw, 5rem); font-weight: 900; letter-spacing: -0.035em; }
+.hero h1 .w { display: inline-block; white-space: nowrap; }
+.hero h1 .c { display: inline-block; animation: charIn 0.7s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i) * 28ms + 150ms); }
+@keyframes charIn { from { opacity: 0; transform: translateY(0.6em) rotate(8deg); filter: blur(6px); } }
+.hero h1 .hl { background: linear-gradient(90deg, var(--mint), var(--sun), var(--mint)); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: charIn 0.7s cubic-bezier(.2,.8,.2,1) both, sheen 5s linear infinite; }
+@keyframes sheen { to { background-position: -200% 0; } }
+.lead { margin-top: 18px; font-size: clamp(1.05rem, 2.2vw, 1.25rem); color: rgba(255,255,255,0.82); max-width: 40ch; animation: up 0.8s 0.9s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes up { from { opacity: 0; transform: translateY(18px); } }
+.cta { margin-top: 30px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; animation: up 0.8s 1.1s cubic-bezier(.2,.8,.2,1) both; }
+.btn { position: relative; display: inline-flex; align-items: center; gap: 10px; border-radius: 20px; padding: 15px 24px 15px 18px; font-weight: 700; text-decoration: none; font-size: 1rem; overflow: hidden; transition: transform 0.25s cubic-bezier(.2,.8,.2,1), box-shadow 0.25s; will-change: transform; }
 .btn .ms { font-size: 22px; }
-.btn.white { background: #fff; color: var(--emerald); box-shadow: 0 6px 18px rgba(0,0,0,0.22); }
-.btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0,0,0,0.25); }
-.btn.white::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 40%, rgba(14,90,74,0.12) 50%, transparent 60%); transform: translateX(-100%); animation: shine 4s ease-in-out infinite 1.5s; }
-@keyframes shine { 30%, 100% { transform: translateX(100%); } }
-.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; color: rgba(255,255,255,0.88); border: 1px solid rgba(255,255,255,0.3); border-radius: 999px; padding: 6px 12px; }
-.chip .ms { font-size: 18px; }
+.btn.main { background: var(--mint); color: var(--emerald-deep); box-shadow: 0 10px 30px -8px rgba(134,239,172,0.6); }
+.btn.main .ms { animation: bob 1.6s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(3px); } }
+.btn.main::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,0.7) 50%, transparent 62%); transform: translateX(-110%); animation: shine 3.6s ease-in-out infinite 2s; }
+@keyframes shine { 35%, 100% { transform: translateX(110%); } }
+.btn.ghost { color: #fff; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.06); }
+.btn.ghost:hover { background: rgba(255,255,255,0.12); }
+.stats { margin-top: 38px; display: grid; grid-template-columns: repeat(4, auto); gap: 10px 28px; justify-content: start; animation: up 0.8s 1.3s cubic-bezier(.2,.8,.2,1) both; }
+.stat b { display: block; font-size: 1.9rem; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; line-height: 1; }
+.stat span { font-size: 0.84rem; color: rgba(255,255,255,0.65); }
 
-/* Family card */
-.fcard { background: rgba(255,255,255,0.1); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.18); border-radius: 24px; padding: 18px; box-shadow: 0 24px 50px -24px rgba(0,0,0,0.5); animation: float 7s ease-in-out infinite; }
-@keyframes float { 50% { transform: translateY(-8px); } }
-.fhead { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
-.fhead b { display: flex; align-items: center; gap: 8px; }
-.fhead span { font-size: 0.82rem; color: rgba(255,255,255,0.75); }
-.fgrid { display: grid; grid-template-columns: minmax(56px, 1.2fr) repeat(5, 1fr); gap: 8px 4px; align-items: center; font-size: 0.85rem; }
-.fgrid .col { text-align: center; color: rgba(255,255,255,0.65); font-size: 0.7rem; font-weight: 500; transition: color 0.3s; }
-.fgrid .col.cur { color: var(--sun); font-weight: 700; }
-.fgrid .who { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dot { justify-self: center; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; border: 2px solid rgba(255,255,255,0.28); transition: background 0.3s, border-color 0.3s; }
-.dot .ms { font-size: 17px; font-weight: 700; opacity: 0; transform: scale(0.4); transition: opacity 0.25s, transform 0.35s cubic-bezier(.3,1.6,.5,1); color: var(--emerald-dark); }
-.dot.on { background: var(--mint); border-color: var(--mint); }
-.dot.on .ms { opacity: 1; transform: scale(1); }
-.ffoot { margin-top: 14px; background: rgba(255,255,255,0.12); border-radius: 14px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; font-size: 0.88rem; min-height: 44px; }
-.ffoot .ms { font-size: 20px; color: var(--mint); flex: none; }
-.ffoot span:last-child.swap { animation: swap 0.45s ease-out; }
-.note { margin-top: 8px; font-size: 0.75rem; color: rgba(255,255,255,0.6); text-align: right; }
+/* ---------- Phone ---------- */
+.stage { position: relative; display: grid; place-items: center; perspective: 1200px; animation: up 1s 0.5s cubic-bezier(.2,.8,.2,1) both; }
+.phone { --w: 290px; width: var(--w); max-width: 78vw; aspect-ratio: 9 / 19.2; border-radius: 46px; padding: 11px; background: linear-gradient(145deg, #1d2b26, #050b09); box-shadow: 0 0 0 2px #2c3d37, 0 40px 80px -30px rgba(0,0,0,0.8), 0 0 80px -20px rgba(134,239,172,0.35); position: relative; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(.2,.8,.2,1); container-type: inline-size; }
+.hero .phone { animation: hover 6s ease-in-out infinite; }
+@keyframes hover { 50% { translate: 0 -12px; } }
+.phone::before { content: ""; position: absolute; top: 20px; left: 50%; width: 30%; height: 22px; margin-left: -15%; background: #050b09; border-radius: 999px; z-index: 5; }
+.screen { position: relative; width: 100%; height: 100%; border-radius: 36px; overflow: hidden; background: var(--bg); font-size: 4.4cqw; color: var(--text); }
+.scr { position: absolute; inset: 0; display: flex; flex-direction: column; opacity: 0; transform: translateX(14%) scale(0.98); transition: opacity 0.55s, transform 0.55s cubic-bezier(.2,.8,.2,1); }
+.scr.act { opacity: 1; transform: none; }
+.scr.out { transform: translateX(-14%) scale(0.98); }
+.abar { background: var(--emerald); color: #fff; padding: 3.2em 1.1em 0.9em; display: flex; align-items: center; justify-content: space-between; }
+.abar b { font-size: 1.15em; }
+.abar .ms { font-size: 1.3em; }
+.body { padding: 0.9em; display: grid; gap: 0.6em; align-content: start; flex: 1; }
+.tabs { display: flex; justify-content: space-around; padding: 0.6em 0 1.4em; background: #fff; border-top: 1px solid var(--border); }
+.tabs .ms { font-size: 1.4em; color: var(--text-3); }
+.tabs .ms.on { color: var(--emerald); }
+/* Screen: Bugün */
+.next { background: linear-gradient(135deg, var(--emerald), var(--emerald-light)); color: #fff; border-radius: 1.1em; padding: 0.9em 1em; display: grid; gap: 0.2em; }
+.next small { opacity: 0.8; font-size: 0.8em; }
+.next .cd { font-size: 1.9em; font-weight: 900; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+.vrow { background: #fff; border: 1px solid var(--border); border-radius: 0.9em; padding: 0.55em 0.8em; display: flex; align-items: center; justify-content: space-between; font-size: 0.95em; position: relative; overflow: hidden; }
+.vrow .t { color: var(--text-2); font-variant-numeric: tabular-nums; }
+.vrow .chk { width: 1.5em; height: 1.5em; border-radius: 50%; border: 2px solid var(--border); display: grid; place-items: center; }
+.vrow .chk .ms { font-size: 1em; color: #fff; opacity: 0; }
+.vrow.done .chk { background: var(--emerald); border-color: var(--emerald); }
+.vrow.done .chk .ms { opacity: 1; }
+.vrow.cur { border-color: var(--mint); box-shadow: 0 0 0 2px rgba(134,239,172,0.5); }
+.scr.act .vrow.tap .chk { animation: tapFill 0.4s 1.4s both; }
+.scr.act .vrow.tap .chk .ms { animation: tapIcon 0.4s 1.4s both; }
+@keyframes tapFill { to { background: var(--emerald); border-color: var(--emerald); } }
+@keyframes tapIcon { from { transform: scale(0); } to { opacity: 1; transform: scale(1); } }
+.ripple { position: absolute; width: 2.2em; height: 2.2em; border-radius: 50%; background: rgba(14,90,74,0.25); right: 0.45em; top: 50%; margin-top: -1.1em; transform: scale(0); opacity: 0; }
+.scr.act .vrow.tap .ripple { animation: rip 0.7s 1.25s ease-out; }
+@keyframes rip { from { transform: scale(0); opacity: 1; } to { transform: scale(3); opacity: 0; } }
+/* Screen: Aile */
+.mem { background: #fff; border: 1px solid var(--border); border-radius: 0.9em; padding: 0.6em 0.75em; display: grid; grid-template-columns: 2em 1fr; gap: 0.2em 0.6em; align-items: center; }
+.ava { width: 2em; height: 2em; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 0.95em; grid-row: span 2; }
+.mem b { font-size: 0.92em; }
+.mdots { display: flex; gap: 0.35em; }
+.mdots i { width: 0.95em; height: 0.95em; border-radius: 50%; background: var(--border); }
+.scr.act .mdots i.y { animation: dotOn 0.35s both; animation-delay: calc(var(--d) * 110ms + 300ms); }
+@keyframes dotOn { from { transform: scale(0.3); } to { background: var(--emerald); transform: scale(1); } }
+.toast { background: var(--gold-soft); color: #7a4a06; border-radius: 0.9em; padding: 0.55em 0.75em; font-size: 0.85em; display: flex; gap: 0.5em; align-items: center; }
+.scr.act .toast { animation: toastIn 0.5s 1.6s cubic-bezier(.3,1.5,.5,1) both; }
+@keyframes toastIn { from { opacity: 0; transform: translateY(1em) scale(0.9); } }
+/* Screen: Kaza */
+.kz { background: #fff; border: 1px solid var(--border); border-radius: 0.9em; padding: 0.6em 0.8em; display: flex; justify-content: space-between; align-items: center; }
+.kz .n { font-weight: 900; font-size: 1.25em; font-variant-numeric: tabular-nums; color: var(--orange); }
+.kz .minus { width: 1.7em; height: 1.7em; border-radius: 0.5em; background: var(--orange-soft); color: var(--orange); display: grid; place-items: center; }
+.kz .minus .ms { font-size: 1.1em; }
+.kzsum { background: var(--orange-soft); border-radius: 1em; padding: 0.8em 1em; display: grid; gap: 0.15em; }
+.kzsum b { font-size: 1.7em; color: var(--orange); font-variant-numeric: tabular-nums; }
+.kzsum small { color: #9a3b0a; font-size: 0.8em; }
+.lock { display: flex; gap: 0.4em; align-items: center; font-size: 0.8em; color: var(--text-2); }
+.lock .ms { font-size: 1.1em; color: var(--emerald); }
+/* Screen: Karne */
+.ring { display: grid; place-items: center; position: relative; margin: 0.3em auto 0.2em; width: 9em; height: 9em; }
+.ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 10; }
+.ring .bgc { stroke: var(--emerald-soft); }
+.ring .fg { stroke: var(--emerald); stroke-linecap: round; stroke-dasharray: 283; stroke-dashoffset: 40; }
+.scr.act .ring .fg { animation: ringIn 1.4s 0.3s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes ringIn { from { stroke-dashoffset: 283; } }
+.ring .lbl { position: absolute; text-align: center; }
+.ring .lbl b { font-size: 2em; font-weight: 900; display: block; line-height: 1; }
+.ring .lbl small { font-size: 0.75em; color: var(--text-2); }
+.bars { display: flex; align-items: flex-end; gap: 0.45em; height: 4.4em; padding: 0 0.3em; }
+.bars i { flex: 1; background: var(--emerald-light); border-radius: 0.35em 0.35em 0.15em 0.15em; height: var(--h); transform-origin: bottom; }
+.bars i.low { background: var(--red); opacity: 0.75; }
+.scr.act .bars i { animation: grow 0.7s both; animation-delay: calc(var(--d) * 80ms + 500ms); }
+@keyframes grow { from { transform: scaleY(0); } }
+.days { display: flex; gap: 0.45em; padding: 0 0.3em; font-size: 0.7em; color: var(--text-3); }
+.days span { flex: 1; text-align: center; }
+.badge { display: flex; align-items: center; gap: 0.6em; background: var(--purple-soft); color: var(--purple); border-radius: 0.9em; padding: 0.55em 0.75em; font-size: 0.88em; font-weight: 700; }
+.scr.act .badge { animation: toastIn 0.6s 1.5s cubic-bezier(.3,1.5,.5,1) both; }
+.badge .ms { font-size: 1.4em; }
+/* Screen: Kıble */
+.compass { width: 13em; height: 13em; margin: 0.6em auto; border-radius: 50%; background: radial-gradient(circle, #fff 55%, var(--emerald-soft) 56%, var(--emerald-soft) 70%, #fff 71%); border: 2px solid var(--border); position: relative; display: grid; place-items: center; }
+.compass .dial { position: absolute; inset: 0; }
+.compass .dial span { position: absolute; left: 50%; top: 50%; font-size: 0.8em; font-weight: 700; color: var(--text-2); }
+.needle { position: absolute; left: 50%; top: 50%; width: 0.9em; height: 10.4em; margin: -5.2em 0 0 -0.45em; transform: rotate(var(--q, 151deg)); }
+.needle::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 50%; background: var(--emerald); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.needle::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 50%; background: var(--border); clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.scr.act .needle { animation: seek 2.4s 0.2s cubic-bezier(.3,1.4,.4,1) both; }
+@keyframes seek { 0% { transform: rotate(20deg); } 40% { transform: rotate(200deg); } 70% { transform: rotate(140deg); } }
+.kaaba { position: absolute; width: 1.8em; height: 1.8em; border-radius: 0.4em; background: #142421; left: 50%; top: 50%; transform: rotate(151deg) translateY(-6.3em) rotate(-151deg); margin: -0.9em 0 0 -0.9em; box-shadow: inset 0 0.35em 0 #d97706; }
+.hub { width: 1.2em; height: 1.2em; border-radius: 50%; background: var(--emerald); border: 3px solid #fff; z-index: 2; }
+.qinfo { text-align: center; display: grid; gap: 0.15em; }
+.qinfo b { font-size: 1.6em; font-weight: 900; color: var(--emerald); }
+.qinfo small { color: var(--text-2); font-size: 0.8em; }
+.scr.act .qinfo { animation: toastIn 0.6s 2s both; }
 
-/* Arc with the five prayer times */
-.arc { position: relative; margin-top: 8px; }
-.arc svg { display: block; width: 100%; height: auto; overflow: visible; }
-.arc .path { fill: none; stroke: rgba(255,255,255,0.25); stroke-width: 2; stroke-dasharray: 4 8; }
-.arc .trail { fill: none; stroke: var(--sun); stroke-width: 3; stroke-linecap: round; opacity: 0.8; }
-.arc .stop circle { fill: var(--emerald-dark); stroke: rgba(255,255,255,0.45); stroke-width: 2; transition: fill 0.3s, stroke 0.3s; }
-.arc .stop.done circle { fill: var(--mint); stroke: var(--mint); }
-.arc .stop text { fill: rgba(255,255,255,0.8); font: 500 15px var(--font); text-anchor: middle; }
-.arc .stop.cur text { fill: var(--sun); font-weight: 700; }
-.arc .orb { filter: drop-shadow(0 0 14px rgba(251,191,36,0.9)); }
-.arc .moon { opacity: 0; }
-.horizon { height: 28px; background: linear-gradient(180deg, transparent, rgba(0,0,0,0.12)); }
+/* floating bubbles around hero phone */
+.bubble { position: absolute; z-index: 3; background: rgba(255,255,255,0.95); color: var(--text); border-radius: 16px; padding: 10px 14px; font-size: 0.86rem; display: flex; gap: 10px; align-items: center; box-shadow: 0 16px 40px -14px rgba(0,0,0,0.6); max-width: 230px; opacity: 0; transform: translateY(16px) scale(0.9); transition: opacity 0.5s, transform 0.5s cubic-bezier(.3,1.5,.5,1); pointer-events: none; }
+.bubble.show { opacity: 1; transform: none; }
+.bubble .ms { font-size: 22px; flex: none; border-radius: 10px; padding: 5px; }
+.bubble.b1 { left: -14%; top: 58%; }
+.bubble.b2 { right: -12%; top: 30%; }
+.bubble.b3 { left: -10%; bottom: 4%; }
 
-/* ---------- Content ---------- */
-section { padding-block: 64px; }
-.head { display: grid; gap: 8px; margin-bottom: 28px; max-width: 660px; }
-.head h2 { font-size: clamp(1.7rem, 3.8vw, 2.3rem); font-weight: 900; letter-spacing: -0.015em; }
-.head p { color: var(--text-2); font-size: 1.05rem; }
-.label { display: inline-flex; align-items: center; gap: 8px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--emerald); }
-.label::before { content: ""; width: 22px; height: 3px; border-radius: 3px; background: var(--gold); }
+/* ---------- Marquee ---------- */
+.marquee { position: relative; z-index: 1; overflow: hidden; border-block: 1px solid rgba(134,239,172,0.18); background: rgba(7,67,54,0.6); padding-block: 16px; transform: rotate(-1.5deg); margin-block: 10px 40px; }
+.track { display: flex; width: max-content; animation: slide 28s linear infinite; }
+.track span { display: inline-flex; align-items: center; gap: 18px; padding-right: 18px; font-size: clamp(1.1rem, 3vw, 1.6rem); font-weight: 900; color: rgba(255,255,255,0.88); letter-spacing: 0.02em; white-space: nowrap; }
+.track span::after { content: ""; width: 14px; height: 14px; background: var(--sun); clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); }
+@keyframes slide { to { transform: translateX(-50%); } }
 
-.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-.tiles.two { grid-template-columns: repeat(2, 1fr); }
-.tile { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 18px; display: grid; gap: 8px; align-content: start; transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s; }
-.tile:hover { transform: translateY(-4px); box-shadow: 0 14px 30px -18px rgba(14,90,74,0.45); border-color: #c9ddd4; }
-.tile:hover .ic { transform: rotate(-8deg) scale(1.08); }
-.ic { width: 48px; height: 48px; border-radius: 15px; display: grid; place-items: center; transition: transform 0.3s cubic-bezier(.3,1.6,.5,1); }
-.ic .ms { font-size: 26px; }
-.tile h3 { font-size: 1.04rem; font-weight: 700; }
-.tile p { color: var(--text-2); font-size: 0.95rem; }
+/* ---------- Scroll story ---------- */
+.story { position: relative; height: 520vh; color: #fff; }
+.sticky { position: sticky; top: 0; height: 100vh; height: 100svh; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 40px; padding-top: 70px; }
+.sticky > * { min-width: 0; }
+.steps { position: relative; display: grid; }
+.step { grid-area: 1 / 1; display: grid; gap: 14px; opacity: 0; transform: translateY(30px); transition: opacity 0.5s, transform 0.6s cubic-bezier(.2,.8,.2,1); pointer-events: none; }
+.step.act { opacity: 1; transform: none; pointer-events: auto; }
+.step .num { font-size: 0.85rem; font-weight: 700; letter-spacing: 0.14em; color: var(--sun); text-transform: uppercase; }
+.step h2 { font-size: clamp(2rem, 5vw, 3.4rem); font-weight: 900; letter-spacing: -0.025em; }
+.step p { color: rgba(255,255,255,0.8); font-size: 1.1rem; max-width: 42ch; }
+.step ul { margin: 4px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.step li { display: flex; gap: 10px; align-items: center; color: rgba(255,255,255,0.88); }
+.step li .ms { color: var(--mint); font-size: 20px; }
+.rail { display: flex; gap: 8px; margin-top: 28px; }
+.rail i { height: 5px; flex: 1; max-width: 60px; border-radius: 5px; background: rgba(255,255,255,0.18); overflow: hidden; position: relative; }
+.rail i::after { content: ""; position: absolute; inset: 0; background: var(--mint); transform-origin: 0 50%; transform: scaleX(var(--f, 0)); }
+.story .stage { animation: none; }
+.story .phone { transform: rotateY(var(--ry, 0deg)) rotateX(var(--rx, 0deg)) scale(var(--sc, 1)); }
+.orbit { position: absolute; width: 420px; height: 420px; max-width: 110vw; max-height: 110vw; border-radius: 50%; border: 1px dashed rgba(134,239,172,0.25); animation: spin 40s linear infinite; }
+.orbit::before, .orbit::after { content: ""; position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--sun); top: -7px; left: 50%; margin-left: -7px; box-shadow: 0 0 20px var(--sun); }
+.orbit::after { top: auto; bottom: -7px; background: var(--mint); box-shadow: 0 0 20px var(--mint); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- Light sheets ---------- */
+.sheet { position: relative; z-index: 1; background: var(--bg); border-radius: 40px 40px 0 0; margin-top: -40px; }
+.sheet + .sheet { border-radius: 0; margin-top: 0; }
+section.blk { padding-block: 80px; }
+.head { display: grid; gap: 10px; margin-bottom: 36px; max-width: 700px; }
+.head h2 { font-size: clamp(1.9rem, 4.5vw, 2.9rem); font-weight: 900; letter-spacing: -0.025em; }
+.head p { color: var(--text-2); font-size: 1.08rem; }
+.label { display: inline-flex; align-items: center; gap: 10px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--emerald); }
+.label::before { content: ""; width: 26px; height: 3px; border-radius: 3px; background: linear-gradient(90deg, var(--gold), var(--sun)); animation: stretch 2.4s ease-in-out infinite; transform-origin: left; }
+@keyframes stretch { 50% { transform: scaleX(1.6); } }
+
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 22px; padding: 20px; display: grid; gap: 10px; align-content: start; transform-style: preserve-3d; transition: transform 0.25s, box-shadow 0.3s; will-change: transform; position: relative; overflow: hidden; }
+.card::after { content: ""; position: absolute; inset: 0; background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 0%), rgba(134,239,172,0.22), transparent 60%); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.card:hover::after { opacity: 1; }
+.card:hover { box-shadow: 0 24px 40px -24px rgba(14,90,74,0.55); }
+.ic { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; }
+.ic .ms { font-size: 28px; animation: wiggle 4s ease-in-out infinite; animation-delay: calc(var(--d, 0) * 0.4s); }
+@keyframes wiggle { 0%, 80%, 100% { transform: none; } 85% { transform: rotate(-14deg) scale(1.1); } 90% { transform: rotate(10deg) scale(1.1); } 95% { transform: rotate(-4deg); } }
+.card h3 { font-size: 1.06rem; font-weight: 700; }
+.card p { color: var(--text-2); font-size: 0.95rem; }
 .e { background: var(--emerald-soft); color: var(--emerald); }
 .s { background: var(--sky-soft); color: var(--sky); }
 .o { background: var(--orange-soft); color: var(--orange); }
 .p { background: var(--purple-soft); color: var(--purple); }
 .g { background: var(--gold-soft); color: var(--gold); }
 
-.alt { background: linear-gradient(180deg, var(--emerald-soft), var(--bg)); }
-.ways { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 32px; }
-.way { border-radius: 24px; padding: 20px; display: grid; gap: 12px; align-content: start; transition: transform 0.25s; }
-.way:hover { transform: translateY(-4px); }
-.way.signin { background: var(--emerald); color: #fff; position: relative; overflow: hidden; }
-.way.signin::before { content: ""; position: absolute; width: 220px; height: 220px; border-radius: 50%; right: -70px; top: -90px; background: radial-gradient(circle, rgba(134,239,172,0.28), transparent 70%); animation: pulse 5s ease-in-out infinite; }
-@keyframes pulse { 50% { transform: scale(1.25); } }
-.way.guest { background: var(--card); border: 1px solid var(--border); }
-.way .top { display: flex; align-items: center; gap: 12px; position: relative; }
-.badge { width: 40px; height: 40px; border-radius: 14px; background: #fff; display: grid; place-items: center; font-weight: 700; font-size: 1.3rem; color: #4285f4; flex: none; }
-.way.guest .badge { background: var(--emerald-soft); color: var(--emerald); }
-.way h3 { font-size: 1.06rem; }
-.way ul { margin: 0; padding-left: 20px; display: grid; gap: 5px; font-size: 0.95rem; position: relative; }
-.way.signin ul { color: rgba(255,255,255,0.88); }
-.way.guest ul { color: var(--text-2); }
-.sub { font-size: 1.1rem; font-weight: 700; margin-bottom: 14px; }
+.ways { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 40px; }
+.way { position: relative; border-radius: 26px; padding: 2px; overflow: hidden; isolation: isolate; }
+.way::before { content: ""; position: absolute; inset: -60%; z-index: -1; background: conic-gradient(from 0deg, var(--mint), var(--sun), var(--emerald), var(--mint)); animation: spin 6s linear infinite; }
+.way.guest::before { background: conic-gradient(from 0deg, var(--border), var(--emerald-soft), #b9d4c9, var(--border)); }
+.way .inner { border-radius: 24px; padding: 22px; height: 100%; display: grid; gap: 12px; align-content: start; }
+.way.signin .inner { background: var(--emerald); color: #fff; }
+.way.guest .inner { background: var(--card); }
+.way .topline { display: flex; align-items: center; gap: 12px; }
+.gb { width: 44px; height: 44px; border-radius: 14px; background: #fff; display: grid; place-items: center; font-weight: 900; font-size: 1.35rem; color: #4285f4; flex: none; }
+.way.guest .gb { background: var(--emerald-soft); color: var(--emerald); }
+.way h3 { font-size: 1.12rem; }
+.way ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 0.96rem; }
+.way li { display: flex; gap: 8px; align-items: flex-start; }
+.way li .ms { font-size: 19px; margin-top: 1px; flex: none; }
+.way.signin li { color: rgba(255,255,255,0.9); }
+.way.signin li .ms { color: var(--mint); }
+.way.guest li { color: var(--text-2); }
+.way.guest li .ms { color: var(--emerald); }
+.sub { font-size: 1.15rem; font-weight: 900; margin-bottom: 16px; }
+.perms { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.perm { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 16px; display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; }
+.perm > div { min-width: 0; display: grid; gap: 2px; }
+.perm b { font-size: 1rem; }
+.perm span.t { color: var(--text-2); font-size: 0.92rem; }
+.switch { width: 46px; height: 26px; border-radius: 999px; background: #d6e3de; position: relative; flex: none; transition: background 0.3s 0.2s; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: transform 0.35s cubic-bezier(.3,1.5,.5,1) 0.2s; }
+.on .switch { background: var(--emerald); }
+.on .switch::after { transform: translateX(20px); }
 
-.consents { display: grid; gap: 10px; margin-bottom: 10px; }
-.consent { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
-.box { flex: none; width: 24px; height: 24px; border-radius: 7px; background: var(--emerald); display: grid; place-items: center; margin-top: 1px; }
-.box svg { width: 16px; height: 16px; }
-.box path { fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 24; stroke-dashoffset: 0; }
-.seen .box path { animation: draw 0.6s ease-out both; }
-.seen .consent:nth-child(2) .box path { animation-delay: 0.5s; }
+.consents { display: grid; gap: 12px; margin-bottom: 10px; }
+.consent { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 16px 18px; display: flex; gap: 14px; align-items: flex-start; }
+.box { flex: none; width: 26px; height: 26px; border-radius: 8px; background: var(--emerald); display: grid; place-items: center; margin-top: 1px; }
+.box svg { width: 17px; height: 17px; }
+.box path { fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 24; }
+.on .box path { animation: draw 0.6s ease-out both; }
+.on .consent:nth-child(2) .box path { animation-delay: 0.5s; }
 @keyframes draw { from { stroke-dashoffset: 24; } }
 .consent > div { display: grid; gap: 4px; min-width: 0; }
-.consent a { font-size: 0.92rem; }
-.caption { font-size: 0.88rem; color: var(--text-3); margin-bottom: 28px; }
+.caption { font-size: 0.88rem; color: var(--text-3); margin-bottom: 30px; }
 .facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-.fact { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 16px; display: grid; gap: 6px; align-content: start; }
-.fact .ms { font-size: 24px; color: var(--emerald); }
-.fact b { font-size: 0.98rem; }
-.fact span { color: var(--text-2); font-size: 0.93rem; }
-.docs { margin-top: 22px; display: flex; gap: 10px; flex-wrap: wrap; }
-.docs a { display: inline-flex; align-items: center; gap: 6px; background: var(--emerald-soft); border-radius: 999px; padding: 8px 14px; text-decoration: none; font-size: 0.93rem; transition: background 0.2s; }
-.docs a:hover { background: #cfe5dc; }
-.docs .ms { font-size: 18px; }
+.fact { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 18px; display: grid; gap: 6px; align-content: start; }
+.fact .ms { font-size: 26px; color: var(--emerald); }
+.fact span { color: var(--text-2); font-size: 0.94rem; }
+.legal { margin-top: 28px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.legal a { background: var(--emerald); color: #fff; border-radius: 18px; padding: 16px; text-decoration: none; display: grid; gap: 6px; transition: transform 0.25s, background 0.25s; }
+.legal a:hover { transform: translateY(-4px); background: var(--emerald-light); }
+.legal a .ms { color: var(--mint); }
+.legal a small { color: rgba(255,255,255,0.72); font-weight: 400; }
 
-.pro { position: relative; overflow: hidden; background: var(--gold-soft); border: 1px solid #fde68a; border-radius: 26px; padding: 26px; display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: start; }
-.pro::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.65) 50%, transparent 65%); transform: translateX(-100%); animation: shine 6s ease-in-out infinite 1s; pointer-events: none; }
-.pro .ic { background: #fff; color: var(--gold); }
-.pro > div { display: grid; gap: 8px; min-width: 0; }
-.pro h2 { font-size: 1.45rem; font-weight: 900; }
+.pro { position: relative; overflow: hidden; background: linear-gradient(135deg, #fffbeb, var(--gold-soft)); border: 1px solid #fde68a; border-radius: 30px; padding: 30px; display: grid; grid-template-columns: 1fr auto; gap: 28px; align-items: center; }
+.pro > div { display: grid; gap: 10px; min-width: 0; }
+.pro::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.7) 50%, transparent 65%); transform: translateX(-110%); animation: shine 5s ease-in-out infinite 1s; pointer-events: none; }
+.pro h2 { font-size: clamp(1.6rem, 3.6vw, 2.2rem); font-weight: 900; color: #5c3b06; }
 .pro p { color: #6b4e16; }
+.ringfam { position: relative; width: 190px; height: 190px; flex: none; }
+.ringfam .crown { position: absolute; inset: 0; margin: auto; width: 72px; height: 72px; border-radius: 50%; background: #fff; display: grid; place-items: center; color: var(--gold); box-shadow: 0 10px 24px -10px rgba(217,119,6,0.6); }
+.ringfam .crown .ms { font-size: 38px; }
+.ringfam .av { position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; border: 3px solid #fff; transform: rotate(calc(var(--k) * 72deg)) translateY(-74px) rotate(calc(var(--k) * -72deg)); }
+.on .ringfam .av { animation: join 0.7s cubic-bezier(.3,1.5,.5,1) both; animation-delay: calc(var(--k) * 140ms); }
+@keyframes join { from { transform: rotate(calc(var(--k) * 72deg)) translateY(0) rotate(calc(var(--k) * -72deg)) scale(0.2); opacity: 0; } }
+.ringfam .spin { position: absolute; inset: 0; border-radius: 50%; border: 2px dashed rgba(217,119,6,0.35); animation: spin 18s linear infinite; }
 
-.download { position: relative; overflow: hidden; isolation: isolate; background: linear-gradient(160deg, var(--emerald-dark), var(--emerald-deep)); color: #fff; border-radius: 30px; padding: 40px 28px; display: grid; gap: 14px; justify-items: start; }
-.download h2 { font-size: clamp(1.6rem, 3.6vw, 2.2rem); font-weight: 900; max-width: 22ch; }
-.download p { color: rgba(255,255,255,0.85); max-width: 58ch; }
-.download .crescent { position: absolute; right: 6%; top: 50%; width: 140px; height: 140px; margin-top: -70px; z-index: -1; animation: float 8s ease-in-out infinite; opacity: 0.9; }
-.download .stars { opacity: 1; }
+.faq { display: grid; gap: 10px; max-width: 860px; }
+.faq details { background: var(--card); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; transition: box-shadow 0.3s, border-color 0.3s; }
+.faq details[open] { border-color: #b9d4c9; box-shadow: 0 14px 30px -20px rgba(14,90,74,0.5); }
+.faq summary { list-style: none; cursor: pointer; padding: 18px 20px; display: flex; justify-content: space-between; gap: 16px; align-items: center; font-weight: 700; font-size: 1.02rem; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary .ms { color: var(--emerald); transition: transform 0.35s cubic-bezier(.3,1.5,.5,1); flex: none; }
+.faq details[open] summary .ms { transform: rotate(45deg); }
+.faq .ans { padding: 0 20px 18px; color: var(--text-2); }
+.faq details[open] .ans { animation: up 0.4s ease-out; }
 
-footer { padding-block: 28px 44px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 0.9rem; color: var(--text-2); border-top: 1px solid var(--border); }
-footer nav { display: flex; gap: 18px; flex-wrap: wrap; }
+.final { position: relative; z-index: 1; color: #fff; text-align: center; padding-block: 110px 90px; overflow: hidden; }
+.final h2 { font-size: clamp(2.2rem, 6vw, 4rem); font-weight: 900; letter-spacing: -0.03em; max-width: 16ch; margin: 0 auto; }
+.final p { color: rgba(255,255,255,0.8); max-width: 52ch; margin: 18px auto 0; font-size: 1.1rem; }
+.final .cta { justify-content: center; animation: none; }
+.moon { position: absolute; width: 180px; height: 180px; right: 8%; top: 40px; animation: hover 7s ease-in-out infinite; filter: drop-shadow(0 0 40px rgba(251,191,36,0.5)); }
+.mosque { position: absolute; left: 0; right: 0; bottom: 0; height: 120px; opacity: 0.18; }
 
-/* Scroll rise: content is visible at rest; JS adds .rise only to blocks below the first screen */
-.rise { animation: rise 0.7s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(var(--d, 0) * 80ms); }
-@keyframes rise { from { opacity: 0; transform: translateY(24px); } }
-.wait { opacity: 0; }
+footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,0.15); color: rgba(255,255,255,0.7); font-size: 0.9rem; }
+.foot { display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; padding-block: 26px 40px; }
+.foot nav { display: flex; gap: 18px; flex-wrap: wrap; }
+.foot a { color: rgba(255,255,255,0.85); }
 
-@media (max-width: 880px) {
-  .hero { grid-template-columns: 1fr; gap: 28px; }
-  .tiles { grid-template-columns: repeat(2, 1fr); }
+/* Reveal */
+.rv { transition: opacity 0.8s cubic-bezier(.2,.8,.2,1), transform 0.8s cubic-bezier(.2,.8,.2,1); transition-delay: calc(var(--d, 0) * 90ms); }
+.rv.wait { opacity: 0; transform: translateY(40px) scale(0.97); }
+
+@media (max-width: 960px) {
+  .grid { grid-template-columns: repeat(2, 1fr); }
+  .legal { grid-template-columns: repeat(2, 1fr); }
   .facts { grid-template-columns: 1fr 1fr; }
 }
-@media (max-width: 600px) {
-  .bar nav { display: none; }
-  .tiles, .tiles.two, .ways, .facts { grid-template-columns: 1fr; }
+@media (max-width: 860px) {
+  .bar nav { display: none; position: absolute; top: 100%; left: 12px; right: 12px; flex-direction: column; background: rgba(4,42,33,0.96); border-radius: 18px; padding: 10px; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.6); }
+  .bar nav.open { display: flex; animation: up 0.3s ease-out; }
+  .bar nav a { padding: 12px 14px; }
+  .menu-btn { display: grid; place-items: center; }
+  .hero { grid-template-columns: 1fr; text-align: left; padding-block: 20px 56px; min-height: 0; gap: 48px; }
+  .stats { grid-template-columns: repeat(2, auto); }
+  .sticky { grid-template-columns: 1fr; grid-template-rows: auto 1fr; gap: 14px; padding-top: 72px; align-content: start; }
+  .sticky .stage { order: -1; }
+  .story .phone { width: min(210px, calc(46svh * 0.47)); }
+  .step h2 { font-size: clamp(1.6rem, 7vw, 2.2rem); }
+  .step p { font-size: 1rem; }
+  .step ul { display: none; }
+  .rail { margin-top: 14px; }
+  .orbit { width: 300px; height: 300px; }
+  .bubble.b1 { left: 0; } .bubble.b2 { right: 0; } .bubble.b3 { left: 4%; }
   .pro { grid-template-columns: 1fr; }
-  .arc .stop text { font-size: 34px; }
-  .arc .stop circle { r: 12px; }
-  .arc .path, .arc .trail { stroke-width: 4; }
-  .dot { width: 24px; height: 24px; }
-  section { padding-block: 48px; }
-  .download .crescent { width: 90px; height: 90px; right: -10px; top: 24px; margin-top: 0; opacity: 0.35; }
+  .ringfam { margin: 0 auto; }
+}
+@media (max-width: 600px) {
+  .grid, .ways, .perms, .facts, .legal { grid-template-columns: 1fr; }
+  section.blk { padding-block: 60px; }
+  .bubble { font-size: 0.8rem; max-width: 200px; padding: 8px 10px; }
+  .moon { width: 110px; height: 110px; right: -10px; top: 20px; opacity: 0.6; }
+  .sheet { border-radius: 28px 28px 0 0; }
+  .pattern { opacity: 0.05; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
-  .wait { opacity: 1; }
+  .rv.wait { opacity: 1; transform: none; }
+  .scr .vrow.tap .chk { background: var(--emerald); border-color: var(--emerald); }
+  .scr .vrow.tap .chk .ms, .mdots i.y { opacity: 1; }
+  .mdots i.y { background: var(--emerald); }
 }
 </style>
 </head>
 <body>
 
-<header class="sky" id="sky">
-  <div class="layer day"></div>
-  <div class="layer dawn"></div>
-  <div class="layer night"></div>
-  <div class="layer stars" id="stars"></div>
-  <div class="in">
-    <div class="bar">
-      <a class="brand" href="#"><span class="ms" aria-hidden="true">mosque</span>Aile İle Namaz</a>
-      <nav>
+<canvas id="bg" aria-hidden="true"></canvas>
+<div class="pattern" aria-hidden="true"></div>
+<div class="glow a" aria-hidden="true"></div>
+<div class="glow b" aria-hidden="true"></div>
+<div class="progress" id="progress" aria-hidden="true"></div>
+
+<div class="page">
+  <header class="top" id="top">
+    <div class="in bar">
+      <a class="brand" href="#" aria-label="Aile İle Namaz ana sayfa">
+        <span class="logo"><span class="ms" aria-hidden="true" style="color:#fff">mosque</span></span>
+        Aile İle Namaz
+      </a>
+      <nav id="nav" aria-label="Sayfa bölümleri">
+        <a href="#nasil">Nasıl çalışır</a>
         <a href="#ozellikler">Özellikler</a>
-        <a href="#baslarken">Başlarken</a>
+        <a href="#baslarken">Tercihler</a>
         <a href="#kvkk">KVKK</a>
+        <a href="#sss">SSS</a>
         <a href="#indir">İndir</a>
       </nav>
+      <button class="menu-btn" id="menuBtn" aria-label="Menüyü aç" aria-expanded="false" aria-controls="nav"><span class="ms" aria-hidden="true">menu</span></button>
     </div>
-    <div class="hero">
+  </header>
+
+  <main>
+    <div class="in hero">
       <div>
-        <h1>Ailecek <span class="now" id="nowName">öğle</span> vakti</h1>
-        <p class="lead">Birlikte namaz kılın, kaza borçlarınızı takip edin ve ortak ibadet havuzunda buluşun.</p>
+        <span class="pill"><span class="live"></span>Ücretsiz Android uygulaması</span>
+        <h1 id="h1" data-split>Namazı <span class="hl">ailecek</span> takip edin.</h1>
+        <p class="lead">Namazını işaretle, ailen anında görsün. Diyanet yöntemiyle vakitler, kaza takibi, karne ve kıble pusulası tek uygulamada.</p>
         <div class="cta">
-          <a class="btn white" href="https://github.com/bilkil53/aile-ile-namaz/releases/latest"><span class="ms" aria-hidden="true">download</span>Uygulamayı indir</a>
-          <span class="chip"><span class="ms" aria-hidden="true">schedule</span>Google Play'e yakında</span>
+          <a class="btn main mag" href="https://github.com/bilkil53/aile-ile-namaz/releases/latest"><span class="ms" aria-hidden="true">download</span>Ücretsiz indir</a>
+          <a class="btn ghost mag" href="#nasil"><span class="ms" aria-hidden="true">play_circle</span>Nasıl çalışır?</a>
+        </div>
+        <div class="stats">
+          <div class="stat"><b class="count" data-to="5">5</b><span>vakit takibi</span></div>
+          <div class="stat"><b class="count" data-to="5">5</b><span>kişilik aile havuzu</span></div>
+          <div class="stat"><b class="count" data-to="150">150</b><span>vakitlik aylık karne</span></div>
+          <div class="stat"><b>TR · EN</b><span>iki dil</span></div>
         </div>
       </div>
-      <div>
-        <div class="fcard" aria-label="Aile Havuzu örnek görünümü">
-          <div class="fhead"><b><span class="ms" aria-hidden="true">groups</span>Aile Havuzu</b><span>Bugün · 4 kişi</span></div>
-          <div class="fgrid" id="board"></div>
-          <div class="ffoot"><span class="ms" aria-hidden="true">volunteer_activism</span><span id="feed">Baba aileye dua gönderdi</span></div>
-        </div>
-        <p class="note">Örnek görünüm</p>
+      <div class="stage" id="heroStage">
+        <div class="phone tilt" id="heroPhone"><div class="screen" data-screens></div></div>
+        <div class="bubble b1"><span class="ms e" aria-hidden="true">check_circle</span><span>Zeynep öğle namazını kıldı</span></div>
+        <div class="bubble b2"><span class="ms g" aria-hidden="true">notifications_active</span><span>İkindi vakti girdi</span></div>
+        <div class="bubble b3"><span class="ms p" aria-hidden="true">emoji_events</span><span>Yeni rozet: İstikrar Yıldızı</span></div>
       </div>
     </div>
-    <div class="arc" aria-hidden="true">
-      <svg viewBox="0 0 1000 210" id="arc">
-        <path class="path" d="M30 190 Q500 -70 970 190"/>
-        <path class="trail" id="trail" d="M30 190 Q500 -70 970 190"/>
-        <g id="stops"></g>
-        <g id="orb" class="orb">
-          <circle class="sunc" r="16" fill="#fbbf24"/>
-          <path class="moon" d="M6 -15 A16 16 0 1 0 6 15 A12 12 0 1 1 6 -15 Z" fill="#fef3c7"/>
-        </g>
-      </svg>
-    </div>
-  </div>
-  <div class="horizon"></div>
-</header>
 
-<main>
-  <section id="ozellikler" class="in">
-    <div class="head reveal"><p class="label">Özellikler</p><h2>Uygulamada neler var?</h2></div>
-    <div class="tiles">
-      <div class="tile reveal"><span class="ic e"><span class="ms" aria-hidden="true">home</span></span><h3>Bugün Sekmesi (Vakitler &amp; Kıble)</h3><p>Diyanet uyumlu vakitler, 5 vakit namaz takibi ve canlı kıble pusulası.</p></div>
-      <div class="tile reveal"><span class="ic s"><span class="ms" aria-hidden="true">groups</span></span><h3>Aile Havuzu (İbadet Halkası)</h3><p>Eşiniz ve çocuklarınızla tek davet kodu ile bağlanın; namaz durumlarını birlikte görün.</p></div>
-      <div class="tile reveal"><span class="ic o"><span class="ms" aria-hidden="true">calendar_month</span></span><h3>Kaza (Mahremiyet Korumalı)</h3><p>Kaza borçlarınızı tutun; ailenizin kaza durumunu sadece özet olarak görün.</p></div>
-      <div class="tile reveal"><span class="ic p"><span class="ms" aria-hidden="true">emoji_events</span></span><h3>Karne (İstatistik &amp; Motivasyon)</h3><p>Haftalık başarı oranınız, manevi rozetler ve günün hadisi. Hafta 35, ay 150 vakit üzerinden.</p></div>
-      <div class="tile reveal"><span class="ic g"><span class="ms" aria-hidden="true">notifications_active</span></span><h3>Hatırlatmalar</h3><p>Vakit girince, Cuma günü ve mübarek gün ve gecelerde hatırlatma.</p></div>
-      <div class="tile reveal"><span class="ic e"><span class="ms" aria-hidden="true">cloud_off</span></span><h3>İnternetsiz de çalışır</h3><p>Vakitler ve telefona kaydedilen işaretler internetsiz çalışır; bağlantı gelince eşitlenir.</p></div>
+    <div class="marquee" aria-hidden="true">
+      <div class="track"><span>Sabah</span><span>Öğle</span><span>İkindi</span><span>Akşam</span><span>Yatsı</span><span>Aile Havuzu</span><span>Kaza Takibi</span><span>Karne</span><span>Kıble</span><span>Sabah</span><span>Öğle</span><span>İkindi</span><span>Akşam</span><span>Yatsı</span><span>Aile Havuzu</span><span>Kaza Takibi</span><span>Karne</span><span>Kıble</span></div>
     </div>
-  </section>
 
-  <div class="alt">
-    <section id="baslarken" class="in">
-      <div class="head reveal"><p class="label">Başlarken</p><h2>Dikkat edilmesi gereken tercihler</h2><p>Uygulamayı açınca iki yol çıkar. Hangisini seçtiğin, neyin kaydedileceğini belirler.</p></div>
-      <div class="ways">
-        <div class="way signin reveal">
-          <div class="top"><span class="badge">G</span><h3>Google ile Hızlı Giriş Yap</h3></div>
-          <ul>
-            <li>Kayıtların buluta yedeklenir, ailenle eşitlenir.</li>
-            <li>Aile Havuzu ve aile bildirimleri yalnız girişle çalışır.</li>
-            <li>Girişten önce iki KVKK kutusunu da işaretlemen gerekir.</li>
-          </ul>
+    <section class="story" id="nasil" aria-label="Nasıl çalışır">
+      <div class="in sticky">
+        <div>
+          <div class="steps" id="steps">
+            <article class="step act">
+              <span class="num">1 / 5 · Bugün</span>
+              <h2>Vakti gelince bir dokunuş</h2>
+              <p>Bulunduğun yere göre Diyanet yöntemiyle vakitler. Sıradaki vakte geri sayım, kıldığını tek dokunuşla işaretle.</p>
+              <ul><li><span class="ms" aria-hidden="true">schedule</span>Vakit girince hatırlatma</li><li><span class="ms" aria-hidden="true">cloud_off</span>İnternetsiz de çalışır</li></ul>
+            </article>
+            <article class="step">
+              <span class="num">2 / 5 · Aile Havuzu</span>
+              <h2>Ailen anında görsün</h2>
+              <p>Eşin ve çocuklarınla tek davet koduyla bağlan. En çok 5 kişi, kim hangi vakti kıldı tek ekranda.</p>
+              <ul><li><span class="ms" aria-hidden="true">volunteer_activism</span>Birbirinize dua gönderin</li><li><span class="ms" aria-hidden="true">notifications</span>Aile bildirimleri</li></ul>
+            </article>
+            <article class="step">
+              <span class="num">3 / 5 · Kaza</span>
+              <h2>Kaza borcun sende kalır</h2>
+              <p>Borcunu bir kez kaydet, kıldıkça düşsün. Ailen yalnız özeti görür, ayrıntı sende kalır.</p>
+              <ul><li><span class="ms" aria-hidden="true">lock</span>Mahremiyet korumalı</li><li><span class="ms" aria-hidden="true">trending_down</span>Kıldıkça azalır</li></ul>
+            </article>
+            <article class="step">
+              <span class="num">4 / 5 · Karne</span>
+              <h2>Haftanı gör, gayretini artır</h2>
+              <p>Hafta 35, ay 150 vakit üzerinden karne. Seri, aylık takvim, istatistikler ve manevi rozetler.</p>
+              <ul><li><span class="ms" aria-hidden="true">emoji_events</span>Rozetler ve seriler</li><li><span class="ms" aria-hidden="true">format_quote</span>Günün hadisi</li></ul>
+            </article>
+            <article class="step">
+              <span class="num">5 / 5 · Kıble</span>
+              <h2>Kıble her yerde yanında</h2>
+              <p>Telefonun pusulasıyla canlı kıble yönü. Cuma, kandil ve mübarek günlerde hatırlatma.</p>
+              <ul><li><span class="ms" aria-hidden="true">explore</span>Canlı pusula</li><li><span class="ms" aria-hidden="true">nights_stay</span>Mübarek gün hatırlatmaları</li></ul>
+            </article>
+          </div>
+          <div class="rail" id="rail"><i></i><i></i><i></i><i></i><i></i></div>
         </div>
-        <div class="way guest reveal">
-          <div class="top"><span class="badge"><span class="ms" aria-hidden="true">explore</span></span><h3>Giriş Yapmadan Devam Et</h3></div>
-          <ul>
-            <li>Uygulamayı serbestçe gezip tüm ekranları deneyebilirsin.</li>
-            <li>Gezinti yalnızca bakmak içindir: işaretleme ve kayıt yapılmaz.</li>
-            <li>İstediğin zaman Google ile giriş yapabilirsin.</li>
-          </ul>
+        <div class="stage">
+          <div class="orbit" aria-hidden="true"></div>
+          <div class="phone" id="storyPhone"><div class="screen" data-screens></div></div>
         </div>
-      </div>
-      <p class="sub reveal">Uygulamanın istediği izinler</p>
-      <div class="tiles two">
-        <div class="tile reveal"><span class="ic e"><span class="ms" aria-hidden="true">location_on</span></span><h3>Konum</h3><p>Yalnız uygulama açıkken, vakit hesabı için. Yaklaşık 1 km'ye yuvarlanır, kimliksiz gönderilir, sunucumuzda saklanmaz.</p></div>
-        <div class="tile reveal"><span class="ic g"><span class="ms" aria-hidden="true">notifications</span></span><h3>Bildirim</h3><p>Vakit hatırlatmaları ve aile havuzundan gelen haberler için.</p></div>
-        <div class="tile reveal"><span class="ic s"><span class="ms" aria-hidden="true">alarm</span></span><h3>Tam zamanlı alarm</h3><p>Hatırlatmanın vakit girdiği dakikada çalması için; senin izninle açılır.</p></div>
-        <div class="tile reveal"><span class="ic o"><span class="ms" aria-hidden="true">explore</span></span><h3>Pusula sensörü</h3><p>Kıble yönünü göstermek için telefonun sensörünü kullanır.</p></div>
       </div>
     </section>
-  </div>
 
-  <section id="kvkk" class="in">
-    <div class="head reveal"><p class="label">KVKK</p><h2>Kişisel verilerin korunması</h2><p>Girişten önce iki ayrı onay istenir. Aydınlatma metnini okuduğunu beyan edersin, sonra açık rızanı ayrıca verirsin.</p></div>
-    <div class="consents reveal" id="consents">
-      <div class="consent"><span class="box"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span><div><p>KVKK Aydınlatma Metni'ni okudum ve anladım.</p><a href="privacy.html#kvkk">Aydınlatma metnini oku</a></div></div>
-      <div class="consent"><span class="box"><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span><div><p>Açık Rıza Metni'ni okudum; namaz ve kaza kayıtlarımın, dua ve tebrik mesajlarımın işlenmesine ve aile havuzumdaki kişilere gösterilmesine açık rıza veriyorum.</p><a href="privacy.html#acik-riza">Açık rıza metnini oku</a></div></div>
+    <div class="sheet">
+      <section class="in blk" id="ozellikler">
+        <div class="head rv"><p class="label">Özellikler</p><h2>Bir ailenin namaz yolculuğu için her şey</h2></div>
+        <div class="grid">
+          <div class="card rv tilt"><span class="ic e" style="--d:0"><span class="ms" aria-hidden="true">home</span></span><h3>Bugün Sekmesi</h3><p>Diyanet uyumlu vakitler, 5 vakit takibi ve sıradaki vakte geri sayım.</p></div>
+          <div class="card rv tilt"><span class="ic s" style="--d:1"><span class="ms" aria-hidden="true">groups</span></span><h3>Aile Havuzu</h3><p>Tek davet koduyla en çok 5 kişi; namaz durumlarını birlikte görün.</p></div>
+          <div class="card rv tilt"><span class="ic o" style="--d:2"><span class="ms" aria-hidden="true">calendar_month</span></span><h3>Kaza Takibi</h3><p>Kaza borcunu tut; ailen yalnız özeti görür.</p></div>
+          <div class="card rv tilt"><span class="ic p" style="--d:3"><span class="ms" aria-hidden="true">emoji_events</span></span><h3>Karne ve Rozetler</h3><p>Haftalık başarı oranı, seri, aylık takvim ve manevi rozetler.</p></div>
+          <div class="card rv tilt"><span class="ic e" style="--d:4"><span class="ms" aria-hidden="true">explore</span></span><h3>Kıble Pusulası</h3><p>Telefonun sensörüyle canlı kıble yönü.</p></div>
+          <div class="card rv tilt"><span class="ic g" style="--d:5"><span class="ms" aria-hidden="true">notifications_active</span></span><h3>Hatırlatmalar</h3><p>Vakit, Cuma, kandil, mübarek gün ve geceler.</p></div>
+          <div class="card rv tilt"><span class="ic s" style="--d:6"><span class="ms" aria-hidden="true">volunteer_activism</span></span><h3>Dua Gönder</h3><p>Aile üyelerine dua ve tebrik mesajı gönder.</p></div>
+          <div class="card rv tilt"><span class="ic o" style="--d:7"><span class="ms" aria-hidden="true">cloud_off</span></span><h3>İnternetsiz Çalışır</h3><p>Vakitler ve işaretler telefonda; bağlantı gelince eşitlenir.</p></div>
+        </div>
+      </section>
     </div>
-    <p class="caption reveal">Uygulamadaki onay kutularının metni. Metin güncellenirse uygulama onayı yeniden ister.</p>
-    <div class="facts">
-      <div class="fact reveal"><span class="ms" aria-hidden="true">shield_person</span><b>Neden açık rıza?</b><span>Namaz, kaza ve dua kayıtları dini inancı gösterebildiği için özel nitelikli kişisel veri sayılır.</span></div>
-      <div class="fact reveal"><span class="ms" aria-hidden="true">dns</span><b>Veriler nerede?</b><span>Avrupa Birliği'ndeki sunucularda (Almanya, Frankfurt). Bağlantılar şifrelidir.</span></div>
-      <div class="fact reveal"><span class="ms" aria-hidden="true">visibility</span><b>Kim görür?</b><span>Yalnız sen ve üyesi olduğun aile havuzu. E-postan diğer kullanıcılara gösterilmez.</span></div>
-      <div class="fact reveal"><span class="ms" aria-hidden="true">history</span><b>Ne kadar saklanır?</b><span>Kayıtlar hesabın silinene kadar; aile akışı 7 gün; hata raporları 30 gün.</span></div>
-      <div class="fact reveal"><span class="ms" aria-hidden="true">undo</span><b>Rızanı geri al</b><span>Hesabını ve verilerini silerek istediğin zaman geri alabilirsin. Haklarını (KVKK md. 11) gizlilik sayfasında bulursun.</span></div>
-      <div class="fact reveal"><span class="ms" aria-hidden="true">family_restroom</span><b>Çocuklar</b><span>13 yaşından küçük çocukların hesabı ebeveyn gözetiminde açılmalıdır.</span></div>
-    </div>
-    <div class="docs reveal">
-      <a href="privacy.html"><span class="ms" aria-hidden="true">description</span>Gizlilik Politikası ve Aydınlatma Metni</a>
-      <a href="delete-account.html"><span class="ms" aria-hidden="true">person_remove</span>Hesap silme</a>
-      <a href="privacy-en.html"><span class="ms" aria-hidden="true">translate</span>Privacy (English)</a>
-    </div>
-  </section>
 
-  <section class="in">
-    <div class="pro reveal">
-      <span class="ic"><span class="ms" aria-hidden="true">workspace_premium</span></span>
-      <div>
-        <h2>Aile Pro</h2>
-        <p>Bireysel kullanım ücretsizdir. Aile Pro'da aile reisinin Pro alması yeter: aile havuzundaki herkes (en çok 5 kişi) Pro olur. Satın alma Google Play üzerinden yapılacak; fiyatlar Play'de gösterilecek.</p>
+    <div class="sheet" style="background:linear-gradient(180deg,var(--emerald-soft),var(--bg))">
+      <section class="in blk" id="baslarken">
+        <div class="head rv"><p class="label">Başlarken</p><h2>Dikkat edilmesi gereken tercihler</h2><p>Uygulamayı açınca iki yol çıkar. Hangisini seçtiğin, neyin kaydedileceğini belirler.</p></div>
+        <div class="ways">
+          <div class="way signin rv"><div class="inner">
+            <div class="topline"><span class="gb">G</span><h3>Google ile Hızlı Giriş Yap</h3></div>
+            <ul>
+              <li><span class="ms" aria-hidden="true">cloud_done</span>Kayıtların buluta yedeklenir, ailenle eşitlenir.</li>
+              <li><span class="ms" aria-hidden="true">groups</span>Aile Havuzu ve aile bildirimleri yalnız girişle çalışır.</li>
+              <li><span class="ms" aria-hidden="true">fact_check</span>Girişten önce iki KVKK kutusunu da işaretlemen gerekir.</li>
+            </ul>
+          </div></div>
+          <div class="way guest rv" style="--d:1"><div class="inner">
+            <div class="topline"><span class="gb"><span class="ms" aria-hidden="true">explore</span></span><h3>Giriş Yapmadan Devam Et</h3></div>
+            <ul>
+              <li><span class="ms" aria-hidden="true">visibility</span>Uygulamayı serbestçe gezip tüm ekranları deneyebilirsin.</li>
+              <li><span class="ms" aria-hidden="true">block</span>Gezinti yalnızca bakmak içindir: işaretleme ve kayıt yapılmaz.</li>
+              <li><span class="ms" aria-hidden="true">login</span>İstediğin zaman Google ile giriş yapabilirsin.</li>
+            </ul>
+          </div></div>
+        </div>
+        <p class="sub rv">Uygulamanın istediği izinler</p>
+        <div class="perms rv" id="perms">
+          <div class="perm"><span class="ic e"><span class="ms" aria-hidden="true">location_on</span></span><div><b>Konum</b><span class="t">Yalnız uygulama açıkken, vakit hesabı için. Yaklaşık 1 km'ye yuvarlanır, sunucumuzda saklanmaz.</span></div><span class="switch" aria-hidden="true"></span></div>
+          <div class="perm"><span class="ic g"><span class="ms" aria-hidden="true">notifications</span></span><div><b>Bildirim</b><span class="t">Vakit hatırlatmaları ve aile havuzundan gelen haberler.</span></div><span class="switch" aria-hidden="true"></span></div>
+          <div class="perm"><span class="ic s"><span class="ms" aria-hidden="true">alarm</span></span><div><b>Tam zamanlı alarm</b><span class="t">Hatırlatmanın vakit girdiği dakikada çalması için, senin izninle.</span></div><span class="switch" aria-hidden="true"></span></div>
+          <div class="perm"><span class="ic o"><span class="ms" aria-hidden="true">explore</span></span><div><b>Pusula sensörü</b><span class="t">Kıble yönünü göstermek için telefonun sensörü.</span></div><span class="switch" aria-hidden="true"></span></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="sheet">
+      <section class="in blk" id="kvkk">
+        <div class="head rv"><p class="label">KVKK ve yasal metinler</p><h2>Kişisel verilerin korunması</h2><p>Girişten önce iki ayrı onay istenir: Aydınlatma Metni'ni okuduğunu beyan edersin, sonra açık rızanı ayrıca verirsin.</p></div>
+        <div class="consents rv" id="consents">
+          <div class="consent"><span class="box"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span><div><p>KVKK Aydınlatma Metni'ni okudum ve anladım.</p><a href="privacy.html#kvkk">Aydınlatma metnini oku</a></div></div>
+          <div class="consent"><span class="box"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span><div><p>Açık Rıza Metni'ni okudum; namaz ve kaza kayıtlarımın, dua ve tebrik mesajlarımın işlenmesine ve aile havuzumdaki kişilere gösterilmesine açık rıza veriyorum.</p><a href="privacy.html#acik-riza">Açık rıza metnini oku</a></div></div>
+        </div>
+        <p class="caption rv">Uygulamadaki onay kutularının metni. Metin güncellenirse uygulama onayı yeniden ister.</p>
+        <div class="facts">
+          <div class="fact rv"><span class="ms" aria-hidden="true">shield_person</span><b>Neden açık rıza?</b><span>Namaz, kaza ve dua kayıtları dini inancı gösterebildiği için özel nitelikli kişisel veri sayılır.</span></div>
+          <div class="fact rv" style="--d:1"><span class="ms" aria-hidden="true">dns</span><b>Veriler nerede?</b><span>Avrupa Birliği'ndeki sunucularda (Almanya, Frankfurt). Bağlantılar şifrelidir.</span></div>
+          <div class="fact rv" style="--d:2"><span class="ms" aria-hidden="true">visibility</span><b>Kim görür?</b><span>Yalnız sen ve üyesi olduğun aile havuzu. E-postan diğer kullanıcılara gösterilmez.</span></div>
+          <div class="fact rv"><span class="ms" aria-hidden="true">history</span><b>Ne kadar saklanır?</b><span>Kayıtlar hesabın silinene kadar; aile akışı 7 gün; hata raporları 30 gün.</span></div>
+          <div class="fact rv" style="--d:1"><span class="ms" aria-hidden="true">undo</span><b>Rızanı geri al</b><span>Hesabını ve verilerini silerek istediğin zaman geri alabilirsin. KVKK md. 11 haklarını gizlilik metninde bulursun.</span></div>
+          <div class="fact rv" style="--d:2"><span class="ms" aria-hidden="true">family_restroom</span><b>Çocuklar</b><span>13 yaşından küçük çocukların hesabı ebeveyn gözetiminde açılmalıdır.</span></div>
+        </div>
+        <div class="legal">
+          <a class="rv" href="privacy.html"><span class="ms" aria-hidden="true">policy</span><b>Gizlilik ve KVKK</b><small>Aydınlatma ve Açık Rıza Metni</small></a>
+          <a class="rv" style="--d:1" href="kullanim-kosullari.html"><span class="ms" aria-hidden="true">gavel</span><b>Kullanım Koşulları</b><small>Uygulama ve site kuralları</small></a>
+          <a class="rv" style="--d:2" href="cerez-politikasi.html"><span class="ms" aria-hidden="true">cookie</span><b>Çerez Politikası</b><small>Bu site çerez kullanmaz</small></a>
+          <a class="rv" style="--d:3" href="delete-account.html"><span class="ms" aria-hidden="true">person_remove</span><b>Hesap Silme</b><small>Hesabını ve verilerini sil</small></a>
+        </div>
+      </section>
+    </div>
+
+    <div class="sheet">
+      <section class="in blk" style="padding-top:20px">
+        <div class="pro rv" id="pro">
+          <div>
+            <p class="label" style="color:#92400e">Aile Pro</p>
+            <h2>Bir kişi alır, bütün aile Pro olur</h2>
+            <p>Bireysel kullanım ücretsizdir. Aile Pro'da aile reisinin Pro alması yeter: aile havuzundaki herkes (en çok 5 kişi) Pro olur. Satın alma Google Play üzerinden yapılacak, fiyatlar Play'de gösterilecek.</p>
+          </div>
+          <div class="ringfam" aria-hidden="true">
+            <div class="spin"></div>
+            <div class="crown"><span class="ms">workspace_premium</span></div>
+            <span class="av" style="--k:0;background:#0e5a4a">A</span>
+            <span class="av" style="--k:1;background:#0369a1">B</span>
+            <span class="av" style="--k:2;background:#ea580c">Z</span>
+            <span class="av" style="--k:3;background:#7e22ce">A</span>
+            <span class="av" style="--k:4;background:#d97706">E</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="in blk" id="sss" style="padding-top:20px">
+        <div class="head rv"><p class="label">Sık sorulan sorular</p><h2>Merak edilenler</h2></div>
+        <div class="faq" id="faq"></div>
+      </section>
+    </div>
+
+    <section class="final" id="indir">
+      <svg class="moon" viewBox="0 0 100 100" aria-hidden="true"><path d="M62 8a42 42 0 1 0 30 62A34 34 0 1 1 62 8z" fill="#fef3c7"/><path d="M78 30l2.4 5 5.6.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.6-.8z" fill="#fbbf24"/></svg>
+      <svg class="mosque" viewBox="0 0 1200 120" preserveAspectRatio="xMidYMax slice" aria-hidden="true"><path fill="#86efac" d="M0 120V96h120V70h10V40l4-8 4 8v30h10v26h40V80c0-22 18-40 40-40s40 18 40 40v16h30V60l6-14 6 14v36h60V84c0-40 34-72 76-72s76 32 76 72v12h60V60l6-14 6 14v36h30V80c0-22 18-40 40-40s40 18 40 40v16h40V70h10V40l4-8 4 8v30h10v26h180V84c0-18 16-32 34-32s34 14 34 32v12h112v24z"/></svg>
+      <div class="in" style="position:relative">
+        <h2 class="rv">Ailene davet kodunu gönder, birlikte başlayın</h2>
+        <p class="rv" style="--d:1">Uygulama şimdilik Android için GitHub üzerinden dağıtılıyor, Google Play sürümü hazırlanıyor. Türkçe ve İngilizce.</p>
+        <div class="cta rv" style="--d:2"><a class="btn main mag" href="https://github.com/bilkil53/aile-ile-namaz/releases/latest"><span class="ms" aria-hidden="true">android</span>Son sürümü indir (APK)</a></div>
       </div>
-    </div>
-  </section>
+    </section>
+  </main>
 
-  <section id="indir" class="in">
-    <div class="download reveal">
-      <div class="layer stars" id="stars2" style="position:absolute;inset:0;z-index:-1"></div>
-      <svg class="crescent" viewBox="0 0 100 100" aria-hidden="true"><path d="M62 8a42 42 0 1 0 30 62A34 34 0 1 1 62 8z" fill="#fef3c7"/></svg>
-      <h2>Ailene davet kodunu gönder, birlikte başlayın</h2>
-      <p>Uygulama şimdilik Android için GitHub üzerinden dağıtılıyor. Google Play sürümü hazırlanıyor. Türkçe ve İngilizce.</p>
-      <a class="btn white" href="https://github.com/bilkil53/aile-ile-namaz/releases/latest"><span class="ms" aria-hidden="true">android</span>Son sürümü indir (APK)</a>
-    </div>
-  </section>
-
-  <div class="in">
-    <footer>
-      <span>Aile İle Namaz · Bu site çerez kullanmaz, ziyaretçi bilgisi toplamaz.</span>
-      <nav>
-        <a href="privacy.html">Gizlilik Politikası</a>
+  <footer>
+    <div class="in foot">
+      <span>© 2026 Aile İle Namaz · Bu site çerez kullanmaz, ziyaretçi bilgisi toplamaz.</span>
+      <nav aria-label="Yasal">
+        <a href="privacy.html">Gizlilik ve KVKK</a>
+        <a href="kullanim-kosullari.html">Kullanım Koşulları</a>
+        <a href="cerez-politikasi.html">Çerez Politikası</a>
         <a href="delete-account.html">Hesap silme</a>
         <a href="https://github.com/bilkil53/aile-ile-namaz/issues">Destek</a>
       </nav>
-    </footer>
-  </div>
-</main>
+    </div>
+  </footer>
+</div>
 
 <script>
 (function () {
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var V = ["Sabah", "Öğle", "İkindi", "Akşam", "Yatsı"];
-  var Vlow = ["sabah", "öğle", "ikindi", "akşam", "yatsı"];
-  // Example family: which prayer index each member has marked (missing ones stay empty)
-  var fam = [["Anne", [0, 1, 2, 3, 4]], ["Baba", [0, 1, 2, 3, 4]], ["Zeynep", [0, 1, 2, 3]], ["Ali", [0, 2, 3, 4]]];
-  var feedText = [
-    "Anne sabah namazını kıldı", "Zeynep öğle namazını kıldı", "Ali ikindi namazını kıldı",
-    "Baba akşam namazını kıldı", "Anne aileye dua gönderdi"
+  var small = window.matchMedia("(max-width: 860px)").matches;
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+
+  /* ---------- FAQ from the JSON-LD (single source) ---------- */
+  try {
+    var ld = JSON.parse($('script[type="application/ld+json"]').textContent);
+    var faq = ld["@graph"].filter(function (n) { return n["@type"] === "FAQPage"; })[0];
+    $("#faq").innerHTML = faq.mainEntity.map(function (q, i) {
+      return '<details class="rv" style="--d:' + (i % 4) + '"' + (i === 0 ? " open" : "") + '><summary>' + q.name + '<span class="ms" aria-hidden="true">add</span></summary><p class="ans">' + q.acceptedAnswer.text + "</p></details>";
+    }).join("");
+  } catch (e) {}
+
+  /* ---------- Phone screens ---------- */
+  var V = [["Sabah", "06:41"], ["Öğle", "12:58"], ["İkindi", "15:34"], ["Akşam", "17:56"], ["Yatsı", "19:21"]];
+  function tabs(k) { return '<div class="tabs">' + ["home", "groups", "calendar_month", "emoji_events", "explore"].map(function (n, i) { return '<span class="ms' + (i === k ? " on" : "") + '">' + n + "</span>"; }).join("") + "</div>"; }
+  function bar(t, ic) { return '<div class="abar"><b>' + t + '</b><span class="ms">' + ic + "</span></div>"; }
+  var fam = [["Anne", "#0e5a4a", [1, 1, 1, 0, 0]], ["Baba", "#0369a1", [1, 1, 1, 0, 0]], ["Zeynep", "#ea580c", [1, 1, 0, 0, 0]], ["Ali", "#7e22ce", [1, 0, 1, 0, 0]]];
+  var S = [
+    bar("Bugün", "notifications") + '<div class="body"><div class="next"><small>Akşam vaktine kalan</small><span class="cd" data-cd>01:24:36</span><small>Örnek konum · İstanbul</small></div>' +
+      V.map(function (v, i) { return '<div class="vrow' + (i < 2 ? " done" : "") + (i === 2 ? " tap cur" : "") + '"><span>' + v[0] + '</span><span class="t">' + v[1] + '</span><span class="chk"><span class="ms">check</span></span>' + (i === 2 ? '<span class="ripple"></span>' : "") + "</div>"; }).join("") + "</div>" + tabs(0),
+    bar("Aile Havuzu", "person_add") + '<div class="body">' +
+      fam.map(function (m) { var d = 0; return '<div class="mem"><span class="ava" style="background:' + m[1] + '">' + m[0][0] + "</span><b>" + m[0] + '</b><span class="mdots">' + m[2].map(function (x) { return "<i" + (x ? ' class="y" style="--d:' + (d++) + '"' : "") + "></i>"; }).join("") + "</span></div>"; }).join("") +
+      '<div class="toast"><span class="ms">volunteer_activism</span>Baba aileye dua gönderdi</div></div>' + tabs(1),
+    bar("Kaza", "lock") + '<div class="body"><div class="kzsum"><small>Toplam kaza borcu</small><b data-kz>412</b><small>Kıldıkça düşer</small></div>' +
+      [["Sabah", 96], ["Öğle", 80], ["İkindi", 82], ["Akşam", 74], ["Yatsı", 80]].map(function (k, i) { return '<div class="kz"><span>' + k[0] + '</span><span class="n"' + (i === 0 ? " data-kz1" : "") + ">" + k[1] + '</span><span class="minus"><span class="ms">remove</span></span></div>'; }).join("") +
+      '<div class="lock"><span class="ms">visibility_off</span>Ailen yalnız özeti görür</div></div>' + tabs(2),
+    bar("Karne", "share") + '<div class="body"><div class="ring"><svg viewBox="0 0 100 100"><circle class="bgc" cx="50" cy="50" r="45"/><circle class="fg" cx="50" cy="50" r="45"/></svg><div class="lbl"><b data-pct>86%</b><small>30 / 35 vakit</small></div></div>' +
+      '<div class="bars">' + [100, 80, 100, 60, 100, 40, 100].map(function (h, i) { return '<i class="' + (h < 50 ? "low" : "") + '" style="--h:' + h + "%;--d:" + i + '"></i>'; }).join("") + '</div><div class="days"><span>Pt</span><span>Sa</span><span>Ça</span><span>Pe</span><span>Cu</span><span>Ct</span><span>Pz</span></div>' +
+      '<div class="badge"><span class="ms">military_tech</span>İstikrar Yıldızı rozeti</div></div>' + tabs(3),
+    bar("Kıble", "my_location") + '<div class="body"><div class="compass"><div class="dial"><span style="transform:translate(-50%,-6.1em)">K</span><span style="transform:translate(-50%,5.2em)">G</span><span style="transform:translate(5.4em,-50%)">D</span><span style="transform:translate(-6.2em,-50%)">B</span></div><span class="kaaba"></span><span class="needle"></span><span class="hub"></span></div>' +
+      '<div class="qinfo"><b>151°</b><small>Kıble yönü · Örnek konum İstanbul</small></div></div>' + tabs(4)
   ];
-
-  // Stars
-  ["stars", "stars2"].forEach(function (id) {
-    var el = document.getElementById(id); if (!el) return;
-    var h = "";
-    for (var i = 0; i < 40; i++) {
-      h += '<i style="left:' + (Math.random() * 100).toFixed(1) + '%;top:' + (Math.random() * 70).toFixed(1) + '%;animation-delay:' + (Math.random() * 3).toFixed(2) + 's;opacity:' + (0.4 + Math.random() * 0.6).toFixed(2) + '"></i>';
-    }
-    el.innerHTML = h;
-  });
-
-  // Board
-  var board = document.getElementById("board");
-  var html = "<span></span>" + V.map(function (v, k) { return '<span class="col" data-k="' + k + '">' + v + "</span>"; }).join("");
-  fam.forEach(function (r, m) {
-    html += '<span class="who">' + r[0] + "</span>";
-    for (var k = 0; k < 5; k++) {
-      html += '<span class="dot" data-m="' + m + '" data-k="' + k + '" role="img" aria-label="' + r[0] + ", " + V[k] + '"><span class="ms" aria-hidden="true">check</span></span>';
-    }
-  });
-  board.innerHTML = html;
-  var dots = board.querySelectorAll(".dot"), cols = board.querySelectorAll(".col");
-
-  // Arc
-  var P0 = [30, 190], P1 = [500, -70], P2 = [970, 190];
-  function bez(t) { var u = 1 - t; return [u * u * P0[0] + 2 * u * t * P1[0] + t * t * P2[0], u * u * P0[1] + 2 * u * t * P1[1] + t * t * P2[1]]; }
-  var TS = [0.1, 0.3, 0.5, 0.7, 0.9];
-  var stopsG = document.getElementById("stops"), s = "";
-  TS.forEach(function (t, k) { var p = bez(t); s += '<g class="stop" data-k="' + k + '"><circle cx="' + p[0] + '" cy="' + p[1] + '" r="8"/><text x="' + p[0] + '" y="' + (p[1] + 34) + '">' + V[k] + "</text></g>"; });
-  stopsG.innerHTML = s;
-  var stops = stopsG.querySelectorAll(".stop");
-  var orb = document.getElementById("orb"), sunc = orb.querySelector(".sunc"), moon = orb.querySelector(".moon");
-  var trail = document.getElementById("trail"), L = trail.getTotalLength();
-  trail.style.strokeDasharray = L;
-  var sky = document.getElementById("sky"), nowName = document.getElementById("nowName"), feed = document.getElementById("feed");
-
-  var cur = -1;
-  function setVakit(k) {
-    if (k === cur) return; cur = k;
-    nowName.textContent = Vlow[Math.max(k, 0)];
-    nowName.classList.remove("swap"); void nowName.offsetWidth; nowName.classList.add("swap");
-    if (k >= 0) { feed.textContent = feedText[k]; feed.classList.remove("swap"); void feed.offsetWidth; feed.classList.add("swap"); }
-    for (var i = 0; i < stops.length; i++) { stops[i].classList.toggle("done", i <= k); stops[i].classList.toggle("cur", i === k); }
-    for (var j = 0; j < cols.length; j++) cols[j].classList.toggle("cur", j === k);
-    for (var d = 0; d < dots.length; d++) {
-      var m = +dots[d].dataset.m, kk = +dots[d].dataset.k;
-      dots[d].classList.toggle("on", kk <= k && fam[m][1].indexOf(kk) >= 0);
-    }
+  $$("[data-screens]").forEach(function (el) { el.innerHTML = S.map(function (h, i) { return '<div class="scr' + (i === 0 ? " act" : "") + '">' + h + "</div>"; }).join(""); });
+  function show(phone, k) {
+    var sc = $$(".scr", phone);
+    sc.forEach(function (s, i) {
+      if (i === k) { s.classList.remove("out"); s.classList.remove("act"); void s.offsetWidth; s.classList.add("act"); }
+      else if (s.classList.contains("act")) { s.classList.remove("act"); s.classList.add("out"); }
+      else s.classList.remove("out");
+    });
+    phone.dataset.k = k;
   }
-  function frame(t) {
-    var p = bez(t);
-    orb.setAttribute("transform", "translate(" + p[0] + " " + p[1] + ")");
-    trail.style.strokeDashoffset = L * (1 - t);
-    var night = Math.min(1, Math.max(0, (t - 0.72) / 0.2));
-    var dawn = Math.max(0, 1 - Math.abs(t - 0.06) / 0.14) * 0.9 + Math.max(0, 1 - Math.abs(t - 0.72) / 0.12) * 0.9;
-    var day = Math.max(0, 1 - Math.abs(t - 0.45) / 0.35);
-    sky.style.setProperty("--night", night.toFixed(3));
-    sky.style.setProperty("--dawn", dawn.toFixed(3));
-    sky.style.setProperty("--day", day.toFixed(3));
-    sky.style.setProperty("--sx", (p[0] / 10).toFixed(1) + "%");
-    sunc.setAttribute("fill", night > 0.5 ? "transparent" : "#fbbf24");
-    moon.style.opacity = night > 0.5 ? 1 : 0;
-    var k = -1; for (var i = 0; i < TS.length; i++) if (t >= TS[i]) k = i;
-    setVakit(k);
+  // countdown + kaza counter
+  var cd = 1 * 3600 + 24 * 60 + 36;
+  setInterval(function () {
+    cd = cd > 0 ? cd - 1 : 5400;
+    var t = [Math.floor(cd / 3600), Math.floor(cd / 60) % 60, cd % 60].map(function (n) { return (n < 10 ? "0" : "") + n; }).join(":");
+    $$("[data-cd]").forEach(function (e) { e.textContent = t; });
+  }, 1000);
+
+  /* hero phone autoplay + bubbles */
+  var hero = $("#heroPhone"), hk = 0, bubbles = $$(".bubble"), bk = 0;
+  if (!reduce) {
+    setInterval(function () { hk = (hk + 1) % S.length; show(hero, hk); kazaTick(hero, hk); }, 3800);
+    setInterval(function () { bubbles.forEach(function (b, i) { b.classList.toggle("show", i === bk); }); bk = (bk + 1) % (bubbles.length + 1); }, 2200);
+  } else { bubbles.forEach(function (b) { b.classList.add("show"); }); }
+  function kazaTick(phone, k) {
+    if (k !== 2 || reduce) return;
+    var a = $("[data-kz]", $$(".scr", phone)[2]), b = $("[data-kz1]", $$(".scr", phone)[2]);
+    var n = 412, m = 96; a.textContent = n; b.textContent = m;
+    setTimeout(function () { a.textContent = n - 1; b.textContent = m - 1; }, 1200);
+    setTimeout(function () { a.textContent = n - 2; b.textContent = m - 2; }, 2200);
   }
 
-  if (reduce) { frame(0.52); }
-  else {
-    var DUR = 14000, HOLD = 2500, start = null;
-    var step = function (now) {
-      if (start === null) start = now - DUR * 0.32; // open the page around öğle
-      var e = (now - start) % (DUR + HOLD);
-      frame(Math.min(1, e / DUR) * 0.98);
-      requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }
-
-  // Scroll rise for blocks below the first screen (blocks already on screen stay as they are)
-  var items = document.querySelectorAll(".reveal");
-  if (!reduce && "IntersectionObserver" in window) {
-    var vh = window.innerHeight;
-    var io = new IntersectionObserver(function (es) {
-      es.forEach(function (en) {
-        if (!en.isIntersecting) return;
-        var el = en.target; el.classList.remove("wait"); el.classList.add("rise");
-        if (el.id === "consents") el.classList.add("seen");
-        io.unobserve(el);
-      });
-    }, { rootMargin: "0px 0px -8% 0px" });
-    var groupIndex = new Map();
-    items.forEach(function (el) {
-      var r = el.getBoundingClientRect();
-      if (r.top < vh) { if (el.id === "consents") el.classList.add("seen"); return; }
-      var parent = el.parentElement, n = groupIndex.get(parent) || 0;
-      groupIndex.set(parent, n + 1);
-      el.style.setProperty("--d", n % 6);
-      el.classList.add("wait");
-      io.observe(el);
+  /* ---------- Split heading ---------- */
+  var h1 = $("#h1"), ci = 0;
+  function splitNode(node) {
+    $$("*", node).length;
+    Array.prototype.slice.call(node.childNodes).forEach(function (c) {
+      if (c.nodeType === 3) {
+        var frag = document.createDocumentFragment();
+        c.textContent.split(/(\s+)/).forEach(function (w) {
+          if (!w) return;
+          if (/^\s+$/.test(w)) { frag.appendChild(document.createTextNode(" ")); return; }
+          var ws = document.createElement("span"); ws.className = "w";
+          w.split("").forEach(function (ch) { var s = document.createElement("span"); s.className = "c"; s.style.setProperty("--i", ci++); s.textContent = ch; ws.appendChild(s); });
+          frag.appendChild(ws);
+        });
+        node.replaceChild(frag, c);
+      } else if (c.nodeType === 1 && c.classList.contains("hl")) { c.style.setProperty("--i", ci); ci += c.textContent.length; }
     });
   }
+  if (!reduce) { h1.setAttribute("aria-label", h1.textContent); splitNode(h1); }
+
+  /* ---------- Background canvas: particles ---------- */
+  var cv = $("#bg"), cx = cv.getContext("2d"), W, H, dpr = Math.min(window.devicePixelRatio || 1, 2), parts = [];
+  function size() { W = cv.width = innerWidth * dpr; H = cv.height = innerHeight * dpr; cv.style.width = innerWidth + "px"; cv.style.height = innerHeight + "px"; }
+  size(); addEventListener("resize", size);
+  var N = small ? 28 : 70;
+  for (var i = 0; i < N; i++) parts.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.8 + 0.4, v: Math.random() * 0.00025 + 0.00008, a: Math.random() * Math.PI * 2, g: Math.random() < 0.25 });
+  var scrollY0 = 0;
+  function draw(t) {
+    cx.clearRect(0, 0, W, H);
+    for (var i = 0; i < parts.length; i++) {
+      var p = parts[i];
+      p.y -= p.v; p.a += 0.01;
+      if (p.y < -0.05) { p.y = 1.05; p.x = Math.random(); }
+      var x = (p.x + Math.sin(p.a) * 0.01) * W, y = ((p.y - scrollY0 * 0.00005 * p.r) % 1.1 + 1.1) % 1.1 * H;
+      var al = 0.35 + 0.35 * Math.sin(p.a * 2);
+      cx.beginPath(); cx.arc(x, y, p.r * dpr * (p.g ? 1.6 : 1), 0, 6.283);
+      cx.fillStyle = p.g ? "rgba(251,191,36," + al + ")" : "rgba(134,239,172," + al * 0.8 + ")";
+      cx.fill();
+    }
+    if (!document.hidden) requestAnimationFrame(draw);
+  }
+  if (!reduce) { requestAnimationFrame(draw); document.addEventListener("visibilitychange", function () { if (!document.hidden) requestAnimationFrame(draw); }); }
+
+  /* ---------- Scroll: progress bar, sticky header, story ---------- */
+  var prog = $("#progress"), top = $("#top"), story = $("#nasil"), steps = $$(".step"), rails = $$("#rail i"), sp = $("#storyPhone"), lastK = -1;
+  function onScroll() {
+    var y = scrollY, max = document.documentElement.scrollHeight - innerHeight;
+    scrollY0 = y;
+    prog.style.setProperty("--p", max > 0 ? (y / max).toFixed(4) : 0);
+    top.classList.toggle("solid", y > 20);
+    var r = story.getBoundingClientRect(), span = story.offsetHeight - innerHeight;
+    var p = Math.min(1, Math.max(0, -r.top / span));
+    var k = Math.min(4, Math.floor(p * 5));
+    rails.forEach(function (el, i) { el.style.setProperty("--f", Math.min(1, Math.max(0, p * 5 - i)).toFixed(3)); });
+    if (k !== lastK) { lastK = k; steps.forEach(function (s, i) { s.classList.toggle("act", i === k); }); show(sp, k); kazaTick(sp, k); }
+    if (!reduce) {
+      var local = p * 5 - k;
+      sp.style.setProperty("--ry", ((local - 0.5) * -18).toFixed(2) + "deg");
+      sp.style.setProperty("--rx", (Math.sin(p * Math.PI * 2) * 4).toFixed(2) + "deg");
+      sp.style.setProperty("--sc", (0.92 + Math.sin(p * Math.PI) * 0.08).toFixed(3));
+    }
+  }
+  addEventListener("scroll", onScroll, { passive: true }); onScroll();
+
+  /* ---------- Menu ---------- */
+  var nav = $("#nav"), mb = $("#menuBtn");
+  mb.addEventListener("click", function () { var o = nav.classList.toggle("open"); mb.setAttribute("aria-expanded", o); });
+  $$("a", nav).forEach(function (a) { a.addEventListener("click", function () { nav.classList.remove("open"); mb.setAttribute("aria-expanded", false); }); });
+
+  /* ---------- Tilt + magnetic ---------- */
+  if (!reduce && matchMedia("(hover: hover)").matches) {
+    $$(".tilt").forEach(function (el) {
+      el.addEventListener("pointermove", function (e) {
+        var r = el.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+        el.style.transform = "perspective(900px) rotateY(" + ((x - 0.5) * 14).toFixed(2) + "deg) rotateX(" + ((0.5 - y) * 12).toFixed(2) + "deg) translateZ(0)";
+        el.style.setProperty("--mx", (x * 100).toFixed(1) + "%"); el.style.setProperty("--my", (y * 100).toFixed(1) + "%");
+      });
+      el.addEventListener("pointerleave", function () { el.style.transform = ""; });
+    });
+    $$(".mag").forEach(function (el) {
+      el.addEventListener("pointermove", function (e) { var r = el.getBoundingClientRect(); el.style.transform = "translate(" + ((e.clientX - r.left - r.width / 2) * 0.18).toFixed(1) + "px," + ((e.clientY - r.top - r.height / 2) * 0.25).toFixed(1) + "px)"; });
+      el.addEventListener("pointerleave", function () { el.style.transform = ""; });
+    });
+  }
+
+  /* ---------- Reveal + one-shot animations ---------- */
+  function countUp(el) { var to = +el.dataset.to, t0 = null; el.textContent = "0"; function f(t) { if (!t0) t0 = t; var k = Math.min(1, (t - t0) / 1400); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(f); } requestAnimationFrame(f); }
+  if (!reduce) setTimeout(function () { $$(".count").forEach(countUp); }, 1300);
+  var flags = ["#perms", "#consents", "#pro"];
+  if (reduce || !("IntersectionObserver" in window)) { flags.forEach(function (s) { $(s).classList.add("on"); }); return; }
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (en) {
+      if (!en.isIntersecting) return;
+      var el = en.target; el.classList.remove("wait");
+      if (flags.indexOf("#" + el.id) >= 0) setTimeout(function () { el.classList.add("on"); }, 250);
+      io.unobserve(el);
+    });
+  }, { rootMargin: "0px 0px -10% 0px" });
+  $$(".rv").forEach(function (el) {
+    if (el.getBoundingClientRect().top < innerHeight) { if (flags.indexOf("#" + el.id) >= 0) el.classList.add("on"); return; }
+    el.classList.add("wait"); io.observe(el);
+  });
 })();
 </script>
 </body>

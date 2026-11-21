@@ -1,0 +1,31 @@
+# Aile İle Namaz
+
+> Aile İle Namaz, 5 vakit namazı ailecek takip etmek için ücretsiz bir Android uygulamasıdır. Türkçe ve İngilizce. Türkiye'deki aileler için hazırlanmıştır.
+
+## Ne yapar
+- 5 vakit namaz takibi: kıldığın vakti tek dokunuşla işaretlersin.
+- Namaz vakitleri: konuma göre Diyanet İşleri Başkanlığı hesaplama yöntemiyle; vakit, Cuma ve mübarek gün hatırlatmaları; internetsiz de çalışır.
+- Aile Havuzu: en çok 5 kişi tek davet koduyla bağlanır, kim hangi vakti kıldı birlikte görür, birbirine dua gönderir.
+- Kaza namazı takibi: borç kaydedilir, kıldıkça düşer; aile yalnızca özeti görür.
+- Karne: hafta 35, ay 150 vakit üzerinden başarı oranı, seri, aylık takvim, rozetler.
+- Kıble pusulası: telefonun sensörüyle canlı kıble yönü.
+
+## Fiyat
+- Bireysel kullanım ücretsizdir. Aile Pro isteğe bağlıdır: aile reisinin alması havuzdaki herkesi (en çok 5 kişi) Pro yapar; satın alma Google Play üzerinden yapılacaktır.
+
+## Dağıtım
+- Şimdilik yalnız Android; GitHub üzerinden: https://github.com/bilkil53/aile-ile-namaz/releases/latest
+- Google Play sürümü hazırlanıyor. iPhone sürümü yok.
+
+## Gizlilik
+- Giriş Google hesabıyla. Namaz, kaza ve dua kayıtları özel nitelikli kişisel veri sayıldığı için açık rıza alınır.
+- Veriler AB'de (Almanya, Frankfurt) saklanır, satılmaz, reklam için kullanılmaz. Konum yaklaşık 1 km'ye yuvarlanır ve saklanmaz.
+- Web sitesi çerez kullanmaz.
+
+## Sayfalar
+- [Ana sayfa](https://bilkil53.github.io/aile-ile-namaz/)
+- [Gizlilik Politikası ve KVKK Aydınlatma Metni](https://bilkil53.github.io/aile-ile-namaz/privacy.html)
+- [Privacy Policy (English)](https://bilkil53.github.io/aile-ile-namaz/privacy-en.html)
+- [Kullanım Koşulları](https://bilkil53.github.io/aile-ile-namaz/kullanim-kosullari.html)
+- [Çerez Politikası](https://bilkil53.github.io/aile-ile-namaz/cerez-politikasi.html)
+- [Hesap silme](https://bilkil53.github.io/aile-ile-namaz/delete-account.html)
