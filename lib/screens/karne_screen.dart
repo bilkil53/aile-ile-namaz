@@ -58,21 +58,24 @@ class _KarneScreenState extends State<KarneScreen> {
     try {
       final r = await Future.wait<dynamic>([
         Repo.myRange(now.subtract(const Duration(days: 399)), now),
-        DiniGunler.ensure(),
         Repo.myKaza(),
         Repo.myDisplayName(),
       ]);
       if (!mounted) return;
       setState(() {
         _data = r[0] as Map<String, Map<String, PrayerStatus>>;
-        _kaza = r[2] as Map<String, (int, int)>;
-        _name = r[3] as String;
+        _kaza = r[1] as Map<String, (int, int)>;
+        _name = r[2] as String;
       });
     } catch (_) {
       // çevrimdışı: eldeki veriyle göster
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+    // Dini günler (mevsimlik rozetler) ekranı bekletmez; gelince rozetler yenilenir
+    await DiniGunler.ensure();
+    if (!mounted) return;
+    setState(() {});
     _announceNewBadges();
   }
 

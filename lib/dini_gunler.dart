@@ -180,7 +180,15 @@ class DiniGunler {
   }
 
   /// Gerekirse (ilk açılış, ayda bir kontrol, liste 4 aydan az kaldıysa) Diyanet takviminden yeniler.
-  static Future<void> ensure() async {
+  /// Aynı anda birden çok çağrı (Bugün kartı, bildirimler, Karne) tek yenileme bekler.
+  static Future<void>? _running;
+  static Future<void> ensure() => _running ??= _ensure().whenComplete(() => _running = null);
+
+  /// Testte ağ yerine kullanılır.
+  @visibleForTesting
+  static Future<Map<String, dynamic>> Function(String url)? fetchForTest;
+
+  static Future<void> _ensure() async {
     if (_events.isEmpty) _load();
     final now = _d(DateTime.now());
     final last = _events.isEmpty ? null : _events.last.date;
@@ -188,12 +196,21 @@ class DiniGunler {
     final stale = at == null || now.difference(at).inDays > 30;
     final short = last == null || last.difference(now).inDays < 120;
     if (!stale && !short) return;
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 6);
+    Future<Map<String, dynamic>> get(String url) => fetchForTest?.call(url) ?? _get(client, url);
     try {
-      final hYear = await _hijriYearOf(now);
+      final hYear = await _hijriYearOf(get, now);
       final list = <DiniGunEvent>[];
       for (final y in [hYear, hYear + 1]) {
         for (final g in diniGunler) {
-          var day = await _hToG(g.hDay, g.hMonth, y);
+          DateTime day;
+          try {
+            day = await _hToG(get, g.hDay, g.hMonth, y);
+          } on HttpException catch (e) {
+            // Takvimde henüz olmayan tarih (Diyanet tablosu ileri yılda bitiyor, sunucu 500 döner): atlanır, ötekiler kaydedilir
+            if (e.message == 'HTTP 500') continue;
+            rethrow;
+          }
           if (g.regaib) {
             // Recep içindeki ilk Cuma gecesi (Perşembe akşamı Recep'e düşmeli): Cuma ≥ 2 Recep
             day = day.add(const Duration(days: 1));
@@ -205,6 +222,7 @@ class DiniGunler {
           list.add(DiniGunEvent(g, day));
         }
       }
+      if (list.isEmpty) return;
       list.sort((a, b) => a.date.compareTo(b.date));
       _events = list;
       await AppSettings.prefs.setString(
@@ -217,6 +235,8 @@ class DiniGunler {
           }));
     } catch (_) {
       // İnternet yoksa eldeki liste kullanılır; sonraki açılışta tekrar denenir.
+    } finally {
+      client.close();
     }
   }
 
@@ -256,27 +276,23 @@ class DiniGunler {
     return _events.where((e) => !e.gun.bayram && e.date == d).map((e) => e.gun).firstOrNull;
   }
 
-  static Future<int> _hijriYearOf(DateTime d) async {
-    final j = await _get('https://api.aladhan.com/v1/gToH/${DateFormat('dd-MM-yyyy').format(d)}?calendarMethod=DIYANET');
+  static Future<int> _hijriYearOf(Future<Map<String, dynamic>> Function(String) get, DateTime d) async {
+    final j = await get('https://api.aladhan.com/v1/gToH/${DateFormat('dd-MM-yyyy').format(d)}?calendarMethod=DIYANET');
     return int.parse(((j['data'] as Map)['hijri'] as Map)['year'] as String);
   }
 
-  static Future<DateTime> _hToG(int day, int month, int year) async {
+  static Future<DateTime> _hToG(Future<Map<String, dynamic>> Function(String) get, int day, int month, int year) async {
     final h = '${day.toString().padLeft(2, '0')}-${month.toString().padLeft(2, '0')}-$year';
-    final j = await _get('https://api.aladhan.com/v1/hToG/$h?calendarMethod=DIYANET');
+    final j = await get('https://api.aladhan.com/v1/hToG/$h?calendarMethod=DIYANET');
     final g = ((j['data'] as Map)['gregorian'] as Map)['date'] as String; // dd-MM-yyyy
     return DateFormat('dd-MM-yyyy').parse(g);
   }
 
-  static Future<Map<String, dynamic>> _get(String url) async {
-    final client = HttpClient()..connectionTimeout = const Duration(seconds: 6);
-    try {
-      final req = await client.getUrl(Uri.parse(url));
-      final res = await req.close().timeout(const Duration(seconds: 8));
-      if (res.statusCode != 200) throw HttpException('HTTP ${res.statusCode}');
-      return jsonDecode(await res.transform(utf8.decoder).join()) as Map<String, dynamic>;
-    } finally {
-      client.close();
-    }
+  /// Tek bağlantı istemcisi tüm istekler için kullanılır (her istekte yeni bağlantı kurulmaz).
+  static Future<Map<String, dynamic>> _get(HttpClient client, String url) async {
+    final req = await client.getUrl(Uri.parse(url));
+    final res = await req.close().timeout(const Duration(seconds: 8));
+    if (res.statusCode != 200) throw HttpException('HTTP ${res.statusCode}');
+    return jsonDecode(await res.transform(utf8.decoder).join()) as Map<String, dynamic>;
   }
 }
