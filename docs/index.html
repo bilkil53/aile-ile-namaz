@@ -2,35 +2,324 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Aile İle Namaz: ailenle birlikte namaz takibi. Diyanet uyumlu vakitler, aile havuzu, kaza takibi ve karne.">
 <title>Aile İle Namaz</title>
 <style>
-  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; max-width: 680px; margin: 0 auto; padding: 32px 20px; line-height: 1.6; color: #1b1b1b; }
-  h1 { color: #1B5E20; margin-bottom: 4px; }
-  .lead { color: #444; margin-top: 0; }
-  ul { padding-left: 20px; }
-  footer { margin-top: 48px; font-size: 14px; color: #666; }
-  a { color: #1B5E20; }
+@font-face { font-family: "Roboto"; font-style: normal; font-weight: 100 900; font-display: swap; src: url(fonts/roboto-latin-ext.woff2) format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Roboto"; font-style: normal; font-weight: 100 900; font-display: swap; src: url(fonts/roboto-latin.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Material Symbols Rounded"; font-style: normal; font-weight: 500; font-display: block; src: url(fonts/material-symbols.woff2) format("woff2"); }
+/* Layout: the app's own look (lib/theme.dart). Emerald app-bar band with hero + family card, then app-style tiles:
+   features, start options and permissions, KVKK consent boxes, Aile Pro, download. Single light theme like the app. */
+:root {
+  color-scheme: light;
+  --emerald: #0e5a4a;
+  --emerald-dark: #074336;
+  --emerald-light: #166b58;
+  --emerald-soft: #e2efea;
+  --bg: #f7faf8;
+  --card: #ffffff;
+  --border: #e2ebe6;
+  --text: #142421;
+  --text-2: #5b6e67;
+  --text-3: #7d918a;
+  --mint: #86efac;
+  --gold: #d97706;
+  --gold-soft: #fef3c7;
+  --sky: #0369a1; --sky-soft: #e0f2fe;
+  --orange: #ea580c; --orange-soft: #ffedd5;
+  --purple: #7e22ce; --purple-soft: #f3e8ff;
+  --font: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 1rem; line-height: 1.55; }
+.in { max-width: 1040px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { margin: 0; line-height: 1.2; text-wrap: balance; }
+p { margin: 0; }
+a { color: var(--emerald); font-weight: 500; }
+a:focus-visible, .btn:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; border-radius: 8px; }
+.ms { font-family: "Material Symbols Rounded"; font-weight: normal; font-style: normal; font-size: 24px; line-height: 1; display: inline-block; white-space: nowrap; direction: ltr; -webkit-font-smoothing: antialiased; font-feature-settings: "liga"; overflow: hidden; }
+
+/* App bar band */
+.band { background: var(--emerald); color: #fff; margin-top: calc(-1 * env(safe-area-inset-top, 0px)); padding-top: env(safe-area-inset-top, 0px); }
+.bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 14px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; font-weight: 700; font-size: 1.1rem; }
+.brand .ms { width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.14); display: grid; place-items: center; font-size: 24px; }
+.bar nav { display: flex; gap: 6px; flex-wrap: wrap; }
+.bar nav a { color: rgba(255,255,255,0.85); text-decoration: none; font-size: 0.95rem; padding: 6px 12px; border-radius: 999px; }
+.bar nav a:hover { background: rgba(255,255,255,0.12); color: #fff; }
+
+.hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: center; padding-block: 40px 64px; }
+.hero > * { min-width: 0; }
+.hero h1 { font-size: clamp(2.2rem, 5.5vw, 3.4rem); font-weight: 900; letter-spacing: -0.02em; }
+.hero .lead { margin-top: 16px; font-size: 1.15rem; color: rgba(255,255,255,0.85); max-width: 36ch; }
+.cta { margin-top: 28px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.btn { display: inline-flex; align-items: center; gap: 10px; border-radius: 22px; padding: 12px 20px 12px 14px; font-weight: 700; text-decoration: none; font-size: 1rem; }
+.btn .ms { font-size: 22px; }
+.btn.white { background: #fff; color: var(--emerald); box-shadow: 0 3px 10px rgba(0,0,0,0.18); }
+.btn.green { background: var(--emerald); color: #fff; box-shadow: 0 3px 10px rgba(14,90,74,0.3); }
+.btn:hover { filter: brightness(1.05); }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; color: rgba(255,255,255,0.85); border: 1px solid rgba(255,255,255,0.3); border-radius: 999px; padding: 6px 12px; }
+.chip .ms { font-size: 18px; }
+
+/* Family card, as in the app's green cards */
+.fcard { background: var(--emerald-light); border-radius: 24px; padding: 20px; box-shadow: 0 18px 40px -18px rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.12); }
+.fhead { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+.fhead b { display: flex; align-items: center; gap: 8px; font-size: 1.05rem; }
+.fhead span { font-size: 0.85rem; color: rgba(255,255,255,0.75); }
+.fgrid { display: grid; grid-template-columns: minmax(58px, 1.2fr) repeat(5, 1fr); gap: 8px 4px; align-items: center; font-size: 0.85rem; }
+.fgrid .col { text-align: center; color: rgba(255,255,255,0.7); font-size: 0.72rem; font-weight: 500; }
+.fgrid .who { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dot { justify-self: center; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; border: 2px solid rgba(255,255,255,0.28); }
+.dot.on { background: var(--mint); border-color: var(--mint); color: var(--emerald-dark); }
+.dot.on .ms { font-size: 18px; font-weight: 700; }
+.dot.now { border-color: #fcd34d; border-style: dashed; }
+.ffoot { margin-top: 16px; background: rgba(255,255,255,0.12); border-radius: 14px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; font-size: 0.9rem; }
+.ffoot .ms { font-size: 20px; color: var(--mint); }
+.note { margin-top: 8px; font-size: 0.78rem; color: rgba(255,255,255,0.65); text-align: right; }
+
+/* Sections */
+section { padding-block: 56px; }
+section + section { border-top: 1px solid var(--border); }
+.head { display: grid; gap: 8px; margin-bottom: 28px; max-width: 640px; }
+.head h2 { font-size: clamp(1.6rem, 3.6vw, 2.1rem); font-weight: 900; letter-spacing: -0.01em; }
+.head p { color: var(--text-2); font-size: 1.05rem; }
+.label { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--emerald); }
+
+.tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.tile { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 14px; display: flex; gap: 14px; align-items: flex-start; }
+.tile > div { min-width: 0; display: grid; gap: 3px; }
+.ic { flex: none; width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; }
+.ic .ms { font-size: 26px; }
+.tile h3 { font-size: 1.02rem; font-weight: 700; }
+.tile p { color: var(--text-2); font-size: 0.95rem; }
+.e { background: var(--emerald-soft); color: var(--emerald); }
+.s { background: var(--sky-soft); color: var(--sky); }
+.o { background: var(--orange-soft); color: var(--orange); }
+.p { background: var(--purple-soft); color: var(--purple); }
+.g { background: var(--gold-soft); color: var(--gold); }
+
+/* Start options */
+.ways { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; }
+.way { border-radius: 22px; padding: 18px; display: grid; gap: 10px; align-content: start; }
+.way.signin { background: var(--emerald); color: #fff; }
+.way.guest { background: var(--card); border: 1px solid var(--border); }
+.way .top { display: flex; align-items: center; gap: 12px; }
+.way .top .g-badge { width: 38px; height: 38px; border-radius: 14px; background: #fff; display: grid; place-items: center; font-weight: 700; font-size: 1.3rem; color: #4285f4; flex: none; }
+.way.guest .top .g-badge { background: var(--emerald-soft); color: var(--emerald); }
+.way h3 { font-size: 1.05rem; }
+.way ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 0.95rem; }
+.way.signin ul { color: rgba(255,255,255,0.88); }
+.way.guest ul { color: var(--text-2); }
+.sub { font-size: 1.05rem; font-weight: 700; margin-bottom: 12px; }
+
+/* KVKK consent boxes, as on the sign-in screen */
+.consents { display: grid; gap: 10px; margin-bottom: 24px; }
+.consent { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 14px 16px; display: flex; gap: 12px; align-items: flex-start; }
+.box { flex: none; width: 22px; height: 22px; border-radius: 6px; background: var(--emerald); color: #fff; display: grid; place-items: center; margin-top: 2px; }
+.box .ms { font-size: 18px; font-weight: 700; }
+.consent > div { display: grid; gap: 4px; min-width: 0; }
+.consent p { font-size: 0.97rem; }
+.consent a { font-size: 0.92rem; }
+.caption { font-size: 0.9rem; color: var(--text-3); margin-top: -12px; margin-bottom: 24px; }
+.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.fact { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 16px; display: grid; gap: 6px; align-content: start; }
+.fact .ms { font-size: 22px; color: var(--emerald); }
+.fact b { font-size: 0.98rem; }
+.fact span { color: var(--text-2); font-size: 0.93rem; }
+.docs { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+.docs a { display: inline-flex; align-items: center; gap: 6px; background: var(--emerald-soft); border-radius: 999px; padding: 8px 14px; text-decoration: none; font-size: 0.93rem; }
+.docs .ms { font-size: 18px; }
+
+/* Pro */
+.pro { background: var(--gold-soft); border: 1px solid #fde68a; border-radius: 24px; padding: 24px; display: grid; grid-template-columns: auto 1fr; gap: 18px; align-items: start; }
+.pro .ic { background: #fff; color: var(--gold); }
+.pro > div { display: grid; gap: 8px; min-width: 0; }
+.pro h2 { font-size: 1.4rem; font-weight: 900; }
+.pro p { color: #6b4e16; }
+
+.download { background: var(--emerald); color: #fff; border-radius: 28px; padding: 32px 28px; display: grid; gap: 14px; justify-items: start; }
+.download h2 { font-size: clamp(1.5rem, 3.4vw, 2rem); font-weight: 900; }
+.download p { color: rgba(255,255,255,0.85); max-width: 60ch; }
+
+footer { padding-block: 28px 44px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 0.9rem; color: var(--text-2); border-top: 1px solid var(--border); }
+footer nav { display: flex; gap: 18px; flex-wrap: wrap; }
+
+@media (max-width: 860px) {
+  .hero { grid-template-columns: 1fr; gap: 32px; }
+  .facts { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+  .bar nav { display: none; }
+  .tiles, .ways, .facts { grid-template-columns: 1fr; }
+  .pro { grid-template-columns: 1fr; }
+  .fcard { padding: 16px; }
+  .dot { width: 25px; height: 25px; }
+  section { padding-block: 44px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .dot.on { animation: pop 0.45s ease-out both; animation-delay: calc(var(--i) * 60ms); }
+  @keyframes pop { from { transform: scale(0.7); } to { transform: scale(1); } }
+}
 </style>
 </head>
 <body>
-  <div style="font-size:56px">🕌</div>
-  <h1>Aile İle Namaz</h1>
-  <p class="lead">Ailenle birlikte namaz takibi.</p>
 
-  <h2>Neler yapabilirsin?</h2>
-  <ul>
-    <li>Google hesabınla giriş yap.</li>
-    <li>Ailen için bir havuz oluştur ya da davet koduyla bir havuza katıl.</li>
-    <li>Günlük beş vakit namazını işaretle; aile üyelerin kıldığında anında haberin olsun.</li>
-    <li>Ailene dua gönder.</li>
-  </ul>
+<div class="band">
+  <div class="in">
+    <div class="bar">
+      <a class="brand" href="#"><span class="ms" aria-hidden="true">mosque</span>Aile İle Namaz</a>
+      <nav>
+        <a href="#ozellikler">Özellikler</a>
+        <a href="#baslarken">Başlarken</a>
+        <a href="#kvkk">KVKK</a>
+        <a href="#indir">İndir</a>
+      </nav>
+    </div>
+    <div class="hero">
+      <div>
+        <h1>Ailenle birlikte namaz takibi</h1>
+        <p class="lead">Birlikte namaz kılın, kaza borçlarınızı takip edin ve ortak ibadet havuzunda buluşun.</p>
+        <div class="cta">
+          <a class="btn white" href="https://github.com/bilkil53/aile-ile-namaz/releases/latest"><span class="ms" aria-hidden="true">download</span>Uygulamayı indir</a>
+          <span class="chip"><span class="ms" aria-hidden="true">schedule</span>Google Play'e yakında</span>
+        </div>
+      </div>
+      <div>
+        <div class="fcard" aria-label="Aile Havuzu örnek görünümü">
+          <div class="fhead">
+            <b><span class="ms" aria-hidden="true">groups</span>Aile Havuzu</b>
+            <span>Bugün · 4 kişi</span>
+          </div>
+          <div class="fgrid" id="board"></div>
+          <div class="ffoot"><span class="ms" aria-hidden="true">volunteer_activism</span><span>Baba aileye dua gönderdi</span></div>
+        </div>
+        <p class="note">Örnek görünüm</p>
+      </div>
+    </div>
+  </div>
+</div>
 
-  <h2>İletişim</h2>
-  <p>Soru ve talepler için: <a href="https://github.com/bilkil53/aile-ile-namaz/issues">GitHub üzerinden talep oluşturun</a> (kişisel bilgilerinizi yazmayın).</p>
+<main class="in">
+  <section id="ozellikler">
+    <div class="head">
+      <p class="label">Özellikler</p>
+      <h2>Uygulamada neler var?</h2>
+    </div>
+    <div class="tiles">
+      <div class="tile"><span class="ic e"><span class="ms" aria-hidden="true">home</span></span><div><h3>Bugün Sekmesi (Vakitler &amp; Kıble)</h3><p>Diyanet uyumlu vakitler, 5 vakit namaz takibi ve canlı kıble pusulası.</p></div></div>
+      <div class="tile"><span class="ic s"><span class="ms" aria-hidden="true">groups</span></span><div><h3>Aile Havuzu (İbadet Halkası)</h3><p>Eşiniz ve çocuklarınızla tek davet kodu ile bağlanın; namaz durumlarını birlikte görün.</p></div></div>
+      <div class="tile"><span class="ic o"><span class="ms" aria-hidden="true">calendar_month</span></span><div><h3>Kaza (Mahremiyet Korumalı)</h3><p>Kaza borçlarınızı tutun; ailenizin kaza durumunu sadece özet olarak görün.</p></div></div>
+      <div class="tile"><span class="ic p"><span class="ms" aria-hidden="true">emoji_events</span></span><div><h3>Karne (İstatistik &amp; Motivasyon)</h3><p>Haftalık başarı oranınız, manevi rozetler ve günün hadisi. Hafta 35, ay 150 vakit üzerinden hesaplanır.</p></div></div>
+      <div class="tile"><span class="ic g"><span class="ms" aria-hidden="true">notifications_active</span></span><div><h3>Hatırlatmalar</h3><p>Vakit girince, Cuma günü ve mübarek gün ve gecelerde hatırlatma.</p></div></div>
+      <div class="tile"><span class="ic e"><span class="ms" aria-hidden="true">cloud_off</span></span><div><h3>İnternetsiz de çalışır</h3><p>Vakitler ve telefona kaydedilen işaretler internetsiz çalışır; bağlantı gelince eşitlenir.</p></div></div>
+    </div>
+  </section>
+
+  <section id="baslarken">
+    <div class="head">
+      <p class="label">Başlarken</p>
+      <h2>Dikkat edilmesi gereken tercihler</h2>
+      <p>Uygulamayı açınca iki yol çıkar. Hangisini seçtiğin, neyin kaydedileceğini belirler.</p>
+    </div>
+    <div class="ways">
+      <div class="way signin">
+        <div class="top"><span class="g-badge">G</span><h3>Google ile Hızlı Giriş Yap</h3></div>
+        <ul>
+          <li>Kayıtların buluta yedeklenir, ailenle eşitlenir.</li>
+          <li>Aile Havuzu ve aile bildirimleri yalnız girişle çalışır.</li>
+          <li>Girişten önce iki KVKK kutusunu da işaretlemen gerekir.</li>
+        </ul>
+      </div>
+      <div class="way guest">
+        <div class="top"><span class="g-badge"><span class="ms" aria-hidden="true">explore</span></span><h3>Giriş Yapmadan Devam Et</h3></div>
+        <ul>
+          <li>Uygulamayı serbestçe gezip tüm ekranları deneyebilirsin.</li>
+          <li>Gezinti yalnızca bakmak içindir: işaretleme ve kayıt yapılmaz.</li>
+          <li>İstediğin zaman Google ile giriş yapabilirsin.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="sub">Uygulamanın istediği izinler</p>
+    <div class="tiles">
+      <div class="tile"><span class="ic e"><span class="ms" aria-hidden="true">location_on</span></span><div><h3>Konum</h3><p>Yalnız uygulama açıkken, vakit hesabı için. Yaklaşık 1 km'ye yuvarlanır, kimliksiz gönderilir, sunucumuzda saklanmaz.</p></div></div>
+      <div class="tile"><span class="ic g"><span class="ms" aria-hidden="true">notifications</span></span><div><h3>Bildirim</h3><p>Vakit hatırlatmaları ve aile havuzundan gelen haberler için.</p></div></div>
+      <div class="tile"><span class="ic s"><span class="ms" aria-hidden="true">alarm</span></span><div><h3>Tam zamanlı alarm</h3><p>Hatırlatmanın vakit girdiği dakikada çalması için; senin izninle açılır.</p></div></div>
+      <div class="tile"><span class="ic o"><span class="ms" aria-hidden="true">explore</span></span><div><h3>Pusula sensörü</h3><p>Kıble yönünü göstermek için telefonun sensörünü kullanır; veri gönderilmez.</p></div></div>
+    </div>
+  </section>
+
+  <section id="kvkk">
+    <div class="head">
+      <p class="label">KVKK</p>
+      <h2>Kişisel verilerin korunması</h2>
+      <p>Girişten önce iki ayrı onay istenir. Aydınlatma metnini okuduğunu beyan edersin, sonra açık rızanı ayrıca verirsin.</p>
+    </div>
+    <div class="consents">
+      <div class="consent"><span class="box"><span class="ms" aria-hidden="true">check</span></span><div><p>KVKK Aydınlatma Metni'ni okudum ve anladım.</p><a href="privacy.html#kvkk">Aydınlatma metnini oku</a></div></div>
+      <div class="consent"><span class="box"><span class="ms" aria-hidden="true">check</span></span><div><p>Açık Rıza Metni'ni okudum; namaz ve kaza kayıtlarımın, dua ve tebrik mesajlarımın işlenmesine ve aile havuzumdaki kişilere gösterilmesine açık rıza veriyorum.</p><a href="privacy.html#acik-riza">Açık rıza metnini oku</a></div></div>
+    </div>
+    <p class="caption">Uygulamadaki onay kutularının metni. Metin güncellenirse uygulama onayı yeniden ister.</p>
+    <div class="facts">
+      <div class="fact"><span class="ms" aria-hidden="true">shield_person</span><b>Neden açık rıza?</b><span>Namaz, kaza ve dua kayıtları dini inancı gösterebildiği için özel nitelikli kişisel veri sayılır.</span></div>
+      <div class="fact"><span class="ms" aria-hidden="true">dns</span><b>Veriler nerede?</b><span>Avrupa Birliği'ndeki sunucularda (Almanya, Frankfurt). Bağlantılar şifrelidir.</span></div>
+      <div class="fact"><span class="ms" aria-hidden="true">visibility</span><b>Kim görür?</b><span>Yalnız sen ve üyesi olduğun aile havuzu. E-postan diğer kullanıcılara gösterilmez.</span></div>
+      <div class="fact"><span class="ms" aria-hidden="true">history</span><b>Ne kadar saklanır?</b><span>Kayıtlar hesabın silinene kadar; aile akışı 7 gün; hata raporları 30 gün.</span></div>
+      <div class="fact"><span class="ms" aria-hidden="true">undo</span><b>Rızanı geri al</b><span>Hesabını ve verilerini silerek istediğin zaman geri alabilirsin. Haklarını (KVKK md. 11) gizlilik sayfasında bulursun.</span></div>
+      <div class="fact"><span class="ms" aria-hidden="true">family_restroom</span><b>Çocuklar</b><span>13 yaşından küçük çocukların hesabı ebeveyn gözetiminde açılmalıdır.</span></div>
+    </div>
+    <div class="docs">
+      <a href="privacy.html"><span class="ms" aria-hidden="true">description</span>Gizlilik Politikası ve Aydınlatma Metni</a>
+      <a href="delete-account.html"><span class="ms" aria-hidden="true">person_remove</span>Hesap silme</a>
+      <a href="privacy-en.html"><span class="ms" aria-hidden="true">translate</span>Privacy (English)</a>
+    </div>
+  </section>
+
+  <section>
+    <div class="pro">
+      <span class="ic"><span class="ms" aria-hidden="true">workspace_premium</span></span>
+      <div>
+        <h2>Aile Pro</h2>
+        <p>Bireysel kullanım ücretsizdir. Aile Pro'da aile reisinin Pro alması yeter: aile havuzundaki herkes (en çok 5 kişi) Pro olur. Satın alma Google Play üzerinden yapılacak; fiyatlar Play'de gösterilecek.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="indir">
+    <div class="download">
+      <h2>Ailene davet kodunu gönder, birlikte başlayın</h2>
+      <p>Uygulama şimdilik Android için GitHub üzerinden dağıtılıyor. Google Play sürümü hazırlanıyor. Türkçe ve İngilizce.</p>
+      <a class="btn white" href="https://github.com/bilkil53/aile-ile-namaz/releases/latest"><span class="ms" aria-hidden="true">android</span>Son sürümü indir (APK)</a>
+    </div>
+  </section>
 
   <footer>
-    <a href="privacy.html">Gizlilik Politikası</a> · <a href="delete-account.html">Hesap silme</a>
+    <span>Aile İle Namaz · Bu site çerez kullanmaz, ziyaretçi bilgisi toplamaz.</span>
+    <nav>
+      <a href="privacy.html">Gizlilik Politikası</a>
+      <a href="delete-account.html">Hesap silme</a>
+      <a href="https://github.com/bilkil53/aile-ile-namaz/issues">Destek</a>
+    </nav>
   </footer>
+</main>
+
+<script>
+(function () {
+  var vakit = ["Sabah", "Öğle", "İkindi", "Akşam", "Yatsı"];
+  var aile = [["Anne", [1, 1, 1, 0, 0]], ["Baba", [1, 1, 1, 0, 0]], ["Zeynep", [1, 1, 2, 0, 0]], ["Ali", [1, 0, 2, 0, 0]]];
+  var html = "<span></span>" + vakit.map(function (v) { return '<span class="col">' + v + "</span>"; }).join("");
+  var i = 0;
+  aile.forEach(function (r) {
+    html += '<span class="who">' + r[0] + "</span>";
+    r[1].forEach(function (s, k) {
+      var label = r[0] + ", " + vakit[k] + ": " + (s === 1 ? "kıldı" : s === 2 ? "vakit içinde" : "henüz değil");
+      html += s === 1
+        ? '<span class="dot on" style="--i:' + (i++) + '" role="img" aria-label="' + label + '"><span class="ms" aria-hidden="true">check</span></span>'
+        : '<span class="dot' + (s === 2 ? " now" : "") + '" role="img" aria-label="' + label + '"></span>';
+    });
+  });
+  document.getElementById("board").innerHTML = html;
+})();
+</script>
 </body>
 </html>
