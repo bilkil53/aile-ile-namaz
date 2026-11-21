@@ -71,6 +71,7 @@
 6. (TAMAM, 18 Kasım) Öneri yaz denendi.
 7. (KAPANDI, 18 Kasım kullanıcı kararı) Eski repo maddesi kapatıldı.
 8. (KAPANDI, kullanıcı beyanı 21 Kasım) Demo'daki eski test hesabı önceki bir sohbette kaldırıldı; o sohbet özete yazmamıştı.
+12. Aile bildirimlerini telefonlarda test etmek (kullanıcı not aldırdı, 21 Kasım; ayar değiştirmeden; uygulama arka plandayken bakılır). Sonuç gelince sunucu kayıtlarıyla karşılaştırılır.
 11. ACİL: gerçek sunucunun işlev secret'ı `FCM_SERVICE_ACCOUNT`'ı yeni Firebase projesinin hizmet hesabı JSON'uyla değiştirmek (Supabase panosu → Edge Functions → Secrets); sonra haber ver, bildirim denenir.
 10. Demo ön sürümünü (13fd91f ve sonrası) telefonda denemek: Pro yenileme bildirimi uygulama açıkken, Hata kaydında internet hatası çıkmaması, Kıble pusulası (sensors_plus 7).
 9. Yönetim deposuna (`SUPABASE_DB_URL` var, güvenlik testi yeşil) `FIREBASE_TESTLAB_KEY` secret'ını eklemek (yoksa) (ana depodaki değerler); sabit bağlantıdan APK'yı kurup Google ile girişi denemek; imza secret'ları (ANDROID_KEYSTORE_BASE64/_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD) + Google Cloud'da Android istemcisi (paket `com.bilkil53.aile_namaz_yonetim` + SHA-1); tarayıcı yedeği kalktığı için giriş artık bunlara bağlı (adımlar 21 Kasım verildi). Haftalık hata raporu görevine claude.ai'de Supabase bağlayıcısı ve depo eklemek.
