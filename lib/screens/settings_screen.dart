@@ -359,7 +359,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
       );
 
   /// 🧪 Test Paneli (yalnızca Namaz Demo): durumlar arasında hızlı geçiş, gerçek akıştan ayrı.
-  Widget _testPanel() => Container(
+  /// Test listesinde olmayan hesapta hiç görünmez (bilgi satırı da yok).
+  Widget _testPanel() => ValueListenableBuilder<int>(
+        valueListenable: Pro.changed,
+        builder: (_, __, ___) => FutureBuilder<(bool?, bool)>(
+          future: _panelInfo ??= (Pro.testerStatus(), Pro.isReis()).wait,
+          builder: (context, snap) => snap.hasData && snap.data!.$1 == false
+              ? const SizedBox.shrink()
+              : Padding(padding: const EdgeInsets.only(top: 14), child: _testPanelBox()),
+        ),
+      );
+
+  Widget _testPanelBox() => Container(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
         decoration: BoxDecoration(
           color: const Color(0xFFFFFBEB),
@@ -387,10 +398,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: const Text('Tekrar dene', style: TextStyle(color: brown, fontWeight: FontWeight.bold)),
                   ),
                 ]);
-              }
-              if (!tester) {
-                return const Text('🧪 Test Paneli yalnızca test hesaplarına açık.',
-                    style: TextStyle(fontSize: 12, color: brown));
               }
               Widget btn(String label, IconData icon, Future<bool> Function()? onTap) => OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
@@ -1087,7 +1094,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ],
             // Test Paneli (geçici; yalnızca test sürümünde) en altta
-            if (kTestChannel && !guest) ...[const SizedBox(height: 14), _testPanel()],
+            if (kTestChannel && !guest) _testPanel(),
             const SizedBox(height: 12),
           ],
         ),
