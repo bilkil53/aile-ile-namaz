@@ -11,11 +11,11 @@
 - Kıble pusulası: telefonun sensörüyle canlı kıble yönü.
 
 ## Fiyat
-- Bireysel kullanım ücretsizdir. Aile Pro isteğe bağlıdır: aile reisinin alması havuzdaki herkesi (en çok 5 kişi) Pro yapar; satın alma Google Play üzerinden yapılacaktır.
+- Bireysel kullanım ücretsizdir. Aile Pro isteğe bağlıdır: aile reisinin alması havuzdaki herkesi (en çok 5 kişi) Pro yapar; fiyat ve koşullar satın almadan önce uygulamada gösterilir.
 
 ## Dağıtım
-- Şimdilik yalnız Android; GitHub üzerinden: https://github.com/bilkil53/aile-ile-namaz/releases/latest
-- Google Play sürümü hazırlanıyor. iPhone sürümü yok.
+- Android için hazır: https://github.com/bilkil53/aile-ile-namaz/releases/latest
+- iPhone sürümü yok.
 
 ## Gizlilik
 - Giriş Google hesabıyla. Namaz, kaza ve dua kayıtları özel nitelikli kişisel veri sayıldığı için açık rıza alınır.
