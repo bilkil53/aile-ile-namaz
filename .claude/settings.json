@@ -26,10 +26,7 @@
       "Skill(anthropic-skills:skill-creator)",
       "Skill(plugin-authoring)",
       "Skill(session-start-hook)",
-      "Skill(dataviz)",
-      "Skill(artifact-design)",
-      "Skill(artifact-diagramming)",
-      "Skill(artifact-capabilities)"
+      "Skill(dataviz)"
     ]
   }
 }
