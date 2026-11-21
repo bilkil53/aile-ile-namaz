@@ -29,3 +29,10 @@
 - [Kullanım Koşulları](https://bilkil53.github.io/aile-ile-namaz/kullanim-kosullari.html)
 - [Çerez Politikası](https://bilkil53.github.io/aile-ile-namaz/cerez-politikasi.html)
 - [Hesap silme](https://bilkil53.github.io/aile-ile-namaz/delete-account.html)
+- [Home (English)](https://bilkil53.github.io/aile-ile-namaz/index-en.html)
+- [Terms of Use (English)](https://bilkil53.github.io/aile-ile-namaz/terms-en.html)
+- [Cookie Policy (English)](https://bilkil53.github.io/aile-ile-namaz/cookies-en.html)
+- [Account deletion (English)](https://bilkil53.github.io/aile-ile-namaz/delete-account-en.html)
+
+## In English
+Aile İle Namaz is a free Android app for tracking the 5 daily prayers together as a family (Turkish and English). Prayer times by the Diyanet method, a family circle of up to 5 people, kaza (missed prayer) tracking, a report card with badges, and a qibla compass. Individual use is free; Family Pro is optional. Data is stored in the EU (Frankfurt) and not sold. The website uses no cookies.

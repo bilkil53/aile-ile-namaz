@@ -1,13 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-  <url><loc>https://bilkil53.github.io/aile-ile-namaz/</loc><lastmod>2026-11-21</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://bilkil53.github.io/aile-ile-namaz/</loc><lastmod>2026-11-21</lastmod><changefreq>weekly</changefreq><priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://bilkil53.github.io/aile-ile-namaz/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bilkil53.github.io/aile-ile-namaz/index-en.html"/></url>
+  <url><loc>https://bilkil53.github.io/aile-ile-namaz/index-en.html</loc><lastmod>2026-11-21</lastmod><changefreq>weekly</changefreq><priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://bilkil53.github.io/aile-ile-namaz/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bilkil53.github.io/aile-ile-namaz/index-en.html"/></url>
   <url><loc>https://bilkil53.github.io/aile-ile-namaz/privacy.html</loc><lastmod>2026-11-21</lastmod>
     <xhtml:link rel="alternate" hreflang="tr" href="https://bilkil53.github.io/aile-ile-namaz/privacy.html"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://bilkil53.github.io/aile-ile-namaz/privacy-en.html"/></url>
   <url><loc>https://bilkil53.github.io/aile-ile-namaz/privacy-en.html</loc><lastmod>2026-11-21</lastmod>
     <xhtml:link rel="alternate" hreflang="tr" href="https://bilkil53.github.io/aile-ile-namaz/privacy.html"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://bilkil53.github.io/aile-ile-namaz/privacy-en.html"/></url>
-  <url><loc>https://bilkil53.github.io/aile-ile-namaz/kullanim-kosullari.html</loc><lastmod>2026-11-21</lastmod></url>
-  <url><loc>https://bilkil53.github.io/aile-ile-namaz/cerez-politikasi.html</loc><lastmod>2026-11-21</lastmod></url>
-  <url><loc>https://bilkil53.github.io/aile-ile-namaz/delete-account.html</loc><lastmod>2026-11-21</lastmod></url>
+  <url><loc>https://bilkil53.github.io/aile-ile-namaz/kullanim-kosullari.html</loc><lastmod>2026-11-21</lastmod>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://bilkil53.github.io/aile-ile-namaz/kullanim-kosullari.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bilkil53.github.io/aile-ile-namaz/terms-en.html"/></url>
+  <url><loc>https://bilkil53.github.io/aile-ile-namaz/terms-en.html</loc><lastmod>2026-11-21</lastmod>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://bilkil53.github.io/aile-ile-namaz/kullanim-kosullari.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bilkil53.github.io/aile-ile-namaz/terms-en.html"/></url>
+  <url><loc>https://bilkil53.github.io/aile-ile-namaz/cerez-politikasi.html</loc><lastmod>2026-11-21</lastmod>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://bilkil53.github.io/aile-ile-namaz/cerez-politikasi.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bilkil53.github.io/aile-ile-namaz/cookies-en.html"/></url>
+  <url><loc>https://bilkil53.github.io/aile-ile-namaz/cookies-en.html</loc><lastmod>2026-11-21</lastmod>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://bilkil53.github.io/aile-ile-namaz/cerez-politikasi.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bilkil53.github.io/aile-ile-namaz/cookies-en.html"/></url>
+  <url><loc>https://bilkil53.github.io/aile-ile-namaz/delete-account.html</loc><lastmod>2026-11-21</lastmod>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://bilkil53.github.io/aile-ile-namaz/delete-account.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bilkil53.github.io/aile-ile-namaz/delete-account-en.html"/></url>
+  <url><loc>https://bilkil53.github.io/aile-ile-namaz/delete-account-en.html</loc><lastmod>2026-11-21</lastmod>
+    <xhtml:link rel="alternate" hreflang="tr" href="https://bilkil53.github.io/aile-ile-namaz/delete-account.html"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://bilkil53.github.io/aile-ile-namaz/delete-account-en.html"/></url>
 </urlset>
