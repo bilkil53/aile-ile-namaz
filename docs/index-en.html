@@ -366,7 +366,7 @@ section.blk { padding-block: 80px; }
 .faq .ans { padding: 0 20px 18px; color: var(--text-2); }
 .faq details[open] .ans { animation: up 0.4s ease-out; }
 
-.final { position: relative; z-index: 1; color: #fff; text-align: center; padding-block: 110px 90px; overflow: hidden; }
+.final { position: relative; z-index: 1; color: #fff; text-align: center; padding-block: 110px 150px; overflow: hidden; }
 .final h2 { font-size: clamp(2.2rem, 6vw, 4rem); font-weight: 900; letter-spacing: -0.03em; max-width: 16ch; margin: 0 auto; }
 .final p { color: rgba(255,255,255,0.8); max-width: 52ch; margin: 18px auto 0; font-size: 1.1rem; }
 .final .cta { justify-content: center; animation: none; }
@@ -424,10 +424,6 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
   .sheet { border-radius: 28px 28px 0 0; }
   .pattern { opacity: 0.05; }
 }
-.hero-note { margin-top: 14px; font-size: 0.88rem; color: rgba(255,255,255,0.62); display: flex; align-items: center; gap: 6px; }
-.hero-note .ms { font-size: 16px; }
-.install-note { display: flex; gap: 10px; align-items: flex-start; max-width: 540px; margin: 22px auto 0; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16); border-radius: 14px; padding: 14px 16px; color: rgba(255,255,255,0.82); font-size: 0.92rem; text-align: left; }
-.install-note .ms { color: var(--mint); flex: none; margin-top: 1px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .rv.wait { opacity: 1; transform: none; }
@@ -475,7 +471,6 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
           <a class="btn main mag" href="https://github.com/bilkil53/aile-ile-namaz/releases/latest"><span class="ms" aria-hidden="true">download</span>Free download</a>
           <a class="btn ghost mag" href="#nasil"><span class="ms" aria-hidden="true">play_circle</span>How it works</a>
         </div>
-        <p class="hero-note"><span class="ms" aria-hidden="true">fact_check</span>A direct APK from GitHub, not Google Play. The source code is public.</p>
       </div>
       <div class="stage" id="heroStage">
         <div class="phone tilt" id="heroPhone"><div class="screen" data-screens></div></div>
@@ -616,7 +611,6 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
         <h2 class="rv">Send your family the invite code and start together</h2>
         <p class="rv" style="--d:1">Install it on your Android phone now, create your family circle and share the invite code. In Turkish and English.</p>
         <div class="cta rv" style="--d:2"><a class="btn main mag" href="https://github.com/bilkil53/aile-ile-namaz/releases/latest"><span class="ms" aria-hidden="true">android</span>Download for Android (APK)</a></div>
-        <p class="install-note"><span class="ms" aria-hidden="true">policy</span><span>The repository is public and the APK comes straight from GitHub’s own servers, not a third party. That’s why Android shows an "unknown source" warning — it’s expected.</span></p>
         <ol class="install rv" style="--d:3" aria-label="Installation steps"><li>Tap the download button and save the APK file to your phone.</li><li>Open the file; if Android asks, allow installs from this source.</li><li>Install and open it. The app tells you when a new version is out.</li></ol>
       </div>
     </section>

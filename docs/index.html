@@ -390,7 +390,7 @@ section.blk { padding-block: 80px; }
 .faq .ans { padding: 0 20px 18px; color: var(--text-2); }
 .faq details[open] .ans { animation: up 0.4s ease-out; }
 
-.final { position: relative; z-index: 1; color: #fff; text-align: center; padding-block: 110px 90px; overflow: hidden; }
+.final { position: relative; z-index: 1; color: #fff; text-align: center; padding-block: 110px 150px; overflow: hidden; }
 .final h2 { font-size: clamp(2.2rem, 6vw, 4rem); font-weight: 900; letter-spacing: -0.03em; max-width: 16ch; margin: 0 auto; }
 .final p { color: rgba(255,255,255,0.8); max-width: 52ch; margin: 18px auto 0; font-size: 1.1rem; }
 .final .cta { justify-content: center; animation: none; }
@@ -448,10 +448,6 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
   .sheet { border-radius: 28px 28px 0 0; }
   .pattern { opacity: 0.05; }
 }
-.hero-note { margin-top: 14px; font-size: 0.88rem; color: rgba(255,255,255,0.62); display: flex; align-items: center; gap: 6px; }
-.hero-note .ms { font-size: 16px; }
-.install-note { display: flex; gap: 10px; align-items: flex-start; max-width: 540px; margin: 22px auto 0; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16); border-radius: 14px; padding: 14px 16px; color: rgba(255,255,255,0.82); font-size: 0.92rem; text-align: left; }
-.install-note .ms { color: var(--mint); flex: none; margin-top: 1px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .rv.wait { opacity: 1; transform: none; }
@@ -499,7 +495,6 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
           <a class="btn main mag" href="https://github.com/bilkil53/aile-ile-namaz/releases/latest"><span class="ms" aria-hidden="true">download</span>Ücretsiz indir</a>
           <a class="btn ghost mag" href="#nasil"><span class="ms" aria-hidden="true">play_circle</span>Nasıl çalışır?</a>
         </div>
-        <p class="hero-note"><span class="ms" aria-hidden="true">fact_check</span>GitHub üzerinden doğrudan APK; Play Store’da değil. Kaynak kodu herkese açık.</p>
       </div>
       <div class="stage" id="heroStage">
         <div class="phone tilt" id="heroPhone"><div class="screen" data-screens></div></div>
@@ -640,7 +635,6 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
         <h2 class="rv">Ailene davet kodunu gönder, birlikte başlayın</h2>
         <p class="rv" style="--d:1">Android telefonuna hemen kur, aile havuzunu kur ve davet kodunu paylaş. Türkçe ve İngilizce.</p>
         <div class="cta rv" style="--d:2"><a class="btn main mag" href="https://github.com/bilkil53/aile-ile-namaz/releases/latest"><span class="ms" aria-hidden="true">android</span>Android için indir (APK)</a></div>
-        <p class="install-note"><span class="ms" aria-hidden="true">policy</span><span>Depo herkese açık, APK doğrudan GitHub’ın kendi sunucusundan iniyor — üçüncü parti değil. Android’in "bilinmeyen kaynak" uyarısı bu yüzden çıkar, normaldir.</span></p>
         <ol class="install rv" style="--d:3" aria-label="Kurulum adımları"><li>İndir düğmesine dokun, APK dosyasını telefona indir.</li><li>Dosyayı aç; Android sorarsa bu kaynaktan yüklemeye izin ver.</li><li>Kur ve aç. Yeni sürüm çıkınca uygulama sana haber verir.</li></ol>
       </div>
     </section>
