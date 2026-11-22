@@ -123,19 +123,19 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .top.solid { background: rgba(4,42,33,0.78); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 6px 24px -12px rgba(0,0,0,0.6); }
 .bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 14px; }
 .brand { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; font-weight: 700; font-size: 1.08rem; }
-.brand .logo { width: 40px; height: 40px; border-radius: 13px; background: linear-gradient(135deg, var(--emerald-light), var(--emerald)); display: grid; place-items: center; box-shadow: 0 0 0 1px rgba(134,239,172,0.25), 0 6px 16px -6px rgba(134,239,172,0.5); animation: breathe 4s ease-in-out infinite; }
-@keyframes breathe { 50% { box-shadow: 0 0 0 1px rgba(134,239,172,0.4), 0 6px 24px -4px rgba(134,239,172,0.8); } }
+.brand .logo { width: 40px; height: 40px; border-radius: 13px; background: linear-gradient(135deg, var(--emerald-light), var(--emerald)); display: grid; place-items: center; box-shadow: 0 0 0 1px rgba(134,239,172,0.25), 0 6px 16px -6px rgba(134,239,172,0.5); }
 .bar nav { display: flex; gap: 2px; }
 .bar nav a { color: rgba(255,255,255,0.82); text-decoration: none; font-size: 0.94rem; padding: 7px 12px; border-radius: 999px; position: relative; transition: color 0.2s, background 0.2s; }
 .bar nav a:hover { color: #fff; background: rgba(255,255,255,0.1); }
+.bar .lang { color: #fff; text-decoration: none; font-size: 0.86rem; font-weight: 700; padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.3); transition: background 0.2s; }
+.bar .lang:hover { background: rgba(255,255,255,0.12); }
 .menu-btn { display: none; background: rgba(255,255,255,0.12); border: 0; color: #fff; width: 42px; height: 42px; border-radius: 12px; cursor: pointer; }
 
 /* ---------- Hero ---------- */
 .hero { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 40px; align-items: center; padding-block: 36px 72px; color: #fff; min-height: min(780px, 92vh); }
 .hero > * { min-width: 0; }
 .pill { display: inline-flex; align-items: center; gap: 10px; background: rgba(134,239,172,0.12); border: 1px solid rgba(134,239,172,0.3); color: var(--mint); border-radius: 999px; padding: 7px 14px 7px 10px; font-size: 0.88rem; font-weight: 500; }
-.pill .live { width: 9px; height: 9px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 0 0 rgba(134,239,172,0.7); animation: ping 1.8s ease-out infinite; }
-@keyframes ping { 70% { box-shadow: 0 0 0 10px rgba(134,239,172,0); } 100% { box-shadow: 0 0 0 0 rgba(134,239,172,0); } }
+.pill .live { width: 9px; height: 9px; border-radius: 50%; background: var(--mint); }
 .hero h1 { margin-top: 20px; font-size: clamp(2.6rem, 7vw, 5rem); font-weight: 900; letter-spacing: -0.035em; }
 .hero h1 .w { display: inline-block; white-space: nowrap; }
 .hero h1 .c { display: inline-block; animation: charIn 0.7s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i) * 28ms + 150ms); }
@@ -149,7 +149,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .btn.main { background: var(--mint); color: var(--emerald-deep); box-shadow: 0 10px 30px -8px rgba(134,239,172,0.6); }
 .btn.main .ms { animation: bob 1.6s ease-in-out infinite; }
 @keyframes bob { 50% { transform: translateY(3px); } }
-.btn.main::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,0.7) 50%, transparent 62%); transform: translateX(-110%); animation: shine 3.6s ease-in-out infinite 2s; }
+.btn.main::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 38%, rgba(255,255,255,0.7) 50%, transparent 62%); transform: translateX(-110%); animation: shine 3.6s ease-in-out 2s 3; }
 @keyframes shine { 35%, 100% { transform: translateX(110%); } }
 .btn.ghost { color: #fff; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.06); }
 .btn.ghost:hover { background: rgba(255,255,255,0.12); }
@@ -198,7 +198,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .scr.act .mdots i.y { animation: dotOn 0.35s both; animation-delay: calc(var(--d) * 110ms + 300ms); }
 @keyframes dotOn { from { transform: scale(0.3); } to { background: var(--emerald); transform: scale(1); } }
 .toast { background: var(--gold-soft); color: #7a4a06; border-radius: 0.9em; padding: 0.55em 0.75em; font-size: 0.85em; display: flex; gap: 0.5em; align-items: center; }
-.scr.act .toast { animation: toastIn 0.5s 1.6s cubic-bezier(.3,1.5,.5,1) both; }
+.scr.act .toast { animation: toastIn 0.5s 1.6s cubic-bezier(.16,1,.3,1) both; }
 @keyframes toastIn { from { opacity: 0; transform: translateY(1em) scale(0.9); } }
 /* Screen: Kaza */
 .kz { background: #fff; border: 1px solid var(--border); border-radius: 0.9em; padding: 0.6em 0.8em; display: flex; justify-content: space-between; align-items: center; }
@@ -229,7 +229,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .days { display: flex; gap: 0.45em; padding: 0 0.3em; font-size: 0.7em; color: var(--text-3); }
 .days span { flex: 1; text-align: center; }
 .badge { display: flex; align-items: center; gap: 0.6em; background: var(--purple-soft); color: var(--purple); border-radius: 0.9em; padding: 0.55em 0.75em; font-size: 0.88em; font-weight: 700; }
-.scr.act .badge { animation: toastIn 0.6s 1.5s cubic-bezier(.3,1.5,.5,1) both; }
+.scr.act .badge { animation: toastIn 0.6s 1.5s cubic-bezier(.16,1,.3,1) both; }
 .badge .ms { font-size: 1.4em; }
 /* Screen: Kıble */
 .compass { width: 13em; height: 13em; margin: 0.6em auto; border-radius: 50%; background: radial-gradient(circle, #fff 55%, var(--emerald-soft) 56%, var(--emerald-soft) 70%, #fff 71%); border: 2px solid var(--border); position: relative; display: grid; place-items: center; }
@@ -248,7 +248,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .scr.act .qinfo { animation: toastIn 0.6s 2s both; }
 
 /* floating bubbles around hero phone */
-.bubble { position: absolute; z-index: 3; background: rgba(255,255,255,0.95); color: var(--text); border-radius: 16px; padding: 10px 14px; font-size: 0.9rem; display: flex; gap: 10px; align-items: center; box-shadow: 0 16px 40px -14px rgba(0,0,0,0.6); max-width: 230px; opacity: 0; transform: translateY(16px) scale(0.9); transition: opacity 0.5s, transform 0.5s cubic-bezier(.3,1.5,.5,1); pointer-events: none; }
+.bubble { position: absolute; z-index: 3; background: rgba(255,255,255,0.95); color: var(--text); border-radius: 16px; padding: 10px 14px; font-size: 0.9rem; display: flex; gap: 10px; align-items: center; box-shadow: 0 16px 40px -14px rgba(0,0,0,0.6); max-width: 230px; opacity: 0; transform: translateY(16px) scale(0.9); transition: opacity 0.5s, transform 0.5s cubic-bezier(.16,1,.3,1); pointer-events: none; }
 .bubble.show { opacity: 1; transform: none; }
 .bubble .ms { font-size: 22px; flex: none; border-radius: 10px; padding: 5px; }
 .bubble.b1 { left: -14%; top: 58%; }
@@ -328,7 +328,7 @@ section.blk { padding-block: 80px; }
 .perm b { font-size: 1rem; }
 .perm span.t { color: var(--text-2); font-size: 0.92rem; }
 .switch { width: 46px; height: 26px; border-radius: 999px; background: #d6e3de; position: relative; flex: none; transition: background 0.3s 0.2s; }
-.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: transform 0.35s cubic-bezier(.3,1.5,.5,1) 0.2s; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: transform 0.35s cubic-bezier(.16,1,.3,1) 0.2s; }
 .on .switch { background: var(--emerald); }
 .on .switch::after { transform: translateX(20px); }
 
@@ -345,14 +345,14 @@ section.blk { padding-block: 80px; }
 
 .pro { position: relative; overflow: hidden; background: linear-gradient(135deg, #fffbeb, var(--gold-soft)); border: 1px solid #fde68a; border-radius: 30px; padding: 30px; display: grid; grid-template-columns: 1fr auto; gap: 28px; align-items: center; }
 .pro > div { display: grid; gap: 10px; min-width: 0; }
-.pro::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.7) 50%, transparent 65%); transform: translateX(-110%); animation: shine 5s ease-in-out infinite 1s; pointer-events: none; }
+.pro::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.7) 50%, transparent 65%); transform: translateX(-110%); animation: shine 5s ease-in-out 1s 3; pointer-events: none; }
 .pro h2 { font-size: clamp(1.6rem, 3.6vw, 2.2rem); font-weight: 900; color: #5c3b06; }
 .pro p { color: #6b4e16; }
 .ringfam { position: relative; width: 190px; height: 190px; flex: none; }
 .ringfam .crown { position: absolute; inset: 0; margin: auto; width: 72px; height: 72px; border-radius: 50%; background: #fff; display: grid; place-items: center; color: var(--gold); box-shadow: 0 10px 24px -10px rgba(217,119,6,0.6); }
 .ringfam .crown .ms { font-size: 38px; }
 .ringfam .av { position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; margin: -22px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; border: 3px solid #fff; transform: rotate(calc(var(--k) * 72deg)) translateY(-74px) rotate(calc(var(--k) * -72deg)); }
-.on .ringfam .av { animation: join 0.7s cubic-bezier(.3,1.5,.5,1) both; animation-delay: calc(var(--k) * 140ms); }
+.on .ringfam .av { animation: join 0.7s cubic-bezier(.16,1,.3,1) both; animation-delay: calc(var(--k) * 140ms); }
 @keyframes join { from { transform: rotate(calc(var(--k) * 72deg)) translateY(0) rotate(calc(var(--k) * -72deg)) scale(0.2); opacity: 0; } }
 .ringfam .spin { position: absolute; inset: 0; border-radius: 50%; border: 2px dashed rgba(217,119,6,0.35); animation: spin 18s linear infinite; }
 
@@ -361,7 +361,7 @@ section.blk { padding-block: 80px; }
 .faq details[open] { border-color: #b9d4c9; box-shadow: 0 14px 30px -20px rgba(14,90,74,0.5); }
 .faq summary { list-style: none; cursor: pointer; padding: 18px 20px; display: flex; justify-content: space-between; gap: 16px; align-items: center; font-weight: 700; font-size: 1.02rem; }
 .faq summary::-webkit-details-marker { display: none; }
-.faq summary .ms { color: var(--emerald); transition: transform 0.35s cubic-bezier(.3,1.5,.5,1); flex: none; }
+.faq summary .ms { color: var(--emerald); transition: transform 0.35s cubic-bezier(.16,1,.3,1); flex: none; }
 .faq details[open] summary .ms { transform: rotate(45deg); }
 .faq .ans { padding: 0 20px 18px; color: var(--text-2); }
 .faq details[open] .ans { animation: up 0.4s ease-out; }
@@ -424,6 +424,10 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
   .sheet { border-radius: 28px 28px 0 0; }
   .pattern { opacity: 0.05; }
 }
+.hero-note { margin-top: 14px; font-size: 0.88rem; color: rgba(255,255,255,0.62); display: flex; align-items: center; gap: 6px; }
+.hero-note .ms { font-size: 16px; }
+.install-note { display: flex; gap: 10px; align-items: flex-start; max-width: 540px; margin: 22px auto 0; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.16); border-radius: 14px; padding: 14px 16px; color: rgba(255,255,255,0.82); font-size: 0.92rem; text-align: left; }
+.install-note .ms { color: var(--mint); flex: none; margin-top: 1px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .rv.wait { opacity: 1; transform: none; }
@@ -455,8 +459,8 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
         <a href="#kvkk">Privacy</a>
         <a href="#sss">FAQ</a>
         <a href="#indir">Download</a>
-        <a class="lang" href="./" hreflang="tr" lang="tr" aria-label="Türkçe">TR</a>
       </nav>
+      <a class="lang" href="./" hreflang="tr" lang="tr" aria-label="Türkçe">TR</a>
       <button type="button" class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="nav"><span class="ms" aria-hidden="true">menu</span></button>
     </div>
   </header>
@@ -471,6 +475,7 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
           <a class="btn main mag" href="https://github.com/bilkil53/aile-ile-namaz/releases/latest"><span class="ms" aria-hidden="true">download</span>Free download</a>
           <a class="btn ghost mag" href="#nasil"><span class="ms" aria-hidden="true">play_circle</span>How it works</a>
         </div>
+        <p class="hero-note"><span class="ms" aria-hidden="true">fact_check</span>A direct APK from GitHub, not Google Play. The source code is public.</p>
       </div>
       <div class="stage" id="heroStage">
         <div class="phone tilt" id="heroPhone"><div class="screen" data-screens></div></div>
@@ -591,7 +596,7 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
             <div class="crown"><span class="ms">workspace_premium</span></div>
             <span class="av" style="--k:0;background:#0e5a4a">A</span>
             <span class="av" style="--k:1;background:#0369a1">B</span>
-            <span class="av" style="--k:2;background:#ea580c">E</span>
+            <span class="av" style="--k:2;background:#c2410c">E</span>
             <span class="av" style="--k:3;background:#7e22ce">M</span>
             <span class="av" style="--k:4;background:#d97706">+</span>
           </div>
@@ -611,6 +616,7 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
         <h2 class="rv">Send your family the invite code and start together</h2>
         <p class="rv" style="--d:1">Install it on your Android phone now, create your family circle and share the invite code. In Turkish and English.</p>
         <div class="cta rv" style="--d:2"><a class="btn main mag" href="https://github.com/bilkil53/aile-ile-namaz/releases/latest"><span class="ms" aria-hidden="true">android</span>Download for Android (APK)</a></div>
+        <p class="install-note"><span class="ms" aria-hidden="true">policy</span><span>The repository is public and the APK comes straight from GitHub’s own servers, not a third party. That’s why Android shows an "unknown source" warning — it’s expected.</span></p>
         <ol class="install rv" style="--d:3" aria-label="Installation steps"><li>Tap the download button and save the APK file to your phone.</li><li>Open the file; if Android asks, allow installs from this source.</li><li>Install and open it. The app tells you when a new version is out.</li></ol>
       </div>
     </section>
@@ -651,7 +657,7 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
   var V = [["Fajr", "06:41"], ["Dhuhr", "12:58"], ["Asr", "15:34"], ["Maghrib", "17:56"], ["Isha", "19:21"]];
   function tabs(k) { return '<div class="tabs">' + ["home", "groups", "calendar_month", "emoji_events", "explore"].map(function (n, i) { return '<span class="ms' + (i === k ? " on" : "") + '">' + n + "</span>"; }).join("") + "</div>"; }
   function bar(t, ic) { return '<div class="abar"><b>' + t + '</b><span class="ms">' + ic + "</span></div>"; }
-  var fam = [["Mom", "#0e5a4a", [1, 1, 1, 0, 0]], ["Dad", "#0369a1", [1, 1, 1, 0, 0]], ["Eflin", "#ea580c", [1, 1, 0, 0, 0]], ["Meva", "#7e22ce", [1, 0, 1, 0, 0]]];
+  var fam = [["Mom", "#0e5a4a", [1, 1, 1, 0, 0]], ["Dad", "#0369a1", [1, 1, 1, 0, 0]], ["Eflin", "#c2410c", [1, 1, 0, 0, 0]], ["Meva", "#7e22ce", [1, 0, 1, 0, 0]]];
   var S = [
     bar("Today", "notifications") + '<div class="body"><div class="next"><small>Time until Maghrib</small><span class="cd" data-cd>01:24:36</span><small>Sample location · Istanbul</small></div>' +
       V.map(function (v, i) { return '<div class="vrow' + (i < 2 ? " done" : "") + (i === 2 ? " tap cur" : "") + '"><span>' + v[0] + '</span><span class="t">' + v[1] + '</span><span class="chk"><span class="ms">check</span></span>' + (i === 2 ? '<span class="ripple"></span>' : "") + "</div>"; }).join("") + "</div>" + tabs(0),
@@ -723,7 +729,7 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
   var cv = $("#bg"), cx = cv.getContext("2d"), W, H, dpr = Math.min(window.devicePixelRatio || 1, 2), parts = [];
   function size() { W = cv.width = innerWidth * dpr; H = cv.height = innerHeight * dpr; cv.style.width = innerWidth + "px"; cv.style.height = innerHeight + "px"; }
   size(); addEventListener("resize", size);
-  var N = small ? 28 : 70;
+  var N = small ? 16 : 45;
   for (var i = 0; i < N; i++) parts.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.8 + 0.4, v: Math.random() * 0.00025 + 0.00008, a: Math.random() * Math.PI * 2, g: Math.random() < 0.25 });
   var scrollY0 = 0;
   function draw(t) {
