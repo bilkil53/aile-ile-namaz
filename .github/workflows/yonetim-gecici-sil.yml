@@ -1,10 +1,10 @@
 # Yönetim deposu (özel) her yeşil derlemede APK'yı buraya 'yonetim-gecici' ön sürümü olarak koyar
-# (GitHub girişi olmadan indirmek için). Bu iş 2 saati geçen kopyayı siler. Kalıcı kopya yönetim deposunda.
-name: Geçici yönetim APK'sını sil (2 saat)
+# (GitHub girişi olmadan indirmek için). Bu iş 1 saati geçen kopyayı siler. Kalıcı kopya yönetim deposunda.
+name: Geçici yönetim APK'sını sil (1 saat)
 
 on:
   schedule:
-    - cron: '7,37 * * * *' # 30 dakikada bir; silme yaklaşık 2-2,5 saatte olur (GitHub zamanlaması gecikebilir)
+    - cron: '7,22,37,52 * * * *' # 15 dakikada bir; silme yaklaşık 1-1,25 saatte olur (GitHub zamanlaması gecikebilir)
   workflow_dispatch:
 
 permissions:
@@ -15,14 +15,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: 2 saatten eskiyse sil
+      - name: 1 saatten eskiyse sil
         env:
           GH_TOKEN: ${{ github.token }}
           R: ${{ github.repository }}
         run: |
           T=$(gh release view yonetim-gecici --repo "$R" --json createdAt --jq .createdAt 2>/dev/null) || { echo "Geçici kopya yok."; exit 0; }
-          if [ "$(date -u -d "$T" +%s)" -lt "$(date -u -d '2 hours ago' +%s)" ]; then
+          if [ "$(date -u -d "$T" +%s)" -lt "$(date -u -d '1 hour ago' +%s)" ]; then
             gh release delete yonetim-gecici --repo "$R" --cleanup-tag -y && echo "Silindi (oluşturma: $T)" | tee -a "$GITHUB_STEP_SUMMARY"
           else
-            echo "Henüz 2 saat olmadı (oluşturma: $T)."
+            echo "Henüz 1 saat olmadı (oluşturma: $T)."
           fi
