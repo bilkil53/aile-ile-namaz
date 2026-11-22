@@ -215,7 +215,7 @@ Deno.serve(async (req) => {
       return new Response("yetkisiz", { status: 401 });
     }
 
-    const { event_id, check } = await req.json().catch(() => ({}));
+    const { event_id, check, renewal_user } = await req.json().catch(() => ({}));
 
     // Sağlık kontrolü: anahtar var mı ve Google'dan erişim izni alınabiliyor mu? (gizli bilgi döndürmez)
     if (check) {
@@ -228,6 +228,41 @@ Deno.serve(async (req) => {
       } catch (e) {
         return Response.json({ configured: true, oauth: "hata" });
       }
+    }
+
+    // Pro yenileme hatırlatması: günlük görev (aile-pro-renewal) bitişine ≤7 gün kalan ücretli Pro için çağırır.
+    if (renewal_user) {
+      const saRaw = Deno.env.get("FCM_SERVICE_ACCOUNT");
+      if (!saRaw) return Response.json({ skipped: "FCM_SERVICE_ACCOUNT yok" });
+      const { data: prof } = await db.from("profiles").select("pro_paid_until").eq("id", renewal_user).maybeSingle();
+      const until = prof?.pro_paid_until ? new Date(prof.pro_paid_until) : null;
+      const days = until ? Math.ceil((until.getTime() - Date.now()) / 86_400_000) : 0;
+      if (!until || days < 1 || days > 7) return Response.json({ skipped: "süre uygun değil" });
+      const { data: devs } = await db.from("devices").select("fcm_token, lang").eq("user_id", renewal_user);
+      if (!devs?.length) return Response.json({ sent: 0, reason: "cihaz yok" });
+      const tk = await accessToken(JSON.parse(saRaw));
+      const project = JSON.parse(saRaw).project_id;
+      let ok = 0;
+      await Promise.all(devs.map(async (d) => {
+        const en = d.lang === "en";
+        const res = await fetch(`https://fcm.googleapis.com/v1/projects/${project}/messages:send`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${tk}`, "Content-Type": "application/json" },
+          signal: AbortSignal.timeout(8000),
+          body: JSON.stringify({ message: {
+            token: d.fcm_token,
+            notification: en
+              ? { title: "Pro is ending soon", body: `Your Pro license ends in ${days} day${days > 1 ? "s" : ""}. Renew to keep your family features.` }
+              : { title: "Pro lisansın bitiyor", body: `Pro lisansının bitmesine ${days} gün kaldı. Aile özelliklerin kapanmasın diye yenile.` },
+            android: { priority: "HIGH", ttl: "86400s", notification: { channel_id: "aile_olaylari", sound: "default", tag: "pro-renewal" } },
+            data: { type: "PRO_RENEWAL" },
+          } }),
+        }).catch(() => null);
+        if (res?.ok) ok++;
+      }));
+      // İşaret yalnız en az bir cihaza ulaşınca yazılır; ulaşmazsa ertesi gün yeniden denenir
+      if (ok > 0) await db.from("profiles").update({ pro_renewal_notified_until: until.toISOString() }).eq("id", renewal_user);
+      return Response.json({ sent: ok });
     }
 
     if (!event_id) return new Response("event_id gerekli", { status: 400 });

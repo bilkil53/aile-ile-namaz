@@ -8,6 +8,7 @@ import 'package:flutter/services.dart' show PlatformException;
 import 'data.dart';
 import 'lang.dart';
 import 'log.dart';
+import 'notifications.dart';
 import 'settings.dart';
 
 /// Uygulama kapalıyken de aile bildirimleri (Firebase Cloud Messaging).
@@ -93,6 +94,20 @@ class Push {
       _set(false, t('Firebase başlatılamadı', 'Firebase could not start') + ' (${_short(lastError ?? t('bilinmeyen hata', 'unknown error'))})');
       return;
     }
+    _listenForeground();
+  }
+
+  static StreamSubscription<RemoteMessage>? _fg;
+
+  /// Uygulama açıkken Android bildirimi kendisi göstermez. Aile olayları canlı bağlantıyla zaten
+  /// gösterildiği için (çift olmasın) burada yalnız Pro yenileme hatırlatması gösterilir.
+  static void _listenForeground() {
+    _fg ??= FirebaseMessaging.onMessage.listen((m) {
+      final n = m.notification;
+      if (m.data['type'] == 'PRO_RENEWAL' && n != null) {
+        Notifications.showFamily(99001, n.title ?? '', n.body ?? '');
+      }
+    });
   }
 
   /// Giriş yapılmışsa ve aile bildirimleri açıksa cihazı kaydeder.

@@ -676,8 +676,8 @@ class _FamilyScreenState extends State<FamilyScreen> {
               const SizedBox(height: 12),
             ],
             for (final r in _requests) ...[_requestCard(r), const SizedBox(height: 10)],
-            if (_members.length > 1) ...[
-              _isOwner ? _codeCard(pool) : _memberStatusCard(pool),
+            if (_members.length > 1 && _isOwner) ...[
+              _codeCard(pool),
               const SizedBox(height: 12),
             ],
             _matrix(),
@@ -728,6 +728,8 @@ class _FamilyScreenState extends State<FamilyScreen> {
                   }
                 },
               ),
+            // Üye: Havuzdan Ayrıl en altta
+            if (!_isOwner && _members.length > 1) _leaveBox(pool),
           ]),
         ],
       ),
@@ -1145,19 +1147,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
     );
   }
 
-  Widget _memberStatusCard(Pool pool) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        _whiteCard(
-          child: Row(children: [
-            Text('🕌', style: TextStyle(fontSize: 24)),
-            SizedBox(width: 10),
-            Expanded(
-              child: Text(t('Aile İbadet Havuzundasın', 'You are in a Family Worship Circle'),
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.onCard)),
-            ),
-          ]),
-        ),
-        const SizedBox(height: 10),
-        DangerBox(
+  Widget _leaveBox(Pool pool) => DangerBox(
           title: t('Havuzdan Ayrıl', 'Leave Circle'),
           subtitle: t('Ailenin namaz durumunu artık göremezsin', 'You will no longer see your family\'s prayers'),
           icon: Icons.logout,
@@ -1183,8 +1173,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 _toast(_err(e));
               }
           },
-        ),
-      ]);
+        );
 
   // ---------- Ortak matris (vakit × kişi) ----------
   Widget _matrix() {
