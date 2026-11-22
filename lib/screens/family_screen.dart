@@ -668,12 +668,19 @@ class _FamilyScreenState extends State<FamilyScreen> {
           _hero(),
           const SizedBox(height: 12),
           if (pool != null && _isOwner) _proRequestsCard(),
+          // Ücretsizde de başka havuza katılınabilir: katılma kartı soluk/pasif alanın dışında
+          if (pool != null && _demo && _members.length <= 1) ...[
+            if (_outgoing.isNotEmpty) _pendingCard() else _joinCard(),
+            const SizedBox(height: 12),
+          ],
           if (pool != null) ..._demoDim([
             if (_members.length <= 1) ...[
               _codeCard(pool),
               const SizedBox(height: 12),
-              if (_outgoing.isNotEmpty) _pendingCard() else _joinCard(),
-              const SizedBox(height: 12),
+              if (!_demo) ...[
+                if (_outgoing.isNotEmpty) _pendingCard() else _joinCard(),
+                const SizedBox(height: 12),
+              ],
             ],
             for (final r in _requests) ...[_requestCard(r), const SizedBox(height: 10)],
             if (_members.length > 1 && _isOwner) ...[
