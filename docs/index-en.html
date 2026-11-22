@@ -94,8 +94,8 @@
   --font: "Roboto", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { background: var(--emerald-deep); color: var(--text); font-family: var(--font); line-height: 1.55; overflow-x: hidden; }
+html { scroll-behavior: smooth; overflow-x: clip; }
+body { background: var(--emerald-deep); color: var(--text); font-family: var(--font); line-height: 1.55; overflow-x: clip; }
 .in { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 h1, h2, h3 { margin: 0; line-height: 1.12; text-wrap: balance; }
 p { margin: 0; }
@@ -140,7 +140,6 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .hero h1 .w { display: inline-block; white-space: nowrap; }
 .hero h1 .c { display: inline-block; animation: charIn 0.7s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i) * 28ms + 150ms); }
 @keyframes charIn { from { opacity: 0; transform: translateY(0.6em) rotate(8deg); filter: blur(6px); } }
-.hero h1 .hl { background: linear-gradient(90deg, var(--mint), var(--sun), var(--mint)); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: charIn 0.7s cubic-bezier(.2,.8,.2,1) both, sheen 5s linear infinite; }
 @keyframes sheen { to { background-position: -200% 0; } }
 .lead { margin-top: 18px; font-size: clamp(1.05rem, 2.2vw, 1.25rem); color: rgba(255,255,255,0.82); max-width: 40ch; animation: up 0.8s 0.9s cubic-bezier(.2,.8,.2,1) both; }
 @keyframes up { from { opacity: 0; transform: translateY(18px); } }
@@ -154,9 +153,6 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 @keyframes shine { 35%, 100% { transform: translateX(110%); } }
 .btn.ghost { color: #fff; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.06); }
 .btn.ghost:hover { background: rgba(255,255,255,0.12); }
-.stats { margin-top: 38px; display: grid; grid-template-columns: repeat(4, auto); gap: 10px 28px; justify-content: start; animation: up 0.8s 1.3s cubic-bezier(.2,.8,.2,1) both; }
-.stat b { display: block; font-size: 1.9rem; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; line-height: 1; }
-.stat span { font-size: 0.84rem; color: rgba(255,255,255,0.65); }
 
 /* ---------- Phone ---------- */
 .stage { position: relative; display: grid; place-items: center; perspective: 1200px; animation: up 1s 0.5s cubic-bezier(.2,.8,.2,1) both; }
@@ -252,7 +248,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .scr.act .qinfo { animation: toastIn 0.6s 2s both; }
 
 /* floating bubbles around hero phone */
-.bubble { position: absolute; z-index: 3; background: rgba(255,255,255,0.95); color: var(--text); border-radius: 16px; padding: 10px 14px; font-size: 0.86rem; display: flex; gap: 10px; align-items: center; box-shadow: 0 16px 40px -14px rgba(0,0,0,0.6); max-width: 230px; opacity: 0; transform: translateY(16px) scale(0.9); transition: opacity 0.5s, transform 0.5s cubic-bezier(.3,1.5,.5,1); pointer-events: none; }
+.bubble { position: absolute; z-index: 3; background: rgba(255,255,255,0.95); color: var(--text); border-radius: 16px; padding: 10px 14px; font-size: 0.9rem; display: flex; gap: 10px; align-items: center; box-shadow: 0 16px 40px -14px rgba(0,0,0,0.6); max-width: 230px; opacity: 0; transform: translateY(16px) scale(0.9); transition: opacity 0.5s, transform 0.5s cubic-bezier(.3,1.5,.5,1); pointer-events: none; }
 .bubble.show { opacity: 1; transform: none; }
 .bubble .ms { font-size: 22px; flex: none; border-radius: 10px; padding: 5px; }
 .bubble.b1 { left: -14%; top: 58%; }
@@ -273,7 +269,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .steps { position: relative; display: grid; }
 .step { grid-area: 1 / 1; display: grid; gap: 14px; opacity: 0; transform: translateY(30px); transition: opacity 0.5s, transform 0.6s cubic-bezier(.2,.8,.2,1); pointer-events: none; }
 .step.act { opacity: 1; transform: none; pointer-events: auto; }
-.step .num { font-size: 0.85rem; font-weight: 700; letter-spacing: 0.14em; color: var(--sun); text-transform: uppercase; }
+.step .num { font-size: 0.95rem; font-weight: 700; color: var(--sun); }
 .step h2 { font-size: clamp(2rem, 5vw, 3.4rem); font-weight: 900; letter-spacing: -0.025em; }
 .step p { color: rgba(255,255,255,0.8); font-size: 1.1rem; max-width: 42ch; }
 .step ul { margin: 4px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
@@ -296,20 +292,11 @@ section.blk { padding-block: 80px; }
 .head { display: grid; gap: 10px; margin-bottom: 36px; max-width: 700px; }
 .head h2 { font-size: clamp(1.9rem, 4.5vw, 2.9rem); font-weight: 900; letter-spacing: -0.025em; }
 .head p { color: var(--text-2); font-size: 1.08rem; }
-.label { display: inline-flex; align-items: center; gap: 10px; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--emerald); }
-.label::before { content: ""; width: 26px; height: 3px; border-radius: 3px; background: linear-gradient(90deg, var(--gold), var(--sun)); animation: stretch 2.4s ease-in-out infinite; transform-origin: left; }
 @keyframes stretch { 50% { transform: scaleX(1.6); } }
 
-.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.card { background: var(--card); border: 1px solid var(--border); border-radius: 22px; padding: 20px; display: grid; gap: 10px; align-content: start; transform-style: preserve-3d; transition: transform 0.25s, box-shadow 0.3s; will-change: transform; position: relative; overflow: hidden; }
-.card::after { content: ""; position: absolute; inset: 0; background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 0%), rgba(134,239,172,0.22), transparent 60%); opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-.card:hover::after { opacity: 1; }
-.card:hover { box-shadow: 0 24px 40px -24px rgba(14,90,74,0.55); }
 .ic { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; }
 .ic .ms { font-size: 28px; animation: wiggle 4s ease-in-out infinite; animation-delay: calc(var(--d, 0) * 0.4s); }
 @keyframes wiggle { 0%, 80%, 100% { transform: none; } 85% { transform: rotate(-14deg) scale(1.1); } 90% { transform: rotate(10deg) scale(1.1); } 95% { transform: rotate(-4deg); } }
-.card h3 { font-size: 1.06rem; font-weight: 700; }
-.card p { color: var(--text-2); font-size: 0.95rem; }
 .e { background: var(--emerald-soft); color: var(--emerald); }
 .s { background: var(--sky-soft); color: var(--sky); }
 .o { background: var(--orange-soft); color: var(--orange); }
@@ -355,15 +342,6 @@ section.blk { padding-block: 80px; }
 @keyframes draw { from { stroke-dashoffset: 24; } }
 .consent > div { display: grid; gap: 4px; min-width: 0; }
 .caption { font-size: 0.88rem; color: var(--text-2); margin-bottom: 30px; }
-.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-.fact { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 18px; display: grid; gap: 6px; align-content: start; }
-.fact .ms { font-size: 26px; color: var(--emerald); }
-.fact span { color: var(--text-2); font-size: 0.94rem; }
-.legal { margin-top: 28px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-.legal a { background: var(--emerald); color: #fff; border-radius: 18px; padding: 16px; text-decoration: none; display: grid; gap: 6px; transition: transform 0.25s, background 0.25s; }
-.legal a:hover { transform: translateY(-4px); background: var(--emerald-light); }
-.legal a .ms { color: var(--mint); }
-.legal a small { color: rgba(255,255,255,0.72); font-weight: 400; }
 
 .pro { position: relative; overflow: hidden; background: linear-gradient(135deg, #fffbeb, var(--gold-soft)); border: 1px solid #fde68a; border-radius: 30px; padding: 30px; display: grid; grid-template-columns: 1fr auto; gap: 28px; align-items: center; }
 .pro > div { display: grid; gap: 10px; min-width: 0; }
@@ -398,24 +376,34 @@ section.blk { padding-block: 80px; }
 footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,0.15); color: rgba(255,255,255,0.7); font-size: 0.9rem; }
 .foot { display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap; padding-block: 26px 40px; }
 .foot nav { display: flex; gap: 18px; flex-wrap: wrap; }
-.foot a { color: rgba(255,255,255,0.85); }
+.foot a { color: rgba(255,255,255,0.85); display: inline-block; padding-block: 6px; }
 
 /* Reveal */
 .rv { transition: opacity 0.8s cubic-bezier(.2,.8,.2,1), transform 0.8s cubic-bezier(.2,.8,.2,1); transition-delay: calc(var(--d, 0) * 90ms); }
 .rv.wait { opacity: 0; transform: translateY(40px) scale(0.97); }
 
-@media (max-width: 960px) {
-  .grid { grid-template-columns: repeat(2, 1fr); }
-  .legal { grid-template-columns: repeat(2, 1fr); }
-  .facts { grid-template-columns: 1fr 1fr; }
-}
+/* Sadeleştirme: kısa ek özellik listesi, KVKK özeti, yasal bağlantılar, kurulum adımları */
+.also { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+.also li { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: start; }
+.also .ms { grid-row: span 2; font-size: 28px; color: var(--emerald); }
+.also b { font-size: 1.06rem; }
+.also span { color: var(--text-2); }
+.kvkk-sum { margin-top: 22px; max-width: 70ch; color: var(--text-2); font-size: 1.02rem; }
+.legal-links { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 8px 22px; }
+.legal-links a { display: inline-flex; align-items: center; gap: 6px; padding: 8px 0; color: var(--emerald); font-weight: 700; }
+.legal-links .ms { font-size: 20px; }
+.install { list-style: none; counter-reset: s; padding: 0; margin: 34px auto 0; max-width: 760px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; text-align: left; }
+.install li { counter-increment: s; display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; color: rgba(255,255,255,0.85); }
+.install li::before { content: counter(s); display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: rgba(134,239,172,0.16); color: var(--mint); font-weight: 900; }
+@media (max-width: 860px) { .also, .install { grid-template-columns: 1fr; gap: 16px; } }
+
 @media (max-width: 860px) {
   .bar nav { display: none; position: absolute; top: 100%; left: 12px; right: 12px; flex-direction: column; background: rgba(4,42,33,0.96); border-radius: 18px; padding: 10px; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.6); }
   .bar nav.open { display: flex; animation: up 0.3s ease-out; }
   .bar nav a { padding: 12px 14px; }
   .menu-btn { display: grid; place-items: center; }
-  .hero { grid-template-columns: 1fr; text-align: left; padding-block: 20px 56px; min-height: 0; gap: 48px; }
-  .stats { grid-template-columns: repeat(2, auto); }
+  .hero { grid-template-columns: 1fr; text-align: left; padding-block: 12px 48px; min-height: 0; gap: 20px; }
+  .hero h1 { margin-top: 14px; }
   .sticky { grid-template-columns: 1fr; grid-template-rows: auto 1fr; gap: 14px; padding-top: 72px; align-content: start; }
   .sticky .stage { order: -1; }
   .story .phone { width: min(210px, calc(46svh * 0.47)); }
@@ -429,9 +417,9 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
   .ringfam { margin: 0 auto; }
 }
 @media (max-width: 600px) {
-  .grid, .ways, .perms, .facts, .legal { grid-template-columns: 1fr; }
+  .ways, .perms { grid-template-columns: 1fr; }
   section.blk { padding-block: 60px; }
-  .bubble { font-size: 0.8rem; max-width: 200px; padding: 8px 10px; }
+  .bubble { font-size: 0.875rem; max-width: 210px; padding: 8px 10px; }
   .moon { width: 110px; height: 110px; right: -10px; top: 20px; opacity: 0.6; }
   .sheet { border-radius: 28px 28px 0 0; }
   .pattern { opacity: 0.05; }
@@ -477,17 +465,11 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
     <div class="in hero">
       <div>
         <span class="pill"><span class="live"></span>Free Android app</span>
-        <h1 id="h1" data-split>Track your prayers <span class="hl">as a family</span>.</h1>
+        <h1 id="h1" data-split>Track your prayers as a family.</h1>
         <p class="lead">Mark your prayer and your family sees it instantly. Prayer times by the Diyanet method, kaza tracking, a report card and a qibla compass in one app.</p>
         <div class="cta">
           <a class="btn main mag" href="https://github.com/bilkil53/aile-ile-namaz/releases/latest"><span class="ms" aria-hidden="true">download</span>Free download</a>
           <a class="btn ghost mag" href="#nasil"><span class="ms" aria-hidden="true">play_circle</span>How it works</a>
-        </div>
-        <div class="stats">
-          <div class="stat"><b class="count" data-to="5">5</b><span>daily prayers</span></div>
-          <div class="stat"><b class="count" data-to="5">5</b><span>people per family circle</span></div>
-          <div class="stat"><b class="count" data-to="150">150</b><span>prayers in a monthly report</span></div>
-          <div class="stat"><b>TR · EN</b><span>two languages</span></div>
         </div>
       </div>
       <div class="stage" id="heroStage">
@@ -548,23 +530,14 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
 
     <div class="sheet">
       <section class="in blk" id="ozellikler">
-        <div class="head rv"><p class="label">Features</p><h2>Everything for a family's prayer journey</h2></div>
-        <div class="grid">
-          <div class="card rv tilt"><span class="ic e" style="--d:0"><span class="ms" aria-hidden="true">home</span></span><h3>Today Tab</h3><p>Diyanet-compatible prayer times, 5 daily prayer tracking and a countdown to the next prayer.</p></div>
-          <div class="card rv tilt"><span class="ic s" style="--d:1"><span class="ms" aria-hidden="true">groups</span></span><h3>Family Circle</h3><p>Up to 5 people with a single invite code; see each other's prayers together.</p></div>
-          <div class="card rv tilt"><span class="ic o" style="--d:2"><span class="ms" aria-hidden="true">calendar_month</span></span><h3>Kaza Tracking</h3><p>Keep track of missed prayers; your family sees only the summary.</p></div>
-          <div class="card rv tilt"><span class="ic p" style="--d:3"><span class="ms" aria-hidden="true">emoji_events</span></span><h3>Report Card and Badges</h3><p>Weekly success rate, streaks, a monthly calendar and spiritual badges.</p></div>
-          <div class="card rv tilt"><span class="ic e" style="--d:4"><span class="ms" aria-hidden="true">explore</span></span><h3>Qibla Compass</h3><p>Live qibla direction with your phone's sensor.</p></div>
-          <div class="card rv tilt"><span class="ic g" style="--d:5"><span class="ms" aria-hidden="true">notifications_active</span></span><h3>Reminders</h3><p>Prayer times, Fridays, kandil nights, holy days and nights.</p></div>
-          <div class="card rv tilt"><span class="ic s" style="--d:6"><span class="ms" aria-hidden="true">volunteer_activism</span></span><h3>Send a Dua</h3><p>Send duas and congratulations to family members.</p></div>
-          <div class="card rv tilt"><span class="ic o" style="--d:7"><span class="ms" aria-hidden="true">cloud_off</span></span><h3>Works Offline</h3><p>Times and marks are kept on the phone and sync when you are back online.</p></div>
-        </div>
+        <div class="head rv"><h2>Also included</h2></div>
+        <ul class="also"><li class="rv" style="--d:0"><span class="ms" aria-hidden="true">notifications_active</span><b>Reminders</b><span>Prayer times, Fridays, kandil nights, holy days and nights.</span></li><li class="rv" style="--d:1"><span class="ms" aria-hidden="true">volunteer_activism</span><b>Send a dua</b><span>Send duas and congratulations to family members.</span></li><li class="rv" style="--d:2"><span class="ms" aria-hidden="true">cloud_off</span><b>Works offline</b><span>Times and marks are kept on the phone and sync when you are back online.</span></li></ul>
       </section>
     </div>
 
     <div class="sheet" style="background:linear-gradient(180deg,var(--emerald-soft),var(--bg))">
       <section class="in blk" id="baslarken">
-        <div class="head rv"><p class="label">Getting started</p><h2>Choices worth knowing</h2><p>When you open the app you get two options. Which one you choose decides what is saved.</p></div>
+        <div class="head rv"><h2>Choices worth knowing</h2><p>When you open the app you get two options. Which one you choose decides what is saved.</p></div>
         <div class="ways">
           <div class="way signin rv"><div class="inner">
             <div class="topline"><span class="gb">G</span><h3>Quick Sign-in with Google</h3></div>
@@ -595,26 +568,14 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
 
     <div class="sheet">
       <section class="in blk" id="kvkk">
-        <div class="head rv"><p class="label">Privacy (KVKK) and legal texts</p><h2>Protecting your personal data</h2><p>Two separate confirmations are requested before sign-in: you state that you have read the Information Notice, then you give your explicit consent separately.</p></div>
+        <div class="head rv"><h2>Protecting your personal data</h2><p>Two separate confirmations are requested before sign-in: you state that you have read the Information Notice, then you give your explicit consent separately.</p></div>
         <div class="consents rv" id="consents">
           <div class="consent"><span class="box"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span><div><p>I have read and understood the KVKK Information Notice.</p><a href="privacy-en.html#kvkk">Read the information notice</a></div></div>
           <div class="consent"><span class="box"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5"/></svg></span><div><p>I have read the Explicit Consent Text; I give my explicit consent for my prayer and kaza records and my dua and greeting messages to be processed and shown to the people in my family circle.</p><a href="privacy-en.html#acik-riza">Read the explicit consent text</a></div></div>
         </div>
         <p class="caption rv">The text of the consent boxes in the app. If the text changes, the app asks for consent again.</p>
-        <div class="facts">
-          <div class="fact rv"><span class="ms" aria-hidden="true">shield_person</span><b>Why explicit consent?</b><span>Prayer, kaza and dua records can reveal religious belief, so they count as special category personal data.</span></div>
-          <div class="fact rv" style="--d:1"><span class="ms" aria-hidden="true">dns</span><b>Where is the data?</b><span>On servers in the European Union (Frankfurt, Germany). Connections are encrypted.</span></div>
-          <div class="fact rv" style="--d:2"><span class="ms" aria-hidden="true">visibility</span><b>Who sees it?</b><span>Only you and the family circle you belong to. Your email is not shown to other users.</span></div>
-          <div class="fact rv"><span class="ms" aria-hidden="true">history</span><b>How long is it kept?</b><span>Records until your account is deleted; the family feed for 7 days; error reports for 30 days.</span></div>
-          <div class="fact rv" style="--d:1"><span class="ms" aria-hidden="true">undo</span><b>Withdraw consent</b><span>You can withdraw it at any time by deleting your account and data. Your rights under KVKK Article 11 are listed in the privacy policy.</span></div>
-          <div class="fact rv" style="--d:2"><span class="ms" aria-hidden="true">family_restroom</span><b>Children</b><span>Accounts for children under 13 should be opened under a parent's supervision.</span></div>
-        </div>
-        <div class="legal">
-          <a class="rv" href="privacy-en.html"><span class="ms" aria-hidden="true">policy</span><b>Privacy and KVKK</b><small>Information Notice and Explicit Consent</small></a>
-          <a class="rv" style="--d:1" href="terms-en.html"><span class="ms" aria-hidden="true">gavel</span><b>Terms of Use</b><small>Rules for the app and site</small></a>
-          <a class="rv" style="--d:2" href="cookies-en.html"><span class="ms" aria-hidden="true">cookie</span><b>Cookie Policy</b><small>This site uses no cookies</small></a>
-          <a class="rv" style="--d:3" href="delete-account-en.html"><span class="ms" aria-hidden="true">person_remove</span><b>Account Deletion</b><small>Delete your account and data</small></a>
-        </div>
+        <p class="kvkk-sum rv">Data is stored on servers in the European Union (Frankfurt, Germany) over encrypted connections; it is not sold and not used for advertising. Only you and the family circle you belong to see your records. Deleting your account withdraws your consent and deletes your data.</p>
+        <nav class="legal-links rv" aria-label="Legal texts"><a href="privacy-en.html"><span class="ms" aria-hidden="true">policy</span>Privacy and KVKK</a><a href="terms-en.html"><span class="ms" aria-hidden="true">gavel</span>Terms of Use</a><a href="cookies-en.html"><span class="ms" aria-hidden="true">cookie</span>Cookie Policy</a><a href="delete-account-en.html"><span class="ms" aria-hidden="true">person_remove</span>Account deletion</a></nav>
       </section>
     </div>
 
@@ -622,7 +583,6 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
       <section class="in blk" style="padding-top:20px">
         <div class="pro rv" id="pro">
           <div>
-            <p class="label" style="color:#92400e">Family Pro</p>
             <h2>One person buys it, the whole family gets Pro</h2>
             <p>Individual use is free. With Family Pro it is enough for the head of the family to get Pro: everyone in the family circle (up to 5 people) becomes Pro. The price and terms are shown in the app before you buy.</p>
           </div>
@@ -639,7 +599,7 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
       </section>
 
       <section class="in blk" id="sss" style="padding-top:20px">
-        <div class="head rv"><p class="label">Frequently asked questions</p><h2>Common questions</h2></div>
+        <div class="head rv"><h2>Common questions</h2></div>
         <div class="faq" id="faq"></div>
       </section>
     </div>
@@ -651,6 +611,7 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
         <h2 class="rv">Send your family the invite code and start together</h2>
         <p class="rv" style="--d:1">Install it on your Android phone now, create your family circle and share the invite code. In Turkish and English.</p>
         <div class="cta rv" style="--d:2"><a class="btn main mag" href="https://github.com/bilkil53/aile-ile-namaz/releases/latest"><span class="ms" aria-hidden="true">android</span>Download for Android (APK)</a></div>
+        <ol class="install rv" style="--d:3" aria-label="Installation steps"><li>Tap the download button and save the APK file to your phone.</li><li>Open the file; if Android asks, allow installs from this source.</li><li>Install and open it. The app tells you when a new version is out.</li></ol>
       </div>
     </section>
   </main>
