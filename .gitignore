@@ -33,3 +33,5 @@ client_secret*.json
 *serviceaccount*.json
 *-firebase-adminsdk-*.json
 ANDROID_KEYSTORE*.txt
+__pycache__/
+*.pyc
