@@ -113,6 +113,7 @@
 Kullanıcı isteyince uygulama bu listeye göre tek tek kontrol edilir.
 
 ## Play'e çıkarken yapılacaklar
+Site notu (kullanıcı istedi, 22 Kasım): Play'e çıkmadan önce tanıtım sitesindeki APK indirme bağlantısı (GitHub Releases) Play Store bağlantısıyla değiştirilecek (index.html + index-en.html, "Ücretsiz indir" ve "Android için indir" düğmeleri, ayrıca llms.txt/JSON-LD downloadUrl).
 Pro planları ve fiyat (kullanıcı notu, 17 Kasım 2026): 3 aylık 153 ₺, yıllık 1453 ₺ → Play Billing ürünleri bu fiyatlarla açılır; yönetim uygulaması ve yenileme hatırlatması (geçiş 50) bu planlara göre çalışır.
 Notlar (kullanıcı istedi, 18 Kasım): (a) Play sürümünden uygulama içi güncelleme kodu çıkarılsın mı (Play politikası; öneri: evet). (b) GitHub APK'sında Pro satılmasın, tanıdıklara elle açılsın mı (öneri: satılmasın). GitHub Sponsors yalnız bağış; Pro satışı yalnız Play Billing; Play ve GitHub APK imzası farklı, birbirini güncellemez.
 Play Console geliştirici e-postası (kullanıcı kararı 18 Kasım: Play öncesine alındı): yeni destek adresine çevrilecek; hesap silme talepleri o kutuya gelir.
