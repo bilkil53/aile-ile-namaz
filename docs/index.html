@@ -304,6 +304,13 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .rail { display: flex; gap: 8px; margin-top: 28px; }
 .rail i { height: 5px; flex: 1; max-width: 60px; border-radius: 5px; background: rgba(255,255,255,0.18); overflow: hidden; position: relative; }
 .rail i::after { content: ""; position: absolute; inset: 0; background: var(--mint); transform-origin: 0 50%; transform: scaleX(var(--f, 0)); }
+.steps-nav { display: flex; align-items: center; }
+.steps-nav .dot { width: 26px; height: 26px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.28); display: grid; place-items: center; font-size: 0.78rem; font-weight: 800; color: rgba(255,255,255,0.55); flex: none; transition: border-color 0.3s, color 0.3s, background 0.3s, box-shadow 0.3s; }
+.steps-nav .dot.on { border-color: var(--mint); color: var(--emerald-deep); background: var(--mint); }
+.steps-nav .dot.cur { box-shadow: 0 0 0 4px rgba(134,239,172,0.22); }
+.steps-nav .line { flex: 1; height: 2px; min-width: 12px; background: rgba(255,255,255,0.2); position: relative; }
+.steps-nav .line::after { content: ""; position: absolute; inset: 0; background: var(--mint); transform-origin: 0 50%; transform: scaleX(0); transition: transform 0.35s cubic-bezier(.16,1,.3,1); }
+.steps-nav .line.on::after { transform: scaleX(1); }
 .story .stage { animation: none; }
 .story .phone { transform: rotateY(var(--ry, 0deg)) rotateX(var(--rx, 0deg)) scale(var(--sc, 1)); }
 .orbit { position: absolute; width: 420px; height: 420px; max-width: 110vw; max-height: 110vw; border-radius: 50%; border: 1px dashed rgba(134,239,172,0.25); animation: spin 40s linear infinite; }
@@ -437,6 +444,7 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
   .step p { font-size: 1rem; }
   .step ul { display: none; }
   .rail { margin-top: 14px; }
+  .steps-nav .dot { width: 22px; height: 22px; font-size: 0.7rem; }
   .orbit { width: 300px; height: 300px; }
   .bubble.b1 { left: 0; } .bubble.b2 { right: 0; } .bubble.b3 { left: 4%; }
   .pro { grid-template-columns: 1fr; }
@@ -538,6 +546,13 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
               <ul><li><span class="ms" aria-hidden="true">explore</span>Canlı pusula</li><li><span class="ms" aria-hidden="true">nights_stay</span>Mübarek gün hatırlatmaları</li></ul>
             </article>
           </div>
+          <div class="steps-nav" id="stepsNav" aria-hidden="true">
+            <span class="dot on cur">1</span><span class="line"></span>
+            <span class="dot">2</span><span class="line"></span>
+            <span class="dot">3</span><span class="line"></span>
+            <span class="dot">4</span><span class="line"></span>
+            <span class="dot">5</span>
+          </div>
           <div class="rail" id="rail"><i></i><i></i><i></i><i></i><i></i></div>
         </div>
         <div class="stage">
@@ -564,6 +579,7 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
               <li><span class="ms" aria-hidden="true">cloud_done</span>Kayıtların buluta yedeklenir, ailenle eşitlenir.</li>
               <li><span class="ms" aria-hidden="true">groups</span>Aile Havuzu ve aile bildirimleri yalnız girişle çalışır.</li>
               <li><span class="ms" aria-hidden="true">fact_check</span>Girişten önce iki KVKK kutusunu da işaretlemen gerekir.</li>
+              <li><span class="ms" aria-hidden="true">login</span>Giriş yalnızca Gmail (Google) hesabıyla yapılır; e-posta/şifre ile kayıt yoktur.</li>
             </ul>
           </div></div>
           <div class="way guest rv" style="--d:1"><div class="inner">
@@ -763,6 +779,7 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
 
   /* ---------- Scroll: progress bar, sticky header, story ---------- */
   var prog = $("#progress"), top = $("#top"), story = $("#nasil"), steps = $$(".step"), rails = $$("#rail i"), sp = $("#storyPhone"), lastK = -1;
+  var navDots = $$("#stepsNav .dot"), navLines = $$("#stepsNav .line");
   function onScroll() {
     var y = scrollY, max = document.documentElement.scrollHeight - innerHeight;
     scrollY0 = y;
@@ -772,7 +789,9 @@ footer { position: relative; z-index: 1; border-top: 1px solid rgba(134,239,172,
     var p = Math.min(1, Math.max(0, -r.top / span));
     var k = Math.min(4, Math.floor(p * 5));
     rails.forEach(function (el, i) { el.style.setProperty("--f", Math.min(1, Math.max(0, p * 5 - i)).toFixed(3)); });
-    if (k !== lastK) { lastK = k; steps.forEach(function (s, i) { s.classList.toggle("act", i === k); }); show(sp, k); kazaTick(sp, k); }
+    if (k !== lastK) { lastK = k; steps.forEach(function (s, i) { s.classList.toggle("act", i === k); }); show(sp, k); kazaTick(sp, k);
+      navDots.forEach(function (d, i) { d.classList.toggle("on", i <= k); d.classList.toggle("cur", i === k); });
+      navLines.forEach(function (l, i) { l.classList.toggle("on", i < k); }); }
     if (!reduce) {
       var local = p * 5 - k;
       sp.style.setProperty("--ry", ((local - 0.5) * -18).toFixed(2) + "deg");
