@@ -24,16 +24,16 @@ jobs:
         run: |
           SINIR=$(date -u -d '1 hour ago' +%s)
           # Yönetim kopyası
-          T=$(gh release view yonetim-gecici --repo "$R" --json createdAt --jq .createdAt 2>/dev/null) || T=''
+          T=$(gh release view yonetim-gecici --repo "$R" --json publishedAt --jq .publishedAt 2>/dev/null) || T=''
           if [ -z "$T" ]; then echo "Geçici yönetim kopyası yok."
           elif [ "$(date -u -d "$T" +%s)" -lt "$SINIR" ]; then
-            gh release delete yonetim-gecici --repo "$R" --cleanup-tag -y && echo "Yönetim kopyası silindi (oluşturma: $T)" | tee -a "$GITHUB_STEP_SUMMARY"
+            gh release delete yonetim-gecici --repo "$R" --cleanup-tag -y && echo "Yönetim kopyası silindi (yayın: $T)" | tee -a "$GITHUB_STEP_SUMMARY"
           else echo "Yönetim kopyası: henüz 1 saat olmadı ($T)."; fi
           # Demo kopyaları: yalnız ön sürüm + başlığında "(geçici)" olanlar (eski kalıcı demo yayınlarına dokunulmaz)
-          gh release list --repo "$R" --limit 100 --json tagName,name,isPrerelease,createdAt \
-            --jq '.[] | select(.isPrerelease and (.name | endswith("(geçici)"))) | "\(.tagName) \(.createdAt)"' > demo.txt
+          gh release list --repo "$R" --limit 100 --json tagName,name,isPrerelease,publishedAt \
+            --jq '.[] | select(.isPrerelease and (.name | endswith("(geçici)"))) | "\(.tagName) \(.publishedAt)"' > demo.txt
           while read -r tag t; do
             if [ "$(date -u -d "$t" +%s)" -lt "$SINIR" ]; then
-              gh release delete "$tag" --repo "$R" --cleanup-tag -y && echo "Demo kopyası $tag silindi (oluşturma: $t)" | tee -a "$GITHUB_STEP_SUMMARY"
+              gh release delete "$tag" --repo "$R" --cleanup-tag -y && echo "Demo kopyası $tag silindi (yayın: $t)" | tee -a "$GITHUB_STEP_SUMMARY"
             else echo "Demo kopyası $tag: henüz 1 saat olmadı ($t)."; fi
           done < demo.txt
