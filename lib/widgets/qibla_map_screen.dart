@@ -67,7 +67,7 @@ class _QiblaMapScreenState extends State<QiblaMapScreen> {
                 Marker(point: me, child: const Icon(Icons.my_location, color: Colors.blue, size: 28)),
                 const Marker(point: _kaaba, child: Text('🕋', style: TextStyle(fontSize: 24))),
               ]),
-              const SimpleAttributionWidget(source: Text('OpenStreetMap')),
+              const SimpleAttributionWidget(source: Text('© OpenStreetMap contributors')),
             ],
           ),
           Positioned(
