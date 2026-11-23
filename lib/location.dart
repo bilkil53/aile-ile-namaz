@@ -1,3 +1,5 @@
+import 'dart:ui' show Locale;
+
 import 'package:flutter/foundation.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -84,8 +86,7 @@ class LocationHelper {
   /// "İlçe, İl" (telefonun adres servisi); olmazsa en yakın il.
   static Future<String> _placeName(double lat, double lng) async {
     try {
-      await setLocaleIdentifier('tr_TR');
-      final marks = await placemarkFromCoordinates(lat, lng);
+      final marks = await Geocoding(locale: const Locale('tr', 'TR')).placemarkFromCoordinates(lat, lng);
       if (marks.isNotEmpty) {
         final m = marks.first;
         final ilce = (m.subAdministrativeArea ?? '').trim();

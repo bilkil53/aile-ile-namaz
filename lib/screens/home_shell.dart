@@ -308,7 +308,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                 children: [
                   Row(children: [
                     const Text(
-                      'Aile ile Namaz',
+                      kTestChannel ? 'Aile ile Namaz Demo' : 'Aile ile Namaz',
                       style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                     if (kTestChannel && !isGuest)

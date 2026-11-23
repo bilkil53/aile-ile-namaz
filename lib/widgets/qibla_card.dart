@@ -8,6 +8,7 @@ import '../lang.dart';
 import '../prayer_times.dart';
 import '../settings.dart';
 import '../theme.dart';
+import 'qibla_map_screen.dart';
 
 /// Kıble pusulası: ivme + manyetik sensörden telefonun yönünü hesaplar.
 /// Sensörler sadece kart açıkken dinlenir (pil dostu).
@@ -116,26 +117,44 @@ class _QiblaCardState extends State<QiblaCard> {
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Column(
                 children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    decoration: BoxDecoration(color: AppColors.emeraldContainer, borderRadius: BorderRadius.circular(12)),
+                    child: Text(t('🕋 Kıble ${qibla.toStringAsFixed(1)}°', '🕋 Qibla ${qibla.toStringAsFixed(1)}°'),
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.emerald)),
+                  ),
+                  const SizedBox(height: 12),
                   SizedBox(
-                    width: 200,
-                    height: 200,
+                    width: 280,
+                    height: 280,
                     child: heading == null
                         ? Center(child: Text(t('Sensör bekleniyor…', 'Waiting for sensor…')))
                         : Transform.rotate(
                             angle: -heading * math.pi / 180,
-                            child: CustomPaint(painter: _CompassPainter(qibla, aligned)),
+                            child: CustomPaint(painter: _CompassPainter(qibla, aligned, t('K', 'N'), t('D', 'E'), t('G', 'S'), t('B', 'W'))),
                           ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    heading == null
-                        ? t('Telefonu düz tut.', 'Hold the phone flat.')
-                        : aligned
-                            ? t('Kıbleye dönüksün ✓', 'You are facing the qibla ✓')
-                            : (diff! > 0 ? t('Sağa dön (${diff.abs().toStringAsFixed(0)}°)', 'Turn right (${diff.abs().toStringAsFixed(0)}°)') : t('Sola dön (${diff.abs().toStringAsFixed(0)}°)', 'Turn left (${diff.abs().toStringAsFixed(0)}°)')),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: aligned ? AppColors.prayedMint : AppColors.onCardMuted,
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: aligned ? AppColors.prayedMint.withValues(alpha: 0.25) : Colors.transparent,
+                      border: Border.all(color: aligned ? AppColors.prayedMint : AppColors.onCardFaint),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      heading == null
+                          ? t('Telefonu düz tut.', 'Hold the phone flat.')
+                          : aligned
+                              ? t('Kıble yönündesin ✓', 'You are facing the qibla ✓')
+                              : (diff! > 0 ? t('Sağa dön (${diff.abs().toStringAsFixed(0)}°)', 'Turn right (${diff.abs().toStringAsFixed(0)}°)') : t('Sola dön (${diff.abs().toStringAsFixed(0)}°)', 'Turn left (${diff.abs().toStringAsFixed(0)}°)')),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: aligned ? AppColors.prayedMint : AppColors.onCard,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -143,6 +162,12 @@ class _QiblaCardState extends State<QiblaCard> {
                     t('Telefonu yere paralel tut, metal ve mıknatıslardan uzak dur.', 'Hold the phone parallel to the ground, away from metal and magnets.'),
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 11, color: AppColors.onCardFaint),
+                  ),
+                  TextButton.icon(
+                    style: TextButton.styleFrom(foregroundColor: AppColors.onCard),
+                    icon: const Icon(Icons.map),
+                    label: Text(t('Haritada göster', 'Show on map')),
+                    onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const QiblaMapScreen())),
                   ),
                 ],
               ),
@@ -156,37 +181,65 @@ class _QiblaCardState extends State<QiblaCard> {
 class _CompassPainter extends CustomPainter {
   final double qibla;
   final bool aligned;
-  _CompassPainter(this.qibla, this.aligned);
+  final String n, e, so, w;
+  _CompassPainter(this.qibla, this.aligned, this.n, this.e, this.so, this.w);
 
   @override
   void paint(Canvas canvas, Size size) {
     final c = size.center(Offset.zero);
     final r = size.width / 2 - 4;
-    canvas.drawCircle(c, r, Paint()..color = AppColors.emeraldContainer);
-    canvas.drawCircle(
-        c, r, Paint()..color = AppColors.emerald..style = PaintingStyle.stroke..strokeWidth = 2);
-    // Kuzey işareti
-    final tp = TextPainter(
-      text: const TextSpan(text: 'K', style: TextStyle(color: AppColors.missed, fontWeight: FontWeight.bold)),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    tp.paint(canvas, Offset(c.dx - tp.width / 2, c.dy - r + 4));
-    // Kıble oku
+    canvas.drawCircle(c, r, Paint()..color = AppColors.white);
+    canvas.drawCircle(c, r, Paint()..color = AppColors.emeraldContainer..style = PaintingStyle.stroke..strokeWidth = 4);
+    // Derece çizgileri: 10°'de kısa, 30°'de uzun, ana yönlerde yeşil
+    for (var d = 0; d < 360; d += 10) {
+      final a = d * math.pi / 180;
+      final major = d % 30 == 0;
+      final len = d % 90 == 0 ? 18.0 : (major ? 14.0 : 7.0);
+      final dir = Offset(math.sin(a), -math.cos(a));
+      canvas.drawLine(
+          c + dir * (r - 6),
+          c + dir * (r - 6 - len),
+          Paint()
+            ..color = d % 90 == 0 ? AppColors.emeraldLight : (major ? AppColors.textPrimary : AppColors.textMuted)
+            ..strokeWidth = major ? 2.5 : 1.2);
+    }
+    // Ana yön harfleri (kadranla birlikte döner)
+    final labels = {0: n, 90: e, 180: so, 270: w};
+    labels.forEach((d, s) {
+      final a = d * math.pi / 180;
+      final tp = TextPainter(
+        text: TextSpan(text: s, style: TextStyle(color: d == 0 ? AppColors.missed : AppColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      final p = c + Offset(math.sin(a), -math.cos(a)) * (r - 40);
+      canvas.save();
+      canvas.translate(p.dx, p.dy);
+      canvas.rotate(a);
+      tp.paint(canvas, Offset(-tp.width / 2, -tp.height / 2));
+      canvas.restore();
+    });
+    // Kıble oku ve Kabe
     final a = qibla * math.pi / 180;
-    final tip = Offset(c.dx + (r - 18) * math.sin(a), c.dy - (r - 18) * math.cos(a));
-    canvas.drawLine(
-        c,
-        tip,
-        Paint()
-          ..color = aligned ? AppColors.emerald : AppColors.gold
-          ..strokeWidth = 5
-          ..strokeCap = StrokeCap.round);
-    final kaaba = TextPainter(text: const TextSpan(text: '🕋', style: TextStyle(fontSize: 22)), textDirection: TextDirection.ltr)
-      ..layout();
-    kaaba.paint(canvas, tip - Offset(kaaba.width / 2, kaaba.height / 2));
-    canvas.drawCircle(c, 5, Paint()..color = AppColors.emerald);
+    final dir = Offset(math.sin(a), -math.cos(a));
+    final color = aligned ? AppColors.emeraldLight : AppColors.gold;
+    final tip = c + dir * (r - 62);
+    canvas.drawLine(c, tip, Paint()..color = color..strokeWidth = 5..strokeCap = StrokeCap.round);
+    final side = Offset(-dir.dy, dir.dx);
+    canvas.drawPath(
+        Path()
+          ..moveTo((tip + dir * 12).dx, (tip + dir * 12).dy)
+          ..lineTo((tip + side * 8).dx, (tip + side * 8).dy)
+          ..lineTo((tip - side * 8).dx, (tip - side * 8).dy)
+          ..close(),
+        Paint()..color = color);
+    final kc = c + dir * (r - 36);
+    canvas.drawCircle(kc, 20, Paint()..color = AppColors.white);
+    canvas.drawCircle(kc, 20, Paint()..color = color..style = PaintingStyle.stroke..strokeWidth = 3);
+    final kaaba = TextPainter(text: const TextSpan(text: '🕋', style: TextStyle(fontSize: 22)), textDirection: TextDirection.ltr)..layout();
+    kaaba.paint(canvas, kc - Offset(kaaba.width / 2, kaaba.height / 2));
+    canvas.drawCircle(c, 7, Paint()..color = color);
   }
 
   @override
-  bool shouldRepaint(covariant _CompassPainter old) => old.qibla != qibla || old.aligned != aligned;
+  bool shouldRepaint(covariant _CompassPainter old) => old.qibla != qibla || old.aligned != aligned || old.n != n;
 }
