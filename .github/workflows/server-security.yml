@@ -9,8 +9,10 @@ on:
     paths:
       - 'supabase/**'
       - '.github/workflows/server-security.yml'
-  schedule:
-    - cron: '17 1 * * *' # her gece 04:17 (Türkiye)
+  # Haftalık sıra (pazar 06:00'dan itibaren): önceki iş bitince başlar (zamanlanmış/elle zincir; push ve PR çalışmaları zinciri başlatmaz)
+  workflow_run:
+    workflows: ["Bağımlılık taraması (OSV)"]
+    types: [completed]
   workflow_dispatch:
 
 concurrency:
@@ -19,6 +21,7 @@ concurrency:
 
 jobs:
   security:
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion != 'skipped' && contains(fromJSON('["schedule","workflow_dispatch","workflow_run"]'), github.event.workflow_run.event))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
