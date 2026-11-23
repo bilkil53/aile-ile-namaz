@@ -26,6 +26,20 @@ class _QiblaCardState extends State<QiblaCard> {
   StreamSubscription<MagnetometerEvent>? _magSub;
   List<double> _g = [0, 0, 9.8];
   List<double>? _m;
+  final List<double> _recent = []; // son yönler (dairesel ortalama için)
+  bool _aligned = false; // histerezis: ±2°'de yanar, ±3° dışında söner
+
+  /// Son 10 yönün dairesel ortalaması (sin/cos ortalanır; 359°→0° geçişinde bozulmaz).
+  double _smooth(double h) {
+    _recent.add(h);
+    if (_recent.length > 10) _recent.removeAt(0);
+    var s = 0.0, c = 0.0;
+    for (final x in _recent) {
+      s += math.sin(x * math.pi / 180);
+      c += math.cos(x * math.pi / 180);
+    }
+    return (math.atan2(s, c) * 180 / math.pi + 360) % 360;
+  }
 
   @override
   void dispose() {
@@ -42,7 +56,7 @@ class _QiblaCardState extends State<QiblaCard> {
       final m = _m;
       _m = m == null ? [e.x, e.y, e.z] : [m[0] * 0.8 + e.x * 0.2, m[1] * 0.8 + e.y * 0.2, m[2] * 0.8 + e.z * 0.2];
       final h = _azimuth(_g, _m!);
-      if (h != null && mounted) setState(() => _heading = (h + _declination(AppSettings.lat, AppSettings.lng) + 360) % 360);
+      if (h != null && mounted) setState(() => _heading = _smooth((h + _declination(AppSettings.lat, AppSettings.lng) + 360) % 360));
     });
   }
 
@@ -51,6 +65,7 @@ class _QiblaCardState extends State<QiblaCard> {
     _magSub?.cancel();
     _accSub = null;
     _magSub = null;
+    _recent.clear();
   }
 
   /// Manyetik kuzey ile gerçek kuzey farkı (derece, doğuya pozitif). Sensör manyetik kuzeyi gösterir, kıble açısı
@@ -87,7 +102,14 @@ class _QiblaCardState extends State<QiblaCard> {
     final qibla = PrayerTimesService.qiblaBearing(AppSettings.lat, AppSettings.lng);
     final heading = _heading;
     final diff = heading == null ? null : ((qibla - heading + 540) % 360) - 180;
-    final aligned = diff != null && diff.abs() < 5;
+    if (diff == null) {
+      _aligned = false;
+    } else if (diff.abs() <= 2) {
+      _aligned = true;
+    } else if (diff.abs() > 3) {
+      _aligned = false;
+    }
+    final aligned = _aligned;
 
     // Material: ListTile dokunma efekti kartın üstünde görünsün (Container arka planı onu gizliyordu)
     return Material(
