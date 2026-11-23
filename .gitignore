@@ -35,3 +35,6 @@ client_secret*.json
 ANDROID_KEYSTORE*.txt
 __pycache__/
 *.pyc
+
+# graphify kod haritası (her oturumda yeniden çıkarılır)
+graphify-out/
