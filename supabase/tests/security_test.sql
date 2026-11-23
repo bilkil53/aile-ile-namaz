@@ -370,7 +370,9 @@ begin
   reset role;
   if cardinality(public.push_allowed_recipients(array[u])) = 0 then passed := passed + 1;
   else fails := fails || 'ucretsize_bildirim_gidiyor; '; end if;
-  update public.profiles set pro_until = now() + interval '1 day' where id = u;
+  -- u başkasının havuzundaysa Pro durumu havuz sahibinden gelir (aile Pro'su); ikisini de Pro yap
+  update public.profiles set pro_until = now() + interval '1 day'
+   where id in (u, (select owner_id from public.pools where id = p));
   if cardinality(public.push_allowed_recipients(array[u])) = 1 then passed := passed + 1;
   else fails := fails || 'pro_kisiye_bildirim_gitmiyor; '; end if;
   set local role anon;
