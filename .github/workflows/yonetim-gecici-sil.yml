@@ -1,6 +1,7 @@
 # Özel depo (aile-ile-namaz-dev-and-admin) her yeşil derlemede APK'yı herkese açık ana depoya geçici ön sürüm
 # olarak koyar (GitHub girişi olmadan indirmek için): yönetim 'yonetim-gecici', demo 'v11.N' (başlıkta "(geçici)").
-# Bu iş 1 saati geçen geçici kopyaları siler. Kalıcı kopyalar özel depoda. Yalnız ana depoda çalışır.
+# Bu iş 1 saati geçen geçici kopyaları siler; EN YENİ demo kopyası kalır (telefon güncellemeyi görsün; kullanıcı kararı 23 Kasım 2026).
+# Kalıcı kopyalar özel depoda. Yalnız ana depoda çalışır.
 name: Geçici APK'ları sil (1 saat)
 
 on:
@@ -32,8 +33,10 @@ jobs:
           # Demo kopyaları: yalnız ön sürüm + başlığında "(geçici)" olanlar (eski kalıcı demo yayınlarına dokunulmaz)
           gh release list --repo "$R" --limit 100 --json tagName,name,isPrerelease,publishedAt \
             --jq '.[] | select(.isPrerelease and (.name | endswith("(geçici)"))) | "\(.tagName) \(.publishedAt)"' > demo.txt
+          SON=$(awk '{print $1}' demo.txt | sort -t. -k2,2n | tail -1)
           while read -r tag t; do
-            if [ "$(date -u -d "$t" +%s)" -lt "$SINIR" ]; then
+            if [ "$tag" = "$SON" ]; then echo "Demo kopyası $tag: en yeni, kalır."
+            elif [ "$(date -u -d "$t" +%s)" -lt "$SINIR" ]; then
               gh release delete "$tag" --repo "$R" --cleanup-tag -y && echo "Demo kopyası $tag silindi (yayın: $t)" | tee -a "$GITHUB_STEP_SUMMARY"
             else echo "Demo kopyası $tag: henüz 1 saat olmadı ($t)."; fi
           done < demo.txt
