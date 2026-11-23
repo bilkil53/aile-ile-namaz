@@ -1,17 +1,17 @@
 name: Eskileri temizle (son 2 sürüm kalır)
 
-# Her pazartesi 04:17'de (İstanbul) kendiliğinden çalışır ve siler; elle de başlatılabilir.
+# Her pazar 06:00'da (İstanbul) kendiliğinden çalışır ve siler; elle de başlatılabilir.
 # Elle başlatınca kutu boş bırakılırsa yalnızca liste gösterilir, SIL yazılırsa silinir. Kalıcıdır, geri alınamaz:
 #  - Yayınlar (APK dosyalarıyla): yalnızca bu hattın ürettiği biçimdeki yayınlar (v1.N ve demo v11.N) ele alınır;
 #    taslak (draft) ve başka adlı yayınlara dokunulmaz. v1.N'de en yeni 2 kalır, demo v11.N'nin hepsi silinir (demo özel depoya taşındı); GitHub'ın "en son sürüm"
 #    (latest) olarak gösterdiği yayın hiçbir durumda silinmez.
 #  - Etiketler: yalnızca silinen yayınların etiketleri ve yayını olmayan eski r<N> ve v1.0.N etiketleri.
-#  - Dallar: check/son dışındaki check/* kontrol dalları ve emekli demo dalı. main, dev ve check/son'a dokunulmaz.
+#  - Dallar: main, dev, check/son ve dependabot/* dışındaki tüm dallar; son commit'i en yeni 2 dal kalır.
 #  - Çalışma kayıtları: her workflow'un en yeni 5 kaydı kalır (tamamlananlar; çalışan kayda dokunulmaz). Derleme çıktıları: 7 günden eskiler.
 # Herhangi bir API okuması başarısız olursa hiçbir şey silinmez (eksik listeyle silme planı kurulmaz).
 on:
   schedule:
-    - cron: '17 1 * * 1'
+    - cron: '0 3 * * 0'
   workflow_dispatch:
     inputs:
       onay:
@@ -50,9 +50,10 @@ jobs:
           gh api "$R/git/matching-refs/tags/" --paginate --jq '.[].ref | ltrimstr("refs/tags/")' > etiketler.txt
           awk '{print $2}' hepsi.txt > yayin_etiketleri.txt
           { cat sil_yayin.txt; g -E '^(r[0-9]+|v1\.0\.[0-9]+(-demo)?)$' etiketler.txt | g -vxFf yayin_etiketleri.txt; } | sort -u > sil_etiket.txt
-          gh api "$R/git/matching-refs/heads/check/" --paginate --jq '.[].ref | ltrimstr("refs/heads/")' > dallar.txt
-          g -E '^check/' dallar.txt | g -vx 'check/son' > sil_dal.txt
-          gh api "$R/git/matching-refs/heads/demo" --jq '.[].ref | ltrimstr("refs/heads/")' | g -x demo >> sil_dal.txt
+          # Dallar: korunanlar dışında hepsi silinir, son commit'i en yeni 2 dal kalır
+          gh api graphql -f o="${GITHUB_REPOSITORY%/*}" -f n="${GITHUB_REPOSITORY#*/}" -f query='query($o:String!,$n:String!){repository(owner:$o,name:$n){defaultBranchRef{name} refs(refPrefix:"refs/heads/",first:100){pageInfo{hasNextPage} nodes{name target{... on Commit{committedDate}}}}}}' > dallar.json
+          [ "$(jq -r '.data.repository.refs.pageInfo.hasNextPage' dallar.json)" = false ] || { echo "::error::Dal listesi 100'ü aşıyor; eksik listeyle silinmez."; exit 1; }
+          jq -r '.data.repository.refs.nodes[] | select(.target.committedDate != null) | "\(.target.committedDate) \(.name)"' dallar.json | sort -r | awk '{print $2}' | g -vE '^(main|dev|check/son|dependabot/.*)$' | g -vxF "$(jq -r .data.repository.defaultBranchRef.name dallar.json)" | tail -n +3 > sil_dal.txt
           gh api "$R/actions/runs?per_page=100" --paginate \
             --jq '.workflow_runs[] | select(.status=="completed") | "\(.workflow_id) \(.created_at) \(.id)"' > kayitlar.txt
           # her workflow için en yeni 5 kalır, kalanı silinir (kendi çalışmamız hariç)
