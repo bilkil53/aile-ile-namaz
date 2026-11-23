@@ -9,6 +9,9 @@
     "cowork-plugin-management@synced": false
   },
   "permissions": {
+    "allow": [
+      "mcp__Supabase"
+    ],
     "deny": [
       "mcp__Claude_Docs",
       "Skill(anthropic-skills:pptx)",
