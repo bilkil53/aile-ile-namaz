@@ -1,15 +1,1 @@
-# Aile ile Namaz
-
-- Her oturumda önce özel depodaki (`bilkil53/aile-ile-namaz-dev-and-admin`, main) `ajanlar/00-lider-ozet.md` dosyasını oku ve oradan devam et; oturumda o depo yoksa ekle (add_repo). Bu depodaki aynı adlı dosya yalnız yönlendirmedir. Özet güncellemesi de oraya yazılır.
-- Cevaplar Türkçe ve kısa. Onaylar anketle sorulur.
-- Skill çağrılınca (sohbet boş olsa da) skill dosyasının tüm adımlarını ve bu projenin o skill için kurallarını (ör. özetteki "/sondurum kontrolleri") eksiksiz uygula; adım atlama, kısaltma.
-- Kod işlerinde karpathy-guidelines ve ponytail, cevaplarda caveman üslubu. Sohbet uzayınca kullanıcıya `/compact` öner.
-- Danışmanı (advisor) yalnızca main yayını, gerçek veritabanına yazma, işlev yükleme, büyük mimari karar ya da kullanıcı "danış" derse çağır. Soru, açıklama ve küçük işlerde çağırma.
-- Zorlanınca (aynı hata 2 kez, yaklaşım tutmuyor, emin değilsin): 1) advisor çağır (danışman = Fable, `model: "fable"`). 2) Hâlâ çözülmediyse kullanıcıya sor. İlk basamak için kullanıcıya sorma.
-- Testlerde (CI, birim, güvenlik, ekran, Test Lab) aynı hata 2 kez çıkarsa kendin denemeyi bırak, tüm işi (log okuma, neden bulma, düzeltme, yeniden çalıştırma, doğrulama) danışana (Fable alt ajan) ver; sana yalnız özet dönsün. Main'e alma, gerçek veritabanına yazma ve secret/ayar değişikliği yine kullanıcı onayıyla yapılır.
-- Küçük ve net işler (yazım/metin düzeltme, tek dosyalık küçük değişiklik, log/dosya okuyup özet, arama) özel depodaki `.claude/agents/kucuk-isler.md` ajanına (Haiku) verilir; sonucu lider doğrular, commit ve push'u lider yapar. Karmaşık iş, yayın, veritabanı, workflow ve güvenlik işleri ajana verilmez.
-- Token: büyük dosyayı baştan sona okuma, önce ara (grep) sonra ilgili satırları oku. Kullanıcı istemedikçe alt ajan açma, rapor/grafik/belge üretme.
-- Depo herkese açık: sır, anahtar, e-posta, kişi adı, kullanıcı kimliği yazma.
-- Güvenlik kontrolünde yalnız koda bakma: kullanıcı sormadan GitHub tarafını da tek listeyle öner ("sizde açık mı, şuradan kontrol edin"): Dependabot alerts/security updates, version updates, secret scanning + push protection, CodeQL, OSV taraması, main dal koruması, 2FA, Actions bildirimleri, Actions en az yetki, eylemleri SHA ile sabitleme. Bir testin/bildirimin nerede çalıştığını söylemeden önce workflow dosyasından doğrula.
-- Bir test/çalışma (GitHub Actions, Test Lab, zamanlanmış görev) başlatınca, yeniden çalıştırınca ya da sonucuna bakınca kullanıcıya takip bağlantısını her seferinde ver (ör. `https://github.com/<sahip>/<depo>/actions/runs/<id>`). (kullanıcı kararı, 18 Kasım 2026)
-- Kod haritası (graphify): `graphify-out/graph.json` varsa kod sorusunda ilk grep/okumadan önce `graphify query "<soru>"`; ilişki için `graphify path "A" "B"`, tek kavram için `graphify explain "X"`. Ham dosyadan yalnız haritanın gösterdiği satırları oku. Alt ajan istemine bu kuralı ekle. Kod değişince `graphify update .` (ücretsiz). Harita oturum açılışında kendiliğinden kurulur/çıkarılır, depoya girmez (`graphify-out/` yok sayılır). Dart çağrı bağları zayıf: bulunamazsa grep'e dön.
+Her oturumda önce `bilkil53/aile-ile-namaz-dev-and-admin` (main) deposunu ekle (add_repo), klonla; oradaki `CLAUDE.md` kurallarını ve `ajanlar/00-lider-ozet.md` dosyasını oku, hepsini uygula. Kurallar yalnız orada.
