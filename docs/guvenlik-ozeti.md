@@ -118,11 +118,4 @@ Son kontrol: 09.11.2026, canlı veritabanından okundu. Şema geçmişinin tamam
 
 ## 7. Bilinen açık işler
 
-1. **Play'e çıkmadan önce (ücretli Pro başlamadan) silinecek TEST fonksiyonları — öncelikli.** Şu an yalnızca izin listesindeki test hesapları (`private.pro_testers`) deneme süresini sıfırlayıp "1" koduyla Pro alabilir. Fonksiyonlar: `test_restart_trial`, `test_remove_pro`, `expire_pro_test`. `redeem_pro_code` ("1" kodu) yerine Google Play ödeme doğrulaması gelecek.
-2. **Testler (eklendi, 08.11.2026).** `test/` altındaki birim testleri CI'da her derlemede çalışır; biri başarısız olursa yayın çıkmaz. `supabase/tests/security_test.sql` sunucu kurallarını (anon yetkileri, `pool_events` sütun yetkisi, hız sınırı, misafirin kayıt yazamaması, gizlilik, erkek üyede "Muaf" kuralı) geri alınarak sınar; her sunucu değişikliğinden sonra çalıştırılmalı. Ekran testleri: `test/` altında widget testleri; her yayında emülatörde misafir akışı (TR+EN) ve giriş yapılmış akış (`integration_test/signed_in_test.dart`, test hesabı gizli ayarlarla; sunucuda e-posta girişi kapalıysa atlanır) ve Google Test Lab.
-3. **Açık rızanın sunucuda zorunlu kılınması.** Rızası olmayan hesabın namaz/kaza/dua kaydı şu an sunucuda aileye kapatılmıyor (yalnızca "5 vakit" bildirimi rızaya bağlı). Bütün hesaplar rıza verdikten sonra RLS'e eklenecek; rıza metni sürüm numarası da kaydedilecek.
-4. **Bildirim kuyruğu:** bir cihaza gidip diğerine geçici hatayla gidemeyen olay "gönderildi" sayılıyor; cihaz başına yeniden deneme eklenecek.
-5. **Güncelleyici:** indirme tek bir yayın nesnesine (etiket + dosya + özet) bağlanacak; kurulumdan önce paket adı ve sürüm kodu doğrulanacak.
-6. **Vakit servisi / alarmlar:** servis hatasında kurulu alarmlar silinmeyecek; yanıt boyut ve süre sınırı.
-7. **Davet:** onaydan önce havuz ve reis adı gösterilmeyecek.
-8. **Play öncesi:** Play Integrity, Play Billing, Supabase ücretli plan (yedek), temiz kurulumda açık yetkiler (grant) ve ortama özel bildirim adresi.
+Ayrıntılı liste özel depodadır (herkese açık depoda zayıflıklar listelenmez).

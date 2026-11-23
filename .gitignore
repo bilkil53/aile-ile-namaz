@@ -38,3 +38,9 @@ __pycache__/
 
 # graphify kod haritası (her oturumda yeniden çıkarılır)
 graphify-out/
+
+# Derleme çıktıları ve yerel ayarlar
+*.apk
+*.aab
+supabase/.temp/
+.claude/settings.local.json

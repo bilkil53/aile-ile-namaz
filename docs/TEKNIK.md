@@ -70,7 +70,7 @@ Migration'lar: `01_core_tables` → `02_helpers_rls_grants` → `03_rpc_triggers
 Tüm migration SQL dosyaları `supabase/migrations/` klasöründedir (sunucudaki kayıtla birebir). Tablo yetkileri, RLS politikaları, RPC'ler ve zamanlanmış işlerin özeti: [`docs/guvenlik-ozeti.md`](docs/guvenlik-ozeti.md).
 
 ### Derleme ve dallar
-* `dev` → test derlemesi (yayınlanmaz) · `main` → resmi yayın (etiket `v1.N`: v1.0, v1.1 …; derleme no = N + 1). 15 Kasım 2026'da yeni imza anahtarına geçildi; eski `v1.0.N` yayınları arşivdir, yeni uygulamaya kurulamaz.
+* İş dalları (`check/...`) → test derlemesi (yayınlanmaz) · `main` → resmi yayın (etiket `v1.N`: v1.0, v1.1 …; derleme no = N + 1). 15 Kasım 2026'da yeni imza anahtarına geçildi; eski `v1.0.N` yayınları arşivdir, yeni uygulamaya kurulamaz.
 * Derlemeler sırayla çalışır (aynı sürüm numarası iki kez verilmez); numara yayınların ve etiketlerin en büyüğünden hesaplanır. Eski `r<N>` yayınları sayılmaz. Yalnızca belge (`docs/`, `*.md`) değişince sürüm çıkmaz.
 * Sürüm açıklaması `RELEASE_NOTES.md` dosyasından + derleme bilgisiyle otomatik oluşur; ilk satır uygulama içi güncelleme penceresinde görünür.
 * İmza: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD` (GitHub Secrets). SHA-1 sabit kaldığı için Google girişi her sürümde çalışır.
