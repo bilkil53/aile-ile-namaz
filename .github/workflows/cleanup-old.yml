@@ -11,7 +11,7 @@ name: Eskileri temizle (son 2 sürüm kalır)
 # Herhangi bir API okuması başarısız olursa hiçbir şey silinmez (eksik listeyle silme planı kurulmaz).
 on:
   schedule:
-    - cron: '0 3 * * 0'
+    - cron: '0 3 * * 0' # her pazar 06:00 (Türkiye); bitince sıradaki zamanlanmış iş başlar
   workflow_dispatch:
     inputs:
       onay:
