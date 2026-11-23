@@ -1,11 +1,11 @@
 # Özel depo (aile-ile-namaz-dev-and-admin) her yeşil derlemede APK'yı herkese açık ana depoya geçici ön sürüm
 # olarak koyar (GitHub girişi olmadan indirmek için): yönetim 'yonetim-gecici', demo 'v11.N' (başlıkta "(geçici)").
-# Bu iş 1 saati geçen geçici kopyaları siler. Kalıcı kopyalar özel depoda. Yalnız ana depoda çalışır.
-name: Geçici APK'ları sil (1 saat)
+# Bu iş her gün 23:53'te (Türkiye) tüm geçici kopyaları siler. Kalıcı kopyalar özel depoda. Yalnız ana depoda çalışır.
+name: Geçici APK'ları sil (her gün 23:53)
 
 on:
   schedule:
-    - cron: '7,22,37,52 * * * *' # 15 dakikada bir; silme yaklaşık 1-1,25 saatte olur (GitHub zamanlaması gecikebilir)
+    - cron: '53 20 * * *' # her gün 23:53 Türkiye (UTC 20:53); GitHub zamanlaması birkaç dakika gecikebilir
   workflow_dispatch:
 
 permissions:
@@ -17,23 +17,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     steps:
-      - name: 1 saatten eskiyse sil
+      - name: Tüm geçici kopyaları sil
         env:
           GH_TOKEN: ${{ github.token }}
           R: ${{ github.repository }}
         run: |
-          SINIR=$(date -u -d '1 hour ago' +%s)
           # Yönetim kopyası
-          T=$(gh release view yonetim-gecici --repo "$R" --json publishedAt --jq .publishedAt 2>/dev/null) || T=''
-          if [ -z "$T" ]; then echo "Geçici yönetim kopyası yok."
-          elif [ "$(date -u -d "$T" +%s)" -lt "$SINIR" ]; then
-            gh release delete yonetim-gecici --repo "$R" --cleanup-tag -y && echo "Yönetim kopyası silindi (yayın: $T)" | tee -a "$GITHUB_STEP_SUMMARY"
-          else echo "Yönetim kopyası: henüz 1 saat olmadı ($T)."; fi
+          if gh release view yonetim-gecici --repo "$R" >/dev/null 2>&1; then
+            gh release delete yonetim-gecici --repo "$R" --cleanup-tag -y && echo "Yönetim kopyası silindi." | tee -a "$GITHUB_STEP_SUMMARY"
+          else echo "Geçici yönetim kopyası yok."; fi
           # Demo kopyaları: yalnız ön sürüm + başlığında "(geçici)" olanlar (eski kalıcı demo yayınlarına dokunulmaz)
-          gh release list --repo "$R" --limit 100 --json tagName,name,isPrerelease,publishedAt \
-            --jq '.[] | select(.isPrerelease and (.name | endswith("(geçici)"))) | "\(.tagName) \(.publishedAt)"' > demo.txt
-          while read -r tag t; do
-            if [ "$(date -u -d "$t" +%s)" -lt "$SINIR" ]; then
-              gh release delete "$tag" --repo "$R" --cleanup-tag -y && echo "Demo kopyası $tag silindi (yayın: $t)" | tee -a "$GITHUB_STEP_SUMMARY"
-            else echo "Demo kopyası $tag: henüz 1 saat olmadı ($t)."; fi
+          gh release list --repo "$R" --limit 100 --json tagName,name,isPrerelease \
+            --jq '.[] | select(.isPrerelease and (.name | endswith("(geçici)"))) | .tagName' > demo.txt
+          while read -r tag; do
+            gh release delete "$tag" --repo "$R" --cleanup-tag -y && echo "Demo kopyası $tag silindi." | tee -a "$GITHUB_STEP_SUMMARY"
           done < demo.txt
+          [ -s demo.txt ] || echo "Geçici demo kopyası yok."
