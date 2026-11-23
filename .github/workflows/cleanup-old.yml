@@ -3,10 +3,10 @@ name: Eskileri temizle (son 2 sürüm kalır)
 # Her pazartesi 04:17'de (İstanbul) kendiliğinden çalışır ve siler; elle de başlatılabilir.
 # Elle başlatınca kutu boş bırakılırsa yalnızca liste gösterilir, SIL yazılırsa silinir. Kalıcıdır, geri alınamaz:
 #  - Yayınlar (APK dosyalarıyla): yalnızca bu hattın ürettiği biçimdeki yayınlar (v1.N ve demo v11.N) ele alınır;
-#    taslak (draft) ve başka adlı yayınlara dokunulmaz. Her kanalda en yeni 2 kalır; GitHub'ın "en son sürüm"
+#    taslak (draft) ve başka adlı yayınlara dokunulmaz. v1.N'de en yeni 2 kalır, demo v11.N'nin hepsi silinir (demo özel depoya taşındı); GitHub'ın "en son sürüm"
 #    (latest) olarak gösterdiği yayın hiçbir durumda silinmez.
 #  - Etiketler: yalnızca silinen yayınların etiketleri ve yayını olmayan eski r<N> ve v1.0.N etiketleri.
-#  - Dallar: check/son dışındaki check/* kontrol dalları. main, demo, dev ve check/son'a dokunulmaz.
+#  - Dallar: check/son dışındaki check/* kontrol dalları ve emekli demo dalı. main, dev ve check/son'a dokunulmaz.
 #  - Çalışma kayıtları: her workflow'un en yeni 5 kaydı kalır (tamamlananlar; çalışan kayda dokunulmaz). Derleme çıktıları: 7 günden eskiler.
 # Herhangi bir API okuması başarısız olursa hiçbir şey silinmez (eksik listeyle silme planı kurulmaz).
 on:
@@ -45,13 +45,14 @@ jobs:
           awk '$3=="false"{print $1" "$2}' hepsi.txt > yayin.txt
           V='^v1\.[0-9]+$'; D='^v11\.[0-9]+$'
           sirala() { awk '{print $2}' yayin.txt | g -E "$1" | awk -F. '{print $2" "$0}' | sort -rn | awk '{print $2}'; }
-          { sirala "$V" | head -2; sirala "$D" | head -2; echo "$LATEST"; } | sort -u > kalan.txt
+          { sirala "$V" | head -2; echo "$LATEST"; } | sort -u > kalan.txt
           awk '{print $2}' yayin.txt | g -E "$V|$D" | g -vxFf kalan.txt > sil_yayin.txt
           gh api "$R/git/matching-refs/tags/" --paginate --jq '.[].ref | ltrimstr("refs/tags/")' > etiketler.txt
           awk '{print $2}' hepsi.txt > yayin_etiketleri.txt
           { cat sil_yayin.txt; g -E '^(r[0-9]+|v1\.0\.[0-9]+(-demo)?)$' etiketler.txt | g -vxFf yayin_etiketleri.txt; } | sort -u > sil_etiket.txt
           gh api "$R/git/matching-refs/heads/check/" --paginate --jq '.[].ref | ltrimstr("refs/heads/")' > dallar.txt
           g -E '^check/' dallar.txt | g -vx 'check/son' > sil_dal.txt
+          gh api "$R/git/matching-refs/heads/demo" --jq '.[].ref | ltrimstr("refs/heads/")' | g -x demo >> sil_dal.txt
           gh api "$R/actions/runs?per_page=100" --paginate \
             --jq '.workflow_runs[] | select(.status=="completed") | "\(.workflow_id) \(.created_at) \(.id)"' > kayitlar.txt
           # her workflow için en yeni 5 kalır, kalanı silinir (kendi çalışmamız hariç)

@@ -2,7 +2,8 @@ name: Android APK
 
 on:
   push:
-    branches: [main, dev, demo]
+    # Demo ve dev kanalları özel depoya taşındı (23 Kasım 2026); burada yalnız main derlenir.
+    branches: [main]
     # Yalnızca belge/web sayfası değişince yeni sürüm çıkmasın
     paths-ignore: ['docs/**', '**.md']
   workflow_dispatch:
