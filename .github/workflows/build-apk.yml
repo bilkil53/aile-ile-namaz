@@ -11,8 +11,8 @@ on:
 permissions:
   contents: write
 
-# Görünen sürüm ve yayın etiketi: main v1.N (v1.0, v1.1 … v1.10), demo v11.N (v11.0, v11.1 …).
-# Her kanalın N'si kendi yayınlarına göre bir artar, hiç sıfırlanmaz. Demo ayrı paket olduğu için ayrı sayılır.
+# Görünen sürüm ve yayın etiketi: main v1.N (v1.0, v1.1 … v1.10).
+# N yayınlara göre bir artar, hiç sıfırlanmaz.
 # Derleme numarası (BUILD_NO = N + 1): Android versionCode + uygulama içi güncelleme karşılaştırması.
 # 15 Kasım 2026'da yeni imza anahtarıyla numaralandırma sıfırlandı (eski v1.0.N yayınları sayılmaz;
 # eski uygulama kaldırılıp yeni kurulur).
@@ -21,10 +21,10 @@ env:
   # Play'e çıkarken "true" yapılır.
   PLAY_BUNDLE: "false"
 
-# Stabil ve demo aynı anda derlenirse aynı sürüm numarasını (rN) almasın: sırayla çalışsın.
+# Yayınlar aynı sürüm numarasını almasın: sırayla çalışsın.
 # Tam test (dev, elle başlatma) yayın üretmez: kendi sırasında, yayınla aynı anda çalışır.
 concurrency:
-  group: ${{ (github.ref_name == 'main' || github.ref_name == 'demo') && 'release-numbering' || format('test-{0}', github.ref_name) }}
+  group: ${{ github.ref_name == 'main' && 'release-numbering' || format('test-{0}', github.ref_name) }}
   cancel-in-progress: false
 
 jobs:
@@ -77,8 +77,6 @@ jobs:
           grep -q getHistoricalProcessExitReasons "$f"
           # Uygulama simgesi (eski uygulamanın logosu: minare, hilal ve E harfi)
           cp -r android-config/res/. android/app/src/main/res/
-          # Demo kanalı: simgenin üstüne kırmızı "DEMO" şeridi (ayrı paket, stabilden ayırt edilsin)
-          if [ "$GITHUB_REF_NAME" = demo ]; then cp -r android-config/demo/. android/app/src/main/res/; fi
           test -f android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
           # Zamanlanmış bildirim alıcısı R8 küçültmesinde bozulmasın
           cp android-config/proguard-rules.pro android/app/proguard-rules.pro
@@ -100,10 +98,7 @@ jobs:
           for perm in perms:
               if perm not in s:
                   s = s.replace('<application', f'<uses-permission android:name="{perm}"/>\n    <application', 1)
-          # Demo ayrı dönüş şeması kullanır (lib/config.dart authRedirect ile aynı): iki uygulama
-          # aynı telefonda aynı şemayı sahiplenmesin
-          import os as _oc
-          scheme = 'io.supabase.aileilenamaz.demo' if _oc.environ.get('GITHUB_REF_NAME') == 'demo' else 'io.supabase.aileilenamaz'
+          scheme = 'io.supabase.aileilenamaz'
           intent = f'''<intent-filter>
                           <action android:name="android.intent.action.VIEW" />
                           <category android:name="android.intent.category.DEFAULT" />
@@ -114,10 +109,6 @@ jobs:
           s = s.replace('</activity>', intent + '\n        </activity>', 1)
           assert s.count(f'android:scheme="{scheme}"') == 1, 'giriş dönüş şeması manifeste yazılamadı'
           s = s.replace('android:label="aile_ile_namaz"', 'android:label="Aile İle Namaz"')
-          # Demo kanalı: telefonda "Namaz Demo" adıyla görünür (ayrı paket .demo, stabilin yanına kurulur)
-          import os as _o
-          if _o.environ.get('GITHUB_REF_NAME') == 'demo':
-              s = s.replace('android:label="Aile İle Namaz"', 'android:label="Namaz Demo"')
           if 'android:roundIcon' not in s:
               s = s.replace('android:icon="@mipmap/ic_launcher"', 'android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"', 1)
           # Çökme kaydedici için kendi Application sınıfımız
@@ -178,11 +169,6 @@ jobs:
               if 'isCoreLibraryDesugaringEnabled' not in s:
                   s = s.replace('compileOptions {', 'compileOptions {\n        isCoreLibraryDesugaringEnabled = true', 1)
                   s += '\ndependencies {\n    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")\n    implementation("androidx.core:core:1.13.1")\n}\n'
-              # Demo ayrı paket: telefonda stabil uygulamanın yanına kurulur (üstüne yazmaz)
-              if os.environ.get('GITHUB_REF_NAME') == 'demo':
-                  old = 'applicationId = "com.bilkil53.aile_ile_namaz"'
-                  if old not in s: raise SystemExit('applicationId satırı bulunamadı; demo paket adı verilemedi')
-                  s = s.replace(old, 'applicationId = "com.bilkil53.aile_ile_namaz.demo"', 1)
               open(kts, 'w', encoding='utf-8').write(s)
           else:
               p = 'android/app/build.gradle'
@@ -238,8 +224,8 @@ jobs:
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           if [ -z "$KEYSTORE_B64" ]; then
-            # Yayın dallarında (main/demo) imza anahtarı zorunlu: geçici anahtarla yayın çıkmaz.
-            if [ "$GITHUB_REF_NAME" = "main" ] || [ "$GITHUB_REF_NAME" = "demo" ]; then
+            # Yayın dalında (main) imza anahtarı zorunlu: geçici anahtarla yayın çıkmaz.
+            if [ "$GITHUB_REF_NAME" = "main" ]; then
               echo "::error::ANDROID_KEYSTORE_BASE64 secret yok; $GITHUB_REF_NAME dalında yayın durduruldu (geçici anahtarla imzalanmış APK yayınlanmaz)."
               exit 1
             fi
@@ -300,7 +286,7 @@ jobs:
           if [ -n "$sig" ]; then
             echo "EXPECTED_SIG=$sig" >> "$GITHUB_ENV"
             echo "İmza parmak izi (SHA-256) gömülecek: ${sig:0:16}…"
-          elif [ "$GITHUB_REF_NAME" = "main" ] || [ "$GITHUB_REF_NAME" = "demo" ]; then
+          elif [ "$GITHUB_REF_NAME" = "main" ]; then
             echo "::error::İmza parmak izi okunamadı (anahtar şifresi/takma adı yanlış olabilir); yayın durduruldu."
             exit 1
           else
@@ -328,14 +314,10 @@ jobs:
             exit "$rc"
           fi
 
-      - name: Sunucu seçimi (demo dalı = demo sunucusu, diğerleri = gerçek sunucu)
+      - name: Sunucu seçimi (gerçek sunucu)
         run: |
           # Değerler gizli değil (istemci anahtarı); güvenlik RLS kurallarıyla sağlanır.
-          if [ "$GITHUB_REF_NAME" = demo ]; then
-            ref=bqcjdxpogtccjmbonhcg; key=sb_publishable_YqK0-mpeB4KVFDk97QUCEQ_CUVEKJBp
-          else
-            ref=tgshrnodnhmnofjhzpqp; key=sb_publishable_ecpaSUNve-SlWZ1Vk6XRkA_R40sbBvf
-          fi
+          ref=tgshrnodnhmnofjhzpqp; key=sb_publishable_ecpaSUNve-SlWZ1Vk6XRkA_R40sbBvf
           echo "SERVER_REF=$ref" >> "$GITHUB_ENV"
           echo "SERVER_DEFINES=--dart-define=SUPABASE_URL=https://$ref.supabase.co --dart-define=SUPABASE_PUBLISHABLE_KEY=$key" >> "$GITHUB_ENV"
           echo "Sunucu: $ref ($GITHUB_REF_NAME)"
@@ -390,14 +372,14 @@ jobs:
               echo "::error::Sunucu güvenlik testi başarısız ya da çalıştırılamadı; derleme durduruldu."; exit 1 ;;
           esac
 
-      - name: Sürüm numarası (main v1.N, demo v11.N; her kanal kendi yayınlarına göre artar)
+      - name: Sürüm numarası (main v1.N; yayınlara göre artar)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Etiket v<KANAL>.N (main 1, demo 11). N hiç sıfırlanmaz; derleme numarası (Android versionCode) = N + 1.
+          # Etiket v1.N. N hiç sıfırlanmaz; derleme numarası (Android versionCode) = N + 1.
           # Yayınlar ve etiketlerin en büyüğü alınır: bir yayın yanlışlıkla silinse bile numara geri gitmez.
           # Eski etiketler (v1.0.N, v1.0.N-demo, rN) bu desene uymaz, sayılmaz.
-          if [ "$GITHUB_REF_NAME" = demo ]; then major=11; else major=1; fi
+          major=1
           F="select(test(\"^v${major}\\\\.[0-9]+\$\")) | split(\".\") | .[1] | tonumber + 1"
           rel=$(gh release list -R "$GITHUB_REPOSITORY" --limit 1000 --json tagName -q "[.[].tagName | $F] | max // 0")
           # Çok sayfalı yanıtta her sayfa ayrı satır verir: en büyüğü alınır
@@ -422,7 +404,7 @@ jobs:
           fi
           if [ -z "$EXPECTED_SIG" ]; then
             case "$GITHUB_REF_NAME" in
-              main|demo) echo "::error::Beklenen imza (EXPECTED_SIG) boş; $GITHUB_REF_NAME dalında yayın durduruldu."; exit 1 ;;
+              main) echo "::error::Beklenen imza (EXPECTED_SIG) boş; $GITHUB_REF_NAME dalında yayın durduruldu."; exit 1 ;;
               *) echo "::warning::EXPECTED_SIG boş; imza kontrolü bu derlemede yapılmayacak (yalnızca $GITHUB_REF_NAME)." ;;
             esac
           fi
@@ -431,7 +413,7 @@ jobs:
       - name: APK derle
         run: |
           set +e
-          flutter build apk --release --build-number=${{ env.BUILD_NO }} --build-name=${{ env.APP_VERSION }} --dart-define=CHANNEL=${{ github.ref_name == 'demo' && 'demo' || 'stable' }} ${{ env.SERVER_DEFINES }} --dart-define=EXPECTED_SIG=${{ env.EXPECTED_SIG }} --obfuscate --split-debug-info=build/symbols > build.txt 2>&1
+          flutter build apk --release --build-number=${{ env.BUILD_NO }} --build-name=${{ env.APP_VERSION }} --dart-define=CHANNEL=stable ${{ env.SERVER_DEFINES }} --dart-define=EXPECTED_SIG=${{ env.EXPECTED_SIG }} --obfuscate --split-debug-info=build/symbols > build.txt 2>&1
           code=$?
           tail -n 80 build.txt
           {
@@ -460,7 +442,7 @@ jobs:
         run: |
           mkdir -p /tmp/sochk && unzip -o -q build/app/outputs/flutter-apk/app-release.apk 'lib/arm64-v8a/libapp.so' -d /tmp/sochk
           so=/tmp/sochk/lib/arm64-v8a/libapp.so
-          if [ "$SERVER_REF" = bqcjdxpogtccjmbonhcg ]; then other=tgshrnodnhmnofjhzpqp; else other=bqcjdxpogtccjmbonhcg; fi
+          other=bqcjdxpogtccjmbonhcg # demo sunucusu
           strings -n 8 "$so" | grep -q "$SERVER_REF" || { echo "::error::APK içinde beklenen sunucu ($SERVER_REF) yok"; exit 1; }
           if strings -n 8 "$so" | grep -q "$other"; then echo "::error::APK içinde diğer sunucunun adresi ($other) var"; exit 1; fi
           echo "APK sunucusu: $SERVER_REF ✓"
@@ -469,18 +451,17 @@ jobs:
         run: |
           cp build/app/outputs/flutter-apk/app-release.apk aile-ile-namaz.apk
           flutter build apk --release --split-per-abi --build-number=${{ env.BUILD_NO }} --build-name=${{ env.APP_VERSION }} \
-            --dart-define=CHANNEL=${{ github.ref_name == 'demo' && 'demo' || 'stable' }} ${{ env.SERVER_DEFINES }} --dart-define=EXPECTED_SIG=${{ env.EXPECTED_SIG }} --obfuscate --split-debug-info=build/symbols-abi
+            --dart-define=CHANNEL=stable ${{ env.SERVER_DEFINES }} --dart-define=EXPECTED_SIG=${{ env.EXPECTED_SIG }} --obfuscate --split-debug-info=build/symbols-abi
           for abi in arm64-v8a armeabi-v7a x86_64; do
             cp "build/app/outputs/flutter-apk/app-$abi-release.apk" "aile-ile-namaz-$abi.apk"
           done
           ls -la aile-ile-namaz*.apk
 
       # Kararlı uygulamada test kodu olmaz: test paneli ve Pro test işlevleri yalnızca CHANNEL=demo
-      # derlemesinde derlenir (sabit koşul, derleyici çıkarır). Derleme karıştırıldığı (--obfuscate) için
+      # derlemesinde (özel depo) derlenir (sabit koşul, derleyici çıkarır). Derleme karıştırıldığı (--obfuscate) için
       # sınıf adı değil, test kodundaki yazılar aranır. Tek APK ve işlemci türüne göre her küçük APK
       # denetlenir; biri bile test kodu içeriyorsa yayın durur (fail-closed).
       - name: Test kodu kontrolü (kararlı APK'larda test paneli ve test işlevleri yok)
-        if: github.ref != 'refs/heads/demo'
         run: |
           bad=''
           for apk in aile-ile-namaz.apk aile-ile-namaz-arm64-v8a.apk aile-ile-namaz-armeabi-v7a.apk aile-ile-namaz-x86_64.apk; do
@@ -512,52 +493,8 @@ jobs:
             debug-symbols.zip
           retention-days: 14
 
-      - name: Demo dosya adları
-        if: github.ref == 'refs/heads/demo'
-        run: |
-          cp aile-ile-namaz.apk aile-ile-namaz-demo.apk
-          for abi in arm64-v8a armeabi-v7a x86_64; do cp "aile-ile-namaz-$abi.apk" "aile-ile-namaz-demo-$abi.apk"; done
-          ls -1 aile-ile-namaz-demo*.apk
-
-      - name: Demo sürüm notları
-        if: github.ref == 'refs/heads/demo'
-        env:
-          COMMIT_MSG: ${{ github.event.head_commit.message }}
-        run: |
-          V="v${{ env.APP_VERSION }}"
-          D="$(TZ=Europe/Istanbul date '+%d.%m.%Y %H:%M')"
-          # Başlıkta "Demo" geçmeli: demo uygulaması güncellemeyi bu adla bulur
-          echo "RELEASE_TITLE=$V Namaz Demo — $D" >> "$GITHUB_ENV"
-          {
-            echo "$(head -n 1 RELEASE_NOTES.md)"
-            echo
-            echo "**Namaz Demo** — Pro/Demo deneme uygulaması (ön sürüm). Ailenin stabil uygulaması bu sürümü görmez."
-            echo
-            echo "---"
-            echo "**Sürüm:** $V · derleme ${{ env.BUILD_NO }} · $D (İstanbul) · commit \`${GITHUB_SHA::7}\`"
-            echo
-            echo "**Bu güncellemedeki değişiklik:** $(printf '%s' "$COMMIT_MSG" | head -n 1)"
-          } > release_body.md
-
-      - name: Demo ön sürümünü yayınla (stabil son sürümü etkilemez)
-        if: github.ref == 'refs/heads/demo'
-        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
-        with:
-          tag_name: v${{ env.APP_VERSION }}
-          target_commitish: ${{ github.sha }}
-          name: ${{ env.RELEASE_TITLE }}
-          body_path: release_body.md
-          prerelease: true
-          make_latest: false
-          files: |
-            aile-ile-namaz-demo.apk
-            aile-ile-namaz-demo-arm64-v8a.apk
-            aile-ile-namaz-demo-armeabi-v7a.apk
-            aile-ile-namaz-demo-x86_64.apk
-
       # ── TEST ORTAMI 1: GitHub emülatörü ── gerçek uygulama bir Android emülatöründe açılır,
-      # misafir akışı parmakla dokunur gibi denenir. Demo'da yayından sonra çalışır (kırmızıysa yayın yerinde kalır,
-      # düzeltme yayını yapılır). Main'de yayından ÖNCE çalışır: kırmızıysa stabil yayın çıkmaz.
+      # misafir akışı parmakla dokunur gibi denenir. Main'de yayından ÖNCE çalışır: kırmızıysa stabil yayın çıkmaz.
       - name: Emülatör için donanım hızlandırma (KVM)
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -589,9 +526,9 @@ jobs:
 
       # ── TEST ORTAMI 2: Google Firebase Test Lab ── yayınlanacak APK'nın kendisi Google'ın
       # 1 gerçek telefonunda ve 1 sanal telefonunda robotla gezilir. Kota sınırlı olduğu için
-      # yalnızca yayın dallarında (main, demo). Demo'da yayından sonra, main'de yayından önce çalışır; geçmezse main'de yayın çıkmaz.
+      # yalnızca main'de, yayından önce çalışır; geçmezse yayın çıkmaz.
       - name: Test Lab anahtarı var mı
-        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo')
+        if: github.ref == 'refs/heads/main'
         env:
           KEY: ${{ secrets.FIREBASE_TESTLAB_KEY }}
         run: |
@@ -599,17 +536,17 @@ jobs:
           echo 'Test Lab anahtarı hazır'
 
       - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
-        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo')
+        if: github.ref == 'refs/heads/main'
         with:
           credentials_json: ${{ secrets.FIREBASE_TESTLAB_KEY }}
 
       - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
-        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo')
+        if: github.ref == 'refs/heads/main'
 
       # Günlük ücretsiz hak (Spark): 5 gerçek + 10 sanal telefon testi.
-      # Stabil: gerçek telefon (Türkçe) + sanal telefon (İngilizce) · Demo: yalnız sanal telefon (Türkçe)
-      - name: Ekran testi — Google Test Lab (stabil 2 telefon TR+EN, demo 1 sanal TR; robot gezinti)
-        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo')
+      # Gerçek telefon (Türkçe) + sanal telefon (İngilizce)
+      - name: Ekran testi — Google Test Lab (2 telefon TR+EN; robot gezinti)
+        if: github.ref == 'refs/heads/main'
         timeout-minutes: 45
         run: |
           # auth adımı anahtar dosyasındaki projeyi CLOUDSDK_CORE_PROJECT ile verir (config'i ezer):
@@ -623,11 +560,6 @@ jobs:
           echo "CLOUDSDK_CORE_PROJECT=aile-ile-namaz-app" >> "$GITHUB_ENV"
           gcloud config set project aile-ile-namaz-app >/dev/null
           VIRT_EN="model=MediumPhone.arm,version=34,locale=en,orientation=portrait"
-          VIRT_TR="model=MediumPhone.arm,version=34,locale=tr,orientation=portrait"
-          if [ "$GITHUB_REF_NAME" = demo ]; then
-            DEVICES=(--device "$VIRT_TR")
-            echo "Demo: 1 sanal telefon (MediumPhone, Android 14, Türkçe)"
-          else
           # Kapasitesi yüksek (kuyrukta bekletmeyen) bir gerçek TELEFON seç: Android 14 → 13 → 15 → 12
             gcloud firebase test android models list --filter='form=PHYSICAL AND formFactor=PHONE' --format=json > models.json
           PHYS=$(python3 - <<'PY'
@@ -646,7 +578,6 @@ jobs:
             [ -n "$PHYS" ] || { echo '::error::Test Lab: uygun gerçek telefon bulunamadı'; exit 1; }
             DEVICES=(--device "$PHYS,locale=tr,orientation=portrait" --device "$VIRT_EN")
             echo "Stabil: gerçek telefon $PHYS (Türkçe) · sanal telefon MediumPhone, Android 14 (İngilizce)"
-          fi
           run() {
             gcloud firebase test android run --type robo --app aile-ile-namaz.apk \
               "${DEVICES[@]}" \
@@ -711,7 +642,7 @@ jobs:
       # Test Lab deposu her testte dolar: 7 günden eski test klasörleri (APK, video, ekran görüntüsü)
       # her yayından sonra silinir. Temizlik başarısız olursa yayın durmaz, yalnızca uyarı verilir.
       - name: Test Lab deposunu temizle (7 günden eski raporlar)
-        if: always() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/demo') && env.GOOGLE_APPLICATION_CREDENTIALS != ''
+        if: always() && github.ref == 'refs/heads/main' && env.GOOGLE_APPLICATION_CREDENTIALS != ''
         continue-on-error: true
         run: |
           B=$(grep -oE 'gs://test-lab-[a-z0-9-]+' testlab.txt 2>/dev/null | head -1)

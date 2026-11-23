@@ -86,10 +86,10 @@ Son kontrol: 09.11.2026, canlı veritabanından okundu. Şema geçmişinin tamam
 
 ## Yayın hattı ve depo (11 Kasım 2026)
 
-- **Sıra:** değişiklik önce demo sürümünde yayınlanır ve emülatör + Test Lab'dan geçer; geçerse kararlı sürüm yayınlanır. Kararlı sürüm yayından sonra arka planda emülatör, Test Lab ve Google Play paketi (AAB) derlemesini çalıştırır.
+- **Sıra:** kararlı sürüm yayından önce emülatör ve Test Lab'dan geçer; geçmezse yayınlanmaz.
 - **Zorunlu kontroller (yayından önce, fail-closed):** kod analizi, birim testleri, sunucu güvenlik testi, imza. Biri başarısızsa hiçbir şey yayınlanmaz.
-- **Depo:** `main` ve `demo` dalları silmeye ve üzerine yazmaya (force push) karşı korumalı. İş akışlarındaki eylemler sabit sürüme (commit SHA) bağlı; paket sürümleri `pubspec.lock` ile kilitli (`--enforce-lockfile`).
-- **Sürüm:** etiket `v1.0.N` (demo `v1.0.N-demo`), derleme numarası N+1; yayın etiketi derlenen commit'e konur.
+- **Depo:** `main` dalı silmeye ve üzerine yazmaya (force push) karşı korumalı. İş akışlarındaki eylemler sabit sürüme (commit SHA) bağlı; paket sürümleri `pubspec.lock` ile kilitli (`--enforce-lockfile`).
+- **Sürüm:** etiket `v1.N`, derleme numarası N+1; yayın etiketi derlenen commit'e konur.
 - **Yedekler:** imza anahtarının şifreli yedeği proje sahibinde (iş: `keystore-backup.yml`). Veritabanı: Supabase ücretsiz planda otomatik yedek yok; Play'e çıkarken ücretli plana geçilecek.
 - **Bildirim fonksiyonu bağımlılığı:** `push-family` Supabase istemcisini tam sürümle içe aktarır (kaynakta sabit); bir sonraki dağıtımda bu sürüm kullanılır.
 
@@ -105,9 +105,9 @@ Son kontrol: 09.11.2026, canlı veritabanından okundu. Şema geçmişinin tamam
 
 ## İmza kontrolü (fail-closed)
 
-- `lib/integrity.dart`: GitHub'dan dağıtılan sürümlerde (stabil ve demo) uygulama açılışta kendi imzasının SHA-256'sını beklenenle karşılaştırır. **Tutmazsa ya da okunamazsa uygulama açılmaz**: kapatılamayan pencerede yalnızca "Resmi sürümü indir" ve "Kapat" vardır; kontrol bütün açılış işlerinden önce çalışır.
+- `lib/integrity.dart`: GitHub'dan dağıtılan sürümlerde uygulama açılışta kendi imzasının SHA-256'sını beklenenle karşılaştırır. **Tutmazsa ya da okunamazsa uygulama açılmaz**: kapatılamayan pencerede yalnızca "Resmi sürümü indir" ve "Kapat" vardır; kontrol bütün açılış işlerinden önce çalışır.
 - Google Play sürümünde (`STORE=play`) bu kontrol yapılmaz: Play uygulamayı kendi anahtarıyla yeniden imzalar, kontrol gerçek kullanıcıları kilitlerdi. Play'e çıkışta doğru yöntem **Play Integrity API** + sunucu tarafı doğrulamadır.
-- Kendini kilitleme koruması: CI, `MainActivity` imza okuyucusunu içermiyorsa ya da beklenen imza (`EXPECTED_SIG`) main/demo'da boşsa yayını durdurur. Karar mantığı `test/integrity_test.dart` ile sınanır.
+- Kendini kilitleme koruması: CI, `MainActivity` imza okuyucusunu içermiyorsa ya da beklenen imza (`EXPECTED_SIG`) main'de boşsa yayını durdurur. Karar mantığı `test/integrity_test.dart` ile sınanır.
 - Sınır: değiştirilmiş bir APK bu kontrolü de silebilir; bu yüzden yetki kontrolü her zaman sunucuda (RLS, sütun yetkileri, RPC'ler; `security_test.sql`, 45 kontrol) yapılır.
 
 ## 6. İstemci tarafı notlar
@@ -125,4 +125,4 @@ Son kontrol: 09.11.2026, canlı veritabanından okundu. Şema geçmişinin tamam
 5. **Güncelleyici:** indirme tek bir yayın nesnesine (etiket + dosya + özet) bağlanacak; kurulumdan önce paket adı ve sürüm kodu doğrulanacak.
 6. **Vakit servisi / alarmlar:** servis hatasında kurulu alarmlar silinmeyecek; yanıt boyut ve süre sınırı.
 7. **Davet:** onaydan önce havuz ve reis adı gösterilmeyecek.
-8. **Play öncesi:** Play Integrity, Play Billing, Supabase ücretli plan (yedek), temiz kurulumda açık yetkiler (grant) ve ortama özel bildirim adresi, demo için ayrı paket/ortam.
+8. **Play öncesi:** Play Integrity, Play Billing, Supabase ücretli plan (yedek), temiz kurulumda açık yetkiler (grant) ve ortama özel bildirim adresi.

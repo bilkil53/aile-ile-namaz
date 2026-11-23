@@ -25,8 +25,6 @@
 
 👉 **[📥 Aile ile Namaz — En Güncel APK'yı İndir](https://github.com/bilkil53/aile-ile-namaz/releases/latest/download/aile-ile-namaz.apk)**
 
-🧪 **Test için:** [Namaz Demo sürümleri](https://github.com/bilkil53/aile-ile-namaz/releases?q=demo&expanded=true) — en üstteki `aile-ile-namaz-demo.apk`. Demo ayrı bir test sunucusuna bağlanır; gerçek aile verisi orada görünmez.
-
 1. Telefonda linke dokun, APK insin.
 2. İnen dosyayı aç; Android "bilinmeyen kaynaklardan yükleme" izni isterse ver.
 3. Açılan **Hoş Geldiniz** penceresinde **Google ile Hızlı Giriş Yap**'a dokun ve telefondaki Gmail hesabını seç. İstersen **Giriş Yapmadan Devam Et** ile önce gezinebilirsin.
@@ -107,7 +105,7 @@
 * **Aile Reisine ilet:** Reis olmayanlarda "Pro'ya geç" yerine "📩 Aile Reisine ilet" (günde 1). Reis bildirim ve istek kartı görür; **Reddet** ya da **Pro'ya geç**.
 * **Ödeme:** kod girme yok. Pro yalnızca ödemeyle alınır: öncelik **hat faturasına yansıtma** (Google Play operatör faturalandırması), sonra **kart**. Ödeme uygulamanın Google Play sürümüyle açılacak. Fiyat (plan): aylık 153 ₺ · yıllık 1.553 ₺.
 * **Pro'ya geçişte** eski bildirimler topluca gelmez (FCM TTL 1 saat).
-* **🧪 Test Paneli** (yalnızca demo derlemesi ve test listesindeki hesaplar): başlıkta durum etiketi; Ayarlar'da denemeyi baştan başlat / bitir, Pro yap / kaldır. Sunucuda `test_restart_trial`, `test_remove_pro`, `expire_pro_test`, `redeem_pro_code` — Play'e çıkmadan önce kaldırılacak.
+* **🧪 Test Paneli** (yalnızca test derlemesi ve test listesindeki hesaplar): başlıkta durum etiketi; Ayarlar'da denemeyi baştan başlat / bitir, Pro yap / kaldır. Sunucuda `test_restart_trial`, `test_remove_pro`, `expire_pro_test`, `redeem_pro_code` — Play'e çıkmadan önce kaldırılacak.
 
 ### 7. 🛟 Hata bildirimi
 * **Hiçbir şey otomatik gönderilmez.** Uygulama kullanılırken beklenmedik bir hata olursa sebebiyle (kod hatası / bellek) bir pencere çıkar; kişi isterse **Raporu gönder** (anonim kayıt) ya da **Mail ile** der, **Kapat** derse hiçbir şey gitmez. İnternet kesintisinde pencere çıkmaz.
