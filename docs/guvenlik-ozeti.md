@@ -118,4 +118,4 @@ Son kontrol: 09.11.2026, canlı veritabanından okundu. Şema geçmişinin tamam
 
 ## 7. Bilinen açık işler
 
-Ayrıntılı liste özel depodadır (herkese açık depoda zayıflıklar listelenmez).
+Ayrıntılı liste özel depodadır: `bilkil53/aile-ile-namaz-dev-and-admin`, `docs/guvenlik-acik-isler.md` (herkese açık depoda zayıflıklar listelenmez).

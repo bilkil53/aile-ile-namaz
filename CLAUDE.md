@@ -1,6 +1,6 @@
 # Aile ile Namaz
 
-- Her oturumda önce özel depodaki (`bilkil53/aile-ile-namaz-dev-and-admin`, main) `ajanlar/00-lider-ozet.md` dosyasını oku ve oradan devam et; oturumda o depo yoksa ekle (add_repo). Özet güncellemesi de oraya yazılır.
+- Her oturumda önce özel depodaki (`bilkil53/aile-ile-namaz-dev-and-admin`, main) `ajanlar/00-lider-ozet.md` dosyasını oku ve oradan devam et; oturumda o depo yoksa ekle (add_repo). Bu depodaki aynı adlı dosya yalnız yönlendirmedir. Özet güncellemesi de oraya yazılır.
 - Cevaplar Türkçe ve kısa. Onaylar anketle sorulur.
 - Skill çağrılınca (sohbet boş olsa da) skill dosyasının tüm adımlarını ve bu projenin o skill için kurallarını (ör. özetteki "/sondurum kontrolleri") eksiksiz uygula; adım atlama, kısaltma.
 - Kod işlerinde karpathy-guidelines ve ponytail, cevaplarda caveman üslubu. Sohbet uzayınca kullanıcıya `/compact` öner.
