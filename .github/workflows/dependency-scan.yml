@@ -5,7 +5,7 @@ name: Bağımlılık taraması (OSV)
 # (yeni açıklar kodu değiştirmesek de çıkabilir). Açık bulunursa iş kırmızı olur (fail-closed).
 on:
   push:
-    branches: [main, demo]
+    branches: [main]
     paths: ['pubspec.lock', 'pubspec.yaml', '.github/workflows/dependency-scan.yml']
   pull_request:
     paths: ['pubspec.lock', 'pubspec.yaml']
