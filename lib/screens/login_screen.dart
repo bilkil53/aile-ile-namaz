@@ -52,10 +52,8 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
     super.dispose();
   }
 
-  final _google = GoogleSignIn(
-    serverClientId: AppConfig.googleWebClientId,
-    scopes: const ['email', 'profile'],
-  );
+  final _google = GoogleSignIn.instance;
+  static Future<void>? _init; // google_sign_in 7: initialize bir kez çağrılır
 
   // Kutular her açılışta BOŞ başlar: açık rıza kullanıcının kendi işaretlemesiyle verilir
   bool _consent = false; // 1) aydınlatma "okudum" beyanı
@@ -97,18 +95,18 @@ class _WelcomeDialogState extends State<WelcomeDialog> {
   }
 
   Future<bool> _nativeSignIn() async {
+    await (_init ??= _google.initialize(serverClientId: AppConfig.googleWebClientId));
     await _google.signOut(); // her seferinde hesap listesi gelsin
-    final account = await _google.signIn();
-    if (account == null) return false;
-    final auth = await account.authentication;
-    final idToken = auth.idToken;
-    if (idToken == null) throw Exception('idToken alınamadı');
-    await Supabase.instance.client.auth.signInWithIdToken(
-      provider: OAuthProvider.google,
-      idToken: idToken,
-      accessToken: auth.accessToken,
-    );
-    return true;
+    try {
+      final account = await _google.authenticate(scopeHint: const ['email', 'profile']);
+      final idToken = account.authentication.idToken;
+      if (idToken == null) throw Exception('idToken alınamadı');
+      await Supabase.instance.client.auth.signInWithIdToken(provider: OAuthProvider.google, idToken: idToken);
+      return true;
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) return false; // kullanıcı vazgeçti
+      rethrow;
+    }
   }
 
   /// "Giriş yapmadan devam et" → ne olacağını açıklayan küçük onay penceresi.
