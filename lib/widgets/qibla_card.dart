@@ -55,7 +55,7 @@ class _QiblaCardState extends State<QiblaCard> {
   List<double> _g = [0, 0, 9.8];
   List<double>? _m;
   final List<double> _recent = []; // son yönler (dairesel ortalama için)
-  bool _aligned = false; // histerezis: ±2°'de yanar, ±3° dışında söner
+  bool _aligned = false; // histerezis: ±3°'de yanar, ±4° dışında söner
   static const _fusedCh = EventChannel('aile/heading');
   StreamSubscription<dynamic>? _fusedSub;
   double? _fused; // birleşik yön sensörü (manyetik kuzeye göre); cihazda yoksa null
@@ -149,9 +149,9 @@ class _QiblaCardState extends State<QiblaCard> {
     final diff = heading == null ? null : ((qibla - heading + 540) % 360) - 180;
     if (diff == null) {
       _aligned = false;
-    } else if (diff.abs() <= 2) {
+    } else if (diff.abs() <= 3) {
       _aligned = true;
-    } else if (diff.abs() > 3) {
+    } else if (diff.abs() > 4) {
       _aligned = false;
     }
     final fused = _fused;
@@ -228,7 +228,7 @@ class _QiblaCardState extends State<QiblaCard> {
                               ? t('Pusula kalibre değil. Telefonu havada 8 çizerek çevir.', 'Compass not calibrated. Move the phone in a figure 8.')
                           : aligned
                               ? t('Kıble yönündesin ✓', 'You are facing the qibla ✓')
-                          : issue == CompassIssue.unstable && diff!.abs() <= 3
+                          : issue == CompassIssue.unstable && diff!.abs() <= 4
                               ? t('Telefonu sabit tut.', 'Hold the phone still.')
                               : (diff! > 0 ? t('Sağa dön (${diff.abs().toStringAsFixed(0)}°)', 'Turn right (${diff.abs().toStringAsFixed(0)}°)') : t('Sola dön (${diff.abs().toStringAsFixed(0)}°)', 'Turn left (${diff.abs().toStringAsFixed(0)}°)')),
                       textAlign: TextAlign.center,
