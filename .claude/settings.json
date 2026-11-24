@@ -42,5 +42,19 @@
     "plugin-authoring": "off",
     "impeccable": "off",
     "ui-ux-pro-max": "off"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/graphify-pc.sh\"",
+            "timeout": 120
+          }
+        ]
+      }
+    ]
   }
 }
