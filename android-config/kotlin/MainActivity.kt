@@ -4,6 +4,10 @@ import android.app.ActivityManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Handler
 import android.os.Looper
 import androidx.core.content.FileProvider
@@ -13,6 +17,7 @@ import android.provider.Settings
 import android.net.Uri
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.security.MessageDigest
@@ -47,6 +52,34 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        // Kıble pusulasının ikinci kaynağı: Android'in jiroskop + manyetometre birleşik yön sensörü.
+        // Telefonun baktığı yönü manyetik kuzeye göre derece olarak gönderir.
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, "aile/heading").setStreamHandler(object : EventChannel.StreamHandler {
+            private var listener: SensorEventListener? = null
+            override fun onListen(arguments: Any?, events: EventChannel.EventSink) {
+                val sm = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+                val sensor = sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
+                if (sensor == null) { events.error("none", "rotation vector yok", null); return }
+                val r = FloatArray(9)
+                val o = FloatArray(3)
+                val l = object : SensorEventListener {
+                    override fun onSensorChanged(e: SensorEvent) {
+                        // Bazı cihazlarda 4'ten fazla değer getRotationMatrixFromVector'ı bozar
+                        SensorManager.getRotationMatrixFromVector(r, if (e.values.size > 4) e.values.copyOf(4) else e.values)
+                        SensorManager.getOrientation(r, o)
+                        events.success((Math.toDegrees(o[0].toDouble()) + 360) % 360)
+                    }
+                    override fun onAccuracyChanged(s: Sensor?, a: Int) {}
+                }
+                listener = l
+                sm.registerListener(l, sensor, SensorManager.SENSOR_DELAY_UI)
+            }
+            override fun onCancel(arguments: Any?) {
+                val l = listener ?: return
+                (getSystemService(Context.SENSOR_SERVICE) as SensorManager).unregisterListener(l)
+                listener = null
+            }
+        })
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "aile/exit").setMethodCallHandler { call, result ->
             if (call.method == "signatureSha256") { result.success(signatureSha256()); return@setMethodCallHandler }
             // Pil tasarrufu muafiyeti: Android uygulamayı uyutmuyor mu?

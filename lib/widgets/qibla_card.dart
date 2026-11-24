@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
 import '../lang.dart';
@@ -10,8 +11,35 @@ import '../settings.dart';
 import '../theme.dart';
 import 'qibla_map_screen.dart';
 
-/// Kıble pusulası: ivme + manyetik sensörden telefonun yönünü hesaplar.
-/// Sensörler sadece kart açıkken dinlenir (pil dostu).
+enum CompassIssue { none, interference, unstable, mismatch }
+
+/// Pusula ölçümüne güvenilir mi?
+/// [field]: manyetik alan gücü (µT); Dünya'nın alanı 25–65 µT, dışı metal/mıknatıs demektir.
+/// [recent]: son yönler; dağınıksa telefon hareket ediyor ya da ölçüm titriyor.
+/// [fused]: Android birleşik yön sensörü (aynı kuzey düzeltmesiyle); 5°'den fazla ayrışırsa kalibrasyon gerekir.
+@visibleForTesting
+CompassIssue compassIssue({required double field, required List<double> recent, required double heading, double? fused}) {
+  if (field < 20 || field > 70) return CompassIssue.interference;
+  if (recent.length >= 5 && headingSpread(recent) > 5) return CompassIssue.unstable;
+  if (fused != null && (((heading - fused + 540) % 360) - 180).abs() > 5) return CompassIssue.mismatch;
+  return CompassIssue.none;
+}
+
+/// Yönlerin dairesel standart sapması (derece).
+@visibleForTesting
+double headingSpread(List<double> hs) {
+  var s = 0.0, c = 0.0;
+  for (final x in hs) {
+    s += math.sin(x * math.pi / 180);
+    c += math.cos(x * math.pi / 180);
+  }
+  final r = math.sqrt(s * s + c * c) / hs.length;
+  if (r >= 1) return 0;
+  return math.sqrt(-2 * math.log(r)) * 180 / math.pi;
+}
+
+/// Kıble pusulası: ivme + manyetik sensörden telefonun yönünü hesaplar, Android'in birleşik yön
+/// sensörüyle teyit eder. Sensörler sadece kart açıkken dinlenir (pil dostu).
 class QiblaCard extends StatefulWidget {
   const QiblaCard({super.key});
 
@@ -28,6 +56,10 @@ class _QiblaCardState extends State<QiblaCard> {
   List<double>? _m;
   final List<double> _recent = []; // son yönler (dairesel ortalama için)
   bool _aligned = false; // histerezis: ±2°'de yanar, ±3° dışında söner
+  static const _fusedCh = EventChannel('aile/heading');
+  StreamSubscription<dynamic>? _fusedSub;
+  double? _fused; // birleşik yön sensörü (manyetik kuzeye göre); cihazda yoksa null
+  double _field = 0; // manyetik alan gücü (µT)
 
   /// Son 10 yönün dairesel ortalaması (sin/cos ortalanır; 359°→0° geçişinde bozulmaz).
   double _smooth(double h) {
@@ -54,17 +86,30 @@ class _QiblaCardState extends State<QiblaCard> {
     });
     _magSub = magnetometerEventStream(samplingPeriod: SensorInterval.uiInterval).listen((e) {
       final m = _m;
-      _m = m == null ? [e.x, e.y, e.z] : [m[0] * 0.8 + e.x * 0.2, m[1] * 0.8 + e.y * 0.2, m[2] * 0.8 + e.z * 0.2];
-      final h = _azimuth(_g, _m!);
+      final mm = _m = m == null ? [e.x, e.y, e.z] : [m[0] * 0.8 + e.x * 0.2, m[1] * 0.8 + e.y * 0.2, m[2] * 0.8 + e.z * 0.2];
+      _field = math.sqrt(mm[0] * mm[0] + mm[1] * mm[1] + mm[2] * mm[2]);
+      final h = _azimuth(_g, mm);
       if (h != null && mounted) setState(() => _heading = _smooth((h + _declination(AppSettings.lat, AppSettings.lng) + 360) % 360));
     });
+    _fusedSub = _fusedCh.receiveBroadcastStream().listen(
+      (v) => _fused = (v as num).toDouble(),
+      onError: (_) => _fused = null, // sensör yok: yalnız alan ve kararlılık kontrolü
+    );
   }
 
   void _stop() {
     _accSub?.cancel();
     _magSub?.cancel();
+    _fusedSub?.cancel();
     _accSub = null;
     _magSub = null;
+    _fusedSub = null;
+    // Önceki açılıştan kalan yön ve süzgeç değerleri yeni ölçümü saptırmasın
+    _heading = null;
+    _fused = null;
+    _m = null;
+    _g = [0, 0, 9.8];
+    _field = 0;
     _recent.clear();
   }
 
@@ -109,7 +154,16 @@ class _QiblaCardState extends State<QiblaCard> {
     } else if (diff.abs() > 3) {
       _aligned = false;
     }
-    final aligned = _aligned;
+    final fused = _fused;
+    final issue = heading == null
+        ? CompassIssue.none
+        : compassIssue(
+            field: _field,
+            recent: _recent,
+            heading: heading,
+            fused: fused == null ? null : (fused + _declination(AppSettings.lat, AppSettings.lng) + 360) % 360,
+          );
+    final aligned = _aligned && issue == CompassIssue.none;
 
     // Material: ListTile dokunma efekti kartın üstünde görünsün (Container arka planı onu gizliyordu)
     return Material(
@@ -168,8 +222,14 @@ class _QiblaCardState extends State<QiblaCard> {
                     child: Text(
                       heading == null
                           ? t('Telefonu düz tut.', 'Hold the phone flat.')
+                          : issue == CompassIssue.interference
+                              ? t('Yakında metal ya da mıknatıs var. Uzaklaş.', 'Metal or a magnet is nearby. Move away.')
+                          : issue == CompassIssue.mismatch
+                              ? t('Pusula kalibre değil. Telefonu havada 8 çizerek çevir.', 'Compass not calibrated. Move the phone in a figure 8.')
                           : aligned
                               ? t('Kıble yönündesin ✓', 'You are facing the qibla ✓')
+                          : issue == CompassIssue.unstable && diff!.abs() <= 3
+                              ? t('Telefonu sabit tut.', 'Hold the phone still.')
                               : (diff! > 0 ? t('Sağa dön (${diff.abs().toStringAsFixed(0)}°)', 'Turn right (${diff.abs().toStringAsFixed(0)}°)') : t('Sola dön (${diff.abs().toStringAsFixed(0)}°)', 'Turn left (${diff.abs().toStringAsFixed(0)}°)')),
                       textAlign: TextAlign.center,
                       style: TextStyle(
