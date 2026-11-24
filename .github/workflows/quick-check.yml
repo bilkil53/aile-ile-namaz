@@ -1,4 +1,4 @@
-name: Hızlı kontrol (analiz + birim testleri, yayın yok)
+name: Aile ile Namaz · Hızlı kontrol (analiz + birim testleri, yayın yok)
 
 # Yalnızca check/* dallarına gönderilince çalışır: büyük değişikliklerde (ör. çeviri) derlemeyi
 # beklemeden kodun hatasız olduğu birkaç dakikada görülür. Hiçbir zaman yayın yapmaz.

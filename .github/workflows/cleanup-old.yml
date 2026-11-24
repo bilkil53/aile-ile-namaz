@@ -1,4 +1,4 @@
-name: Eskileri temizle (son 2 sürüm kalır)
+name: Aile ile Namaz · Eskileri temizle (son 2 sürüm kalır)
 
 # Her pazar 06:00'da (İstanbul) kendiliğinden çalışır ve siler; elle de başlatılabilir.
 # Elle başlatınca kutu boş bırakılırsa yalnızca liste gösterilir, SIL yazılırsa silinir. Kalıcıdır, geri alınamaz:

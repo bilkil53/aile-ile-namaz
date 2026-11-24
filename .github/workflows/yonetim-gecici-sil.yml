@@ -1,7 +1,7 @@
 # Özel depo (aile-ile-namaz-dev-and-admin) her yeşil derlemede APK'yı herkese açık ana depoya geçici ön sürüm
 # olarak koyar (GitHub girişi olmadan indirmek için): yönetim 'yonetim-gecici', demo 'v11.N' (başlıkta "(geçici)").
 # Bu iş her gün 23:53'te (Türkiye) tüm geçici kopyaları siler. Kalıcı kopyalar özel depoda. Yalnız ana depoda çalışır.
-name: Geçici APK'ları sil (her gün 23:53)
+name: Namaz Demo + Yönetim · Geçici APK'ları sil (her gün 23:53)
 
 on:
   schedule:
