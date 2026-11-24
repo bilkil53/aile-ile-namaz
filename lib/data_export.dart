@@ -41,6 +41,8 @@ class DataExport {
         'e_posta': email ?? '',
         'aciklama': 'Bu dosya, hesabınıza ait sunucuda tutulan kayıtların kopyasıdır. '
             'Başka aile üyelerinin kayıtları yer almaz.',
+        'description': "This file is a copy of the records kept on the server for your account. "
+            "Other family members' records are not included.",
         'eksik_bolumler': missing,
         for (final t in tables) t.$1: data[t.$1] ?? const <Map<String, dynamic>>[],
         consentKey: data[consentKey] ?? const <Map<String, dynamic>>[],

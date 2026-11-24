@@ -1,5 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'lang.dart';
+
 /// Cihazda saklanan ayarlar (konum, bildirim tercihleri).
 class AppSettings {
   static late SharedPreferences _p;
@@ -11,6 +13,10 @@ class AppSettings {
   static SharedPreferences get prefs => _p;
 
   static String get cityName => _p.getString('cityName') ?? 'İstanbul';
+
+  /// Ekranda gösterilen şehir adı: İngilizcede yerleşik karşılığı olan şehirler çevrilir (kayıt Türkçe kalır).
+  static String get cityLabel => Lang.isEn ? (_cityEn[cityName] ?? cityName) : cityName;
+  static const _cityEn = {'İstanbul': 'Istanbul', 'İzmir': 'Izmir', 'Mekke (Kabe)': 'Mecca (Kaaba)', 'Medine': 'Medina', 'Kudüs': 'Jerusalem'};
   static double get lat => _p.getDouble('lat') ?? 41.0082;
   static double get lng => _p.getDouble('lng') ?? 28.9784;
   static bool get locationFromGps => _p.getBool('locationFromGps') ?? false;

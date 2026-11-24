@@ -384,18 +384,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             builder: (context, snap) {
               const brown = Color(0xFF78350F);
               if (!snap.hasData) {
-                return const Text('🧪 Test Paneli yükleniyor…', style: TextStyle(fontSize: 12, color: brown));
+                return Text(t('🧪 Test Paneli yükleniyor…', '🧪 Test Panel loading…'), style: const TextStyle(fontSize: 12, color: brown));
               }
               final (tester, reis) = snap.data!;
               if (tester == null) {
                 return Row(children: [
-                  const Expanded(
-                    child: Text('🧪 Test Paneli: sunucuya ulaşılamadı (internet yok).',
-                        style: TextStyle(fontSize: 12, color: brown)),
+                  Expanded(
+                    child: Text(t('🧪 Test Paneli: sunucuya ulaşılamadı (internet yok).', '🧪 Test Panel: could not reach the server (no internet).'),
+                        style: const TextStyle(fontSize: 12, color: brown)),
                   ),
                   TextButton(
                     onPressed: () => setState(() => _panelInfo = null),
-                    child: const Text('Tekrar dene', style: TextStyle(color: brown, fontWeight: FontWeight.bold)),
+                    child: Text(t('Tekrar dene', 'Try again'), style: const TextStyle(color: brown, fontWeight: FontWeight.bold)),
                   ),
                 ]);
               }
@@ -410,36 +410,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         : () async {
                             final ok = await onTap();
                             if (!mounted) return;
-                            if (!ok) _toast(Pro.lastError ?? 'İşlem yapılamadı. İnternetini kontrol edip tekrar dene.');
+                            if (!ok) _toast(Pro.lastError ?? t('İşlem yapılamadı. İnternetini kontrol edip tekrar dene.', 'Could not complete. Check your internet and try again.'));
                             setState(() {});
                           },
                     icon: Icon(icon, size: 18),
                     label: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
                   );
               return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('🧪 Test Paneli',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: brown)),
+                Text(t('🧪 Test Paneli', '🧪 Test Panel'),
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: brown)),
                 const SizedBox(height: 4),
-                Text('Şu an: ${Pro.testLabel().replaceFirst('🧪 ', '')}',
+                Text(t('Şu an: ', 'Now: ') + Pro.testLabel().replaceFirst('🧪 ', ''),
                     style: const TextStyle(fontSize: 13, color: brown)),
                 const SizedBox(height: 10),
                 Wrap(spacing: 8, runSpacing: 8, children: [
                   // Pro'dayken yalnızca "düş", ücretsizken yalnızca "geç" görünür
                   if (!Pro.active)
-                    btn(reis ? 'Pro\'ya geç' : 'Demo Pro\'yu reis alır', Icons.workspace_premium,
+                    btn(reis ? t('Pro\'ya geç', 'Go Pro') : t('Demo Pro\'yu reis alır', 'Only the head of family can get demo Pro'), Icons.workspace_premium,
                         reis ? Pro.redeem : null),
-                  if (Pro.active) btn('Pro\'dan düş → Ücretsiz', Icons.close, Pro.expireTest),
-                  btn('Denemeyi baştan başlat (7 gün)', Icons.play_arrow, Pro.testRestartTrial),
+                  if (Pro.active) btn(t('Pro\'dan düş → Ücretsiz', 'Drop Pro → Free'), Icons.close, Pro.expireTest),
+                  btn(t('Denemeyi baştan başlat (7 gün)', 'Restart trial (7 days)'), Icons.play_arrow, Pro.testRestartTrial),
                 ]),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
                   onPressed: _previewDiniGun,
                   icon: const Icon(Icons.auto_awesome, size: 18),
-                  label: const Text('Mübarek gün kartını önizle', style: TextStyle(fontWeight: FontWeight.bold)),
+                  label: Text(t('Mübarek gün kartını önizle', 'Preview the holy day card'), style: const TextStyle(fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(height: 6),
-                const Text('Bu panel yalnızca test sürümünde görünür; gerçek kullanıcılar görmez.',
-                    style: TextStyle(fontSize: 11, color: brown)),
+                Text(t('Bu panel yalnızca test sürümünde görünür; gerçek kullanıcılar görmez.', 'This panel is only visible in the test build; real users do not see it.'),
+                    style: const TextStyle(fontSize: 11, color: brown)),
               ]);
             },
           ),
@@ -453,12 +453,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final pick = await showDialog<DiniGun>(
       context: context,
       builder: (ctx) => SimpleDialog(
-        title: const Text('Hangi günü önizleyelim?'),
+        title: Text(t('Hangi günü önizleyelim?', 'Which day shall we preview?')),
         children: [
           for (final g in diniGunler)
             SimpleDialogOption(
               onPressed: () => Navigator.pop(ctx, g),
-              child: Text('${g.emoji} ${g.nameTr}'),
+              child: Text('${g.emoji} ${g.name}'),
             ),
         ],
       ),
@@ -469,20 +469,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (ctx) => AlertDialog(
         scrollable: true,
         insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
-        title: Text('${pick.nameTr} (önizleme)'),
+        title: Text(t('${pick.name} (önizleme)', '${pick.name} (preview)')),
         content: SizedBox(
           width: MediaQuery.of(ctx).size.width,
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Text('Düğmeler gerçek çalışır: "Aileye gönder" önce sorar, onaylarsan tebrik ailene gider.', style: TextStyle(fontSize: 11)),
+            Text(t('Düğmeler gerçek çalışır: "Aileye gönder" önce sorar, onaylarsan tebrik ailene gider.',
+                    'The buttons really work: "Send to family" asks first; if you confirm, the greeting goes to your family.'),
+                style: const TextStyle(fontSize: 11)),
             const SizedBox(height: 8),
-            const Text('1 gün önce:', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(t('1 gün önce:', '1 day before:'), style: const TextStyle(fontWeight: FontWeight.bold)),
             DiniGunCard(preview: pick, previewTomorrow: true),
             const SizedBox(height: 12),
-            const Text('O gün:', style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(t('O gün:', 'On the day:'), style: const TextStyle(fontWeight: FontWeight.bold)),
             DiniGunCard(preview: pick),
           ]),
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Kapat'))],
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(t('Kapat', 'Close')))],
       ),
     );
   }
@@ -804,7 +806,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ? const SizedBox.shrink()
                             : Padding(
                                 padding: const EdgeInsets.only(top: 6),
-                                child: Text('📩 Pro istedi: ${reqs.keys.map((id) => Pro.requestNames[id] ?? 'Aile ferdin').join(', ')}',
+                                child: Text(t('📩 Pro istedi: ', '📩 Asked for Pro: ') + reqs.keys.map((id) => Pro.requestNames[id] ?? t('Aile ferdin', 'Family member')).join(', '),
                                     style: const TextStyle(fontSize: 13, color: AppColors.goldContainer, fontWeight: FontWeight.bold)),
                               ),
                       ),
@@ -829,7 +831,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text(AppSettings.cityName,
+                    Text(AppSettings.cityLabel,
                         style: const TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.w600)),
                     Text(
                       LocationHelper.permissionDenied

@@ -127,7 +127,7 @@ class _QiblaCardState extends State<QiblaCard> {
             textColor: AppColors.onCard,
             leading: const Icon(Icons.explore, color: AppColors.onCard),
             title: Text(t('Kıble Pusulası', 'Qibla Compass'), style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.onCard)),
-            subtitle: Text(t('${AppSettings.cityName} için kıble: ${qibla.toStringAsFixed(0)}°', 'Qibla for ${AppSettings.cityName}: ${qibla.toStringAsFixed(0)}°'), style: const TextStyle(color: AppColors.onCardMuted)),
+            subtitle: Text(t('${AppSettings.cityLabel} için kıble: ${qibla.toStringAsFixed(0)}°', 'Qibla for ${AppSettings.cityLabel}: ${qibla.toStringAsFixed(0)}°'), style: const TextStyle(color: AppColors.onCardMuted)),
             trailing: Icon(_open ? Icons.expand_less : Icons.expand_more, color: AppColors.onCard),
             onTap: () {
               setState(() => _open = !_open);

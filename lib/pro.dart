@@ -229,10 +229,10 @@ class Pro {
 
   /// Üst başlıktaki kısa test etiketi: hangi durumdayım?
   static String testLabel() {
-    if (isDemo) return '🧪 Ücretsiz';
+    if (isDemo) return t('🧪 Ücretsiz', '🧪 Free');
     return switch (source) {
-      'trial' => '🧪 Deneme · $daysLeft gün',
-      'family' => '🧪 Pro (aile)',
+      'trial' => t('🧪 Deneme · $daysLeft gün', '🧪 Trial · $daysLeft days'),
+      'family' => t('🧪 Pro (aile)', '🧪 Pro (family)'),
       _ => '🧪 Pro (test)',
     };
   }
