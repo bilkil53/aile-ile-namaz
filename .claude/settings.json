@@ -10,23 +10,7 @@
   },
   "permissions": {
     "deny": [
-      "mcp__Claude_Docs",
-      "Skill(anthropic-skills:pptx)",
-      "Skill(anthropic-skills:docx)",
-      "Skill(anthropic-skills:xlsx)",
-      "Skill(anthropic-skills:pdf)",
-      "Skill(anthropic-skills:docs)",
-      "Skill(anthropic-skills:google-workspace)",
-      "Skill(anthropic-skills:built-in-browser)",
-      "Skill(anthropic-skills:chrome-browser)",
-      "Skill(anthropic-skills:computer-use)",
-      "Skill(anthropic-skills:deep-research)",
-      "Skill(anthropic-skills:morning)",
-      "Skill(anthropic-skills:import-memory)",
-      "Skill(anthropic-skills:skill-creator)",
-      "Skill(plugin-authoring)",
-      "Skill(session-start-hook)",
-      "Skill(dataviz)"
+      "mcp__Claude_Docs"
     ]
   },
   "hooks": {
@@ -74,5 +58,35 @@
         ]
       }
     ]
+  },
+  "skillOverrides": {
+    "anthropic-skills:built-in-browser": "off",
+    "anthropic-skills:caveman": "off",
+    "anthropic-skills:chrome-browser": "off",
+    "anthropic-skills:computer-use": "off",
+    "anthropic-skills:deep-research": "off",
+    "anthropic-skills:docs": "off",
+    "anthropic-skills:docx": "off",
+    "anthropic-skills:google-workspace": "off",
+    "anthropic-skills:import-memory": "off",
+    "anthropic-skills:karpathy-guidelines": "off",
+    "anthropic-skills:morning": "off",
+    "anthropic-skills:pdf": "off",
+    "anthropic-skills:ponytail": "off",
+    "anthropic-skills:pptx": "off",
+    "anthropic-skills:skill-creator": "off",
+    "anthropic-skills:test-driven-development": "off",
+    "anthropic-skills:xlsx": "off",
+    "anthropic-skills:ebsoru": "off",
+    "session-start-hook": "off",
+    "dataviz": "off",
+    "artifact-design": "off",
+    "artifact-diagramming": "off",
+    "artifact-capabilities": "off",
+    "claude-api": "off",
+    "keybindings-help": "off",
+    "plugin-authoring": "off",
+    "impeccable": "off",
+    "ui-ux-pro-max": "off"
   }
 }
