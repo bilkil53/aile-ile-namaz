@@ -37,6 +37,12 @@ class Repo {
     return rows.map<Pool>((r) => Pool.fromMap(r)).toList();
   }
 
+  /// Bireysel mod (Aile ekranındaki "Bireysel Mod"): havuzu yok ya da havuzunda tek kişi.
+  static Future<bool> isSolo() async {
+    final pools = await myPools();
+    return pools.isEmpty || (await members(pools.first.id)).length <= 1;
+  }
+
   /// Geçersiz kodda false döner. Başarılıysa yöneticiye istek gitmiş olur.
   static Future<bool> requestJoin(String code, String role, String icon) async {
     final res = await supa.rpc('request_join', params: {
@@ -146,10 +152,10 @@ class Repo {
     if (isGuest) return true;
     try {
       final pools = await myPools().timeout(const Duration(seconds: 6));
-      if (pools.isEmpty) return true;
-      final me = (await members(pools.first.id).timeout(const Duration(seconds: 6)))
-          .where((m) => m.userId == myId)
-          .firstOrNull;
+      if (pools.isEmpty) return AppSettings.prefs.getString('cuma.myGender') == 'f'; // bireysel: kendi beyanı
+      final ms = await members(pools.first.id).timeout(const Duration(seconds: 6));
+      if (ms.length <= 1) return AppSettings.prefs.getString('cuma.myGender') == 'f'; // bireysel mod: kendi beyanı
+      final me = ms.where((m) => m.userId == myId).firstOrNull;
       return me == null || canBeExcused(me.roleTitle, me.icon, me.gender);
     } catch (_) {
       // Çevrimdışı: reisin belirlediği son bilinen cinsiyet (Cuma uyarısı için saklanır).

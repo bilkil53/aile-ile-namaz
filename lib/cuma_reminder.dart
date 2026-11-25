@@ -64,9 +64,9 @@ class CumaReminder {
       final sent = AppSettings.prefs.getStringList(_kSent) ?? [];
       if (sent.contains(day)) return;
 
-      // Cinsiyet: önce havuzdaki güncel bilgi, yoksa hafızadaki
+      // Cinsiyet: aile modunda havuzdaki güncel bilgi; bireysel modda (tek kişilik havuz) kullanıcının kendi beyanı
       final me = await Repo.myMember();
-      if (me != null) await rememberGender(genderOf(me));
+      if (me != null && !await Repo.isSolo()) await rememberGender(genderOf(me));
       if (AppSettings.prefs.getString(_kGender) != 'm') return;
 
       final count = await _missedFridaysInARow(DateTime.parse(day));

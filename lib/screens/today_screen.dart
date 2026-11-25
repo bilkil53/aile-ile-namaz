@@ -192,6 +192,8 @@ class _TodayScreenState extends State<TodayScreen> {
             DiniGunCard(key: ValueKey(DateFormat('yyyy-MM-dd').format(DateTime.now()))),
             _heroCard(),
             const SizedBox(height: 12),
+            _kerahatCard(),
+            const SizedBox(height: 12),
             _quoteCard(),
             const SizedBox(height: 16),
           ] else ...[
@@ -363,6 +365,50 @@ class _TodayScreenState extends State<TodayScreen> {
                   ),
             style: TextStyle(fontSize: 11, color: white85, height: 1.35),
           ),
+        ],
+      ),
+    );
+  }
+
+  /// Namazın kerahat vakitleri (güneş doğarken, tam öğle vaktinde, güneş batarken).
+  Widget _kerahatCard() {
+    final windows = PrayerTimesService.kerahatWindows(_times!);
+    final now = DateTime.now();
+    bool isNow(KerahatWindow w) => !now.isBefore(_times!.at(w.start)) && now.isBefore(_times!.at(w.end));
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.goldContainer,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            const Icon(Icons.info_outline, size: 15, color: AppColors.gold),
+            const SizedBox(width: 6),
+            Text(t('Namaz kılınmaması gereken vakitler', 'Times to avoid praying'),
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Color(0xFF78350F))),
+          ]),
+          const SizedBox(height: 8),
+          for (final w in windows)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(w.name, style: const TextStyle(fontSize: 12, color: Color(0xFF78350F))),
+                  Text(
+                    '${w.start}–${w.end}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: isNow(w) ? FontWeight.bold : FontWeight.normal,
+                      color: isNow(w) ? AppColors.missed : const Color(0xFF78350F),
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

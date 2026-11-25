@@ -186,6 +186,42 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       await p.setBool('askedLockScreen', true);
       unawaited(Push.register());
     }
+    // Bireysel mod (havuzu yok ya da havuzda tek kişi): "Muaf" yalnız kadına açılır, cinsiyeti kendisi söyler.
+    // Aile modundan çıkan da sorulur: aile modundayken askedGender sıfırlanır (_listenFamily).
+    if (!(p.getBool('askedGender') ?? false)) {
+      bool solo = false;
+      try {
+        solo = await Repo.isSolo().timeout(const Duration(seconds: 6));
+      } catch (_) {
+        return; // çevrimdışı: aile üyesine boş yere sorulmasın, sonraki açılışta sorulur
+      }
+      if (!solo || !mounted) return; // aile modunda cinsiyeti reis belirler
+      final g = await showDialog<String>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          scrollable: true,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          icon: const Icon(Icons.person_outline, color: AppColors.emerald, size: 32),
+          title: Text(t('Cinsiyetin', 'Your gender'), style: const TextStyle(fontSize: 17)),
+          content: Text(t(
+            'Kadınlar için "Muaf" seçeneği açılır. Bu bilgi yalnız bu telefonda tutulur.',
+            'The "Excused" option is available for women. This is kept only on this phone.',
+          )),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, 'm'), child: Text(t('Erkek', 'Male'))),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: AppColors.emerald),
+              onPressed: () => Navigator.pop(ctx, 'f'),
+              child: Text(t('Kadın', 'Female')),
+            ),
+          ],
+        ),
+      );
+      if (g == null) return; // geri tuşuyla kapatıldı: sonraki açılışta yeniden sorulsun
+      await CumaReminder.rememberGender(g);
+      await p.setBool('askedGender', true);
+    }
   }
 
   /// Pro ↔ Demo değişince: kilitli sekmeden çık, bildirimleri aç/kapat.
@@ -213,7 +249,11 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
       for (final p in await Repo.myPools()) {
         final ms = await Repo.members(p.id);
         final me = ms.where((x) => x.userId == myId).firstOrNull;
-        if (me != null) unawaited(CumaReminder.rememberGender(genderOf(me)));
+        if (me != null && ms.length > 1) {
+          unawaited(CumaReminder.rememberGender(genderOf(me)));
+          // Aile modunda cinsiyeti reis belirler; bireysel moda dönünce kendisine yeniden sorulsun
+          unawaited(AppSettings.prefs.setBool('askedGender', false));
+        }
         final reis = ms.where((x) => x.userId == p.ownerId).firstOrNull;
         for (final m in ms) {
           final label = me == null ? m.labelFor(viewerIsReis: p.ownerId == myId) : kinLabel(viewer: me, target: m, reis: reis);

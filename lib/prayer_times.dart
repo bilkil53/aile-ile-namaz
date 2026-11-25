@@ -148,6 +148,13 @@ class NextPrayer {
   const NextPrayer(this.name, this.time, this.remaining);
 }
 
+/// Namazın kerahat (kılınmaması gereken) olduğu bir aralık ("HH:mm"–"HH:mm").
+class KerahatWindow {
+  final String name;
+  final String start, end;
+  const KerahatWindow(this.name, this.start, this.end);
+}
+
 class PrayerTimesService {
   /// Vakit servisine gönderilen koordinat: 2 ondalığa (yaklaşık 1 km) yuvarlanır; tam konum
   /// telefondan çıkmaz. Önbellek anahtarı da aynı hassasiyettedir.
@@ -265,15 +272,45 @@ class PrayerTimesService {
     }
   }
 
-  /// Yerel yaklaşık hesap (internet yoksa) — eski PrayerCalculator.kt ile aynı.
-  static DayTimes calculate(DateTime day, double lat, double lng) {
+  /// Gerçek öğle (zeval/istiva) saati: yalnız boylam ve zaman denklemine bağlı, enlemden bağımsız.
+  static double _solarNoonHours(DateTime day, double lng) {
     final dayOfYear = day.difference(DateTime(day.year, 1, 1)).inDays + 1;
     const tz = 3.0;
     final b = 2 * math.pi * (dayOfYear - 81) / 365.0;
     final eot = 9.87 * math.sin(2 * b) - 7.53 * math.cos(b) - 1.5 * math.sin(b);
+    return 12.0 - (lng / 15.0) - (eot / 60.0) + tz;
+  }
+
+  /// Üç kerahat vakti: güneş doğarken (~45 dk), tam öğle vaktinde/istiva (öğle vaktine kadar),
+  /// güneş batarken (~45 dk). Yaygın kabul edilen süreler; dakika hassasiyetinde değildir.
+  static List<KerahatWindow> kerahatWindows(DayTimes day) {
+    // İstiva = güneş doğuşu ile batışının ortası; vakitler konumun yerel saatinde geldiği için
+    // saat diliminden bağımsızdır (sabit UTC+3 ile hesap Türkiye dışında ters aralık veriyordu).
+    final noon = _shiftMinutes(day.gunes, (_minutes(day.aksam) - _minutes(day.gunes)) ~/ 2);
+    return [
+      KerahatWindow(t('Güneş doğarken', 'While the sun is rising'), day.gunes, _shiftMinutes(day.gunes, 45)),
+      KerahatWindow(t('Tam öğle vakti (istiva)', 'Solar noon (istiwa)'), noon, day.ogle),
+      KerahatWindow(t('Güneş batarken', 'While the sun is setting'), _shiftMinutes(day.aksam, -45), day.aksam),
+    ];
+  }
+
+  static int _minutes(String hhmm) {
+    final p = hhmm.split(':');
+    return int.parse(p[0]) * 60 + int.parse(p[1]);
+  }
+
+  static String _shiftMinutes(String hhmm, int delta) {
+    final p = hhmm.split(':');
+    final total = (int.parse(p[0]) * 60 + int.parse(p[1]) + delta) % (24 * 60);
+    return '${(total ~/ 60).toString().padLeft(2, '0')}:${(total % 60).toString().padLeft(2, '0')}';
+  }
+
+  /// Yerel yaklaşık hesap (internet yoksa) — eski PrayerCalculator.kt ile aynı.
+  static DayTimes calculate(DateTime day, double lat, double lng) {
+    final dayOfYear = day.difference(DateTime(day.year, 1, 1)).inDays + 1;
     final decl = _rad(23.45 * math.sin(_rad((360.0 / 365.0) * (dayOfYear - 81))));
     final latR = _rad(lat);
-    final noon = 12.0 - (lng / 15.0) - (eot / 60.0) + tz;
+    final noon = _solarNoonHours(day, lng);
 
     double ha(double alt) {
       final c = (math.sin(alt) - math.sin(latR) * math.sin(decl)) / (math.cos(latR) * math.cos(decl));

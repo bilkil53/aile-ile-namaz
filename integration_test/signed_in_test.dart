@@ -84,7 +84,7 @@ void main() {
       return;
     }
     // Daha önce sorulmuş sayılan tek seferlik sorular (testi bekletmesin)
-    SharedPreferences.setMockInitialValues({'lang': lang, 'askedLockScreen': true, 'notifyHealthAsked': true});
+    SharedPreferences.setMockInitialValues({'lang': lang, 'askedLockScreen': true, 'notifyHealthAsked': true, 'askedGender': true});
     await app.main();
     await settle(t, 4);
 

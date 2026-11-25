@@ -12,6 +12,7 @@ import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../data.dart';
+import '../cuma_reminder.dart';
 import '../data_export.dart';
 import '../dini_gunler.dart';
 import '../local_store.dart';
@@ -616,6 +617,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (mounted) setState(() {});
   }
 
+  /// Bireysel moddaki kullanıcı (havuzu yok ya da havuzda tek kişi) cinsiyetini kendi seçer: "Muaf" yalnız kadına açılır.
+  late final Future<bool> _solo = Repo.isSolo().catchError((_) => false);
+
+  Future<void> _pickGender() async {
+    final cur = AppSettings.prefs.getString('cuma.myGender');
+    final picked = await showDialog<String>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(t('Cinsiyetin', 'Your gender'), style: const TextStyle(fontSize: 17)),
+        children: [
+          for (final g in const ['f', 'm'])
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx, g),
+              child: Row(children: [
+                Icon(g == cur ? Icons.radio_button_checked : Icons.radio_button_unchecked, color: AppColors.emerald, size: 20),
+                const SizedBox(width: 12),
+                Expanded(child: Text(g == 'f' ? t('Kadın', 'Female') : t('Erkek', 'Male'), style: const TextStyle(fontSize: 15))),
+              ]),
+            ),
+        ],
+      ),
+    );
+    if (picked == null) return;
+    await CumaReminder.rememberGender(picked);
+    await AppSettings.prefs.setBool('askedGender', true);
+    if (mounted) setState(() {});
+  }
+
   /// "Verilerin" kutusu: hangi veri nerede (bulut / telefon), en son ne zaman gönderildi, bekleyen var mı.
   Widget _dataBox(String email) {
     final white70 = Colors.white.withValues(alpha: 0.75);
@@ -852,6 +881,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _divider(),
               _tapRow(t('Dil', 'Language'), Icons.translate, _pickLang, sub: Lang.label(Lang.choice)),
               _divider(),
+              if (!guest)
+                FutureBuilder<bool>(
+                  future: _solo,
+                  builder: (_, snap) {
+                    if (snap.data != true) return const SizedBox.shrink();
+                    final g = AppSettings.prefs.getString('cuma.myGender');
+                    return Column(children: [
+                      _tapRow(t('Cinsiyet', 'Gender'), Icons.person_outline, _pickGender,
+                          sub: g == 'f' ? t('Kadın', 'Female') : g == 'm' ? t('Erkek', 'Male') : t('Seçilmedi', 'Not set')),
+                      _divider(),
+                    ]);
+                  },
+                ),
               InkWell(
                 onTap: _showNotes,
                 child: Padding(

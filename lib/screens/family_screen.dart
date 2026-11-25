@@ -1466,9 +1466,11 @@ class _TitleDialogState extends State<_TitleDialog> {
   static String? _genderOf(String title) =>
       femaleTitles.contains(title) ? 'f' : (maleTitles.contains(title) ? 'm' : null);
 
-  /// Cinsiyet ayrıca seçilmez: simgeden çıkar (kadın/kız simgesi → Muaf açılır).
-  /// Nötr simgede (🧒, 👤…) ünvandan, o da yoksa önceki kayıttan alınır.
-  String? get _gender => genderOfIcon(_icon) ?? _genderOf(_title) ?? widget.initialGender;
+  /// Cinsiyet önce simgeden (kadın/kız simgesi → Muaf açılır), nötr simgede (🧒, 👤…) ünvandan çıkar.
+  /// Yazılan isimde ünvan yok sayılır. İkisi de belirtmiyorsa reis seçer (zorunlu), önceki kayıt varsa o seçili gelir.
+  String? get _derived => genderOfIcon(_icon) ?? (_ctrl.text.trim().isEmpty ? _genderOf(_title) : null);
+  String? _picked;
+  String? get _gender => _derived ?? _picked ?? widget.initialGender;
 
   /// Reisin kendisi: Anne → kadın, Baba → erkek, Aile Reisi → önceki kayıt (yoksa erkek).
   String? get _ownerGender =>
@@ -1554,13 +1556,29 @@ class _TitleDialogState extends State<_TitleDialog> {
                   ),
               ]),
             ],
+            if (_derived == null) ...[
+              const SizedBox(height: 12),
+              Text(t('Cinsiyeti (zorunlu)', 'Gender (required)'), style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(t('Ünvan ve simge cinsiyet belirtmiyor. "Muaf" yalnız kadına açılır.',
+                      'The title and icon do not indicate gender. "Excused" is only available for women.'),
+                  style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+              const SizedBox(height: 4),
+              Wrap(spacing: 6, children: [
+                for (final g in const ['f', 'm'])
+                  ChoiceChip(
+                    label: Text(g == 'f' ? t('Kadın', 'Female') : t('Erkek', 'Male')),
+                    selected: _gender == g,
+                    onSelected: (_) => setState(() => _picked = g),
+                  ),
+              ]),
+            ],
           ],
         ),
       ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(context), child: Text(t('Vazgeç', 'Cancel'))),
         FilledButton(
-          onPressed: () => Navigator.pop(
+          onPressed: _gender == null ? null : () => Navigator.pop(
               context,
               _TitleResult(custom.isNotEmpty ? custom : _title, _icon, widget.askOwner ? _owner : null, _gender,
                   widget.askOwner ? _ownerGender : null)),
